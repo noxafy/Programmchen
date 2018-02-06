@@ -1,0 +1,235 @@
+#!/bin/bash
+
+echoFiles=3 # 0=verbose only count result; 1=verbose only dirs; 2=verbose only files; 3=verbose everything
+rec=1 #for standard rec is on
+dirCnt=0
+fileCnt=0
+path=""
+help="Prints recursively all files with full path, current location by default.
+Usage: \e[1mlsr\e[0m [ -h | [-d|-f|-c] [-t] \e[4mpath\e[0m ]
+        \e[1m-h\e[0m	Displays this help messages and exits.
+	\e[1m-d\e[0m	Prints directories only.
+        \e[1m-f\e[0m	Prints files only.
+        \e[1m-c\e[0m	Prints nothing as the count message at the end.
+        \e[1m-t\e[0m	Don't search recursively.
+        \e[1m-g\e[0m	Grep something.
+	\e[4mpath\e[0m	List in a given path instead of current.
+"
+
+trap 'printf "To file [$file]:\n"; resumee; exit 1' 2
+
+while [ "$*" ]; do
+  case $1 in
+    -h)
+      printf "$help"
+      exit 0
+      ;;
+    -d)
+      echoFiles=1
+      ;;
+    -f)
+      echoFiles=2
+      ;;
+    -c)
+      echoFiles=0
+      ;;
+    -t)
+      rec=0
+      ;;
+    -g)
+      grepexp=$2
+      shift
+      ;;
+    -*)
+      printf "Wrong argument.\n$help"
+      exit 1
+      ;;
+    *)
+      if [[ -e $1 ]]; then
+        if [[ -d $1 ]]; then
+          path="$1"
+        else
+          echo "$1 is not a directory."
+          exit 1
+        fi
+      else
+        echo "$1 does not exist."
+        exit 1
+      fi
+      if [[ ${path:((${#path}-1)):${#path}} != '/' ]]; then
+        path="$path/"
+      fi
+      break
+      ;;
+  esac
+  shift
+done
+
+#set path to current absolute if not given
+[[ -z $path ]] && path="$(pwd)/"
+
+list() {
+  for file in "$1".* "$1"*; do
+    #skipping ., .. and * (empty dir)
+    if [[ "$file" == "$1." ]] || [[ "$file" == "$1.." ]] || [[ ! -e "$file" ]]; then
+      continue
+    fi
+    $2 "$file" $2
+  done
+}
+
+listNone() {
+  if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
+    ((dirCnt++))
+    if [[ $rec -eq 1 ]]; then
+      list "$1/" $2
+    fi
+  else
+    ((fileCnt++))
+  fi
+}
+
+listAll() {
+  if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
+    ((dirCnt++))
+    echo "$1/"
+    if [[ $rec -eq 1 ]]; then
+      list "$1/" $2
+    fi
+  else
+    ((fileCnt++))
+    echo "$1"
+  fi
+}
+
+listFiles() {
+  if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
+    ((dirCnt++))
+    if [[ $rec -eq 1 ]]; then
+      list "$1/" $2
+    fi
+  else
+    ((fileCnt++))
+    echo "$1"
+  fi
+}
+
+listDirs() {
+  if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
+    ((dirCnt++))
+    echo "$1/"
+    if [[ $rec -eq 1 ]]; then
+      list "$1/" $2
+    fi
+  else
+    ((fileCnt++))
+  fi
+}
+
+listAllWithGrep() {
+  if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
+    ((dirCnt++))
+    echo "$1/" | grep "$grepexp"
+    if [[ $rec -eq 1 ]]; then
+      list "$1/" $2
+    fi
+  else
+    ((fileCnt++))
+    echo "$1" | grep "$grepexp"
+  fi
+}
+
+listDirsWithGrep() {
+  if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
+    ((dirCnt++))
+    echo "$1/" | grep "$grepexp"
+    if [[ $rec -eq 1 ]]; then
+      list "$1/" $2
+    fi
+   else
+    ((fileCnt++))
+  fi
+}
+
+listFilesWithGrep() {
+  if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
+    ((dirCnt++))
+    if [[ $rec -eq 1 ]]; then
+      list "$1/" $2
+    fi
+  else
+    ((fileCnt++))
+	  echo "$1" | grep "$grepexp"
+  fi
+}
+
+resumee() {		
+  if [ $echoFiles -ne 1 ] ; then
+    if [ $fileCnt -eq 0 ]; then
+      printf "No file "
+    elif [ $fileCnt -eq 1 ]; then
+      printf "1 file "
+    else
+      printf "$fileCnt files "
+    fi
+  fi
+
+  if [ $echoFiles -eq 0 ] || [ $echoFiles -eq 3 ]; then
+    if [ $rec -eq 0 ]; then
+      printf "and "
+    else
+      printf "in "
+      ((dirCnt++))
+    fi
+  fi
+  
+  if [ $echoFiles -ne 2 ]; then
+    if [ $dirCnt == 1 ]; then
+      printf "1 directory "
+    else
+      printf "$dirCnt directories "
+    fi
+  fi
+
+  if [[ -n $grepexp ]]; then
+		printf "searched"
+	else
+		printf "found"
+	fi
+
+  if [ $fileCnt -gt 0 ]; then
+    printf " (size: %s)" $(du -hs $path | awk '{print $1}')
+  fi
+  echo ""
+}
+
+case $echoFiles in
+  0)
+    list "$path" listNone
+    ;;
+  1)
+    if [[ -n $grepexp ]]; then
+      list "$path" listDirsWithGrep
+    else
+      list "$path" listDirs
+    fi
+    ;;
+  2)
+    if [[ -n $grepexp ]]; then
+      list "$path" listFilesWithGrep
+    else
+      list "$path" listFiles
+    fi
+    ;;
+  3)
+    if [[ -n $grepexp ]]; then
+      list "$path" listAllWithGrep
+    else
+      list "$path" listAll
+    fi
+    ;;
+esac
+
+if [ -t 1 ] || [[ $echoFiles -eq 0 ]]; then
+  resumee
+fi
