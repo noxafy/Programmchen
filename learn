@@ -1,0 +1,100 @@
+#!/bin/bash
+
+sec=90 # amount of time in seconds for one page
+pages=1000 # amount of pages
+actPage=0 # actual page
+help="Says every $sec seconds via notification (depends on \"note\") on which page you have to be.
+Usage: \e[1mlearn\e[0m -h | [\e[4mactPages\e[0m] [\e[4mpages\e[0m] [-t \e[4mtimeout\e[0m]
+	\e[1m-h\e[0m	Displays this message and exits.
+        \e[4mactPage\e[0m	The page where you gonna start (1-999).
+	\e[4mpages\e[0m	Number of pages in the script (1-999). If not given it ends after 1000 
+		notifications.
+	\e[1m-t\e[0m	Specify a custom timeout between 1 and 999 seconds until the next
+		notification rises (default: 90).
+		
+	Note: Order [\e[4mactPages\e[0m] and then [\e[4mpages\e[0m] is important.
+"
+
+tell() {
+  osascript -e "tell app \"System Events\" to display notification \"$1\""
+}
+
+while [[ $* ]]; do
+  case $1 in
+    [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+      if [[ $actPage == 0 ]]; then
+        actPage=$1
+      elif [[ $actPage -gt $1 ]]; then
+        printf "The actual page number cannot be higher than the number of pages.\n"
+        exit 1
+      else
+        pages=$1
+      fi
+      ;;
+    -h)
+      printf "$help"
+      exit 0
+      ;;
+    -t)
+      case $2 in
+        [1-9]|[1-9][0-9]|[1-9][0-9][0-9])
+          sec=$2
+          ;;
+        *)
+          printf "Please specify a valid timeout with argument -t.\n$help"
+          exit 1
+          ;;
+      esac
+      shift
+      ;;
+    -*)
+      printf "Wrong argument.\n$help"
+      exit 1
+      ;;
+    *)
+      printf "Please specify a valid actual page number.\n$help"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [[ $actPage == 0 ]]; then
+    actPage=1
+fi
+
+#dependency
+if [[ -z $(which note) ]]; then
+	printf "Please get dependency for \"note\" first!"
+	exit 1
+fi
+
+if [[ $pages -ne 1000 ]]; then
+  dur=$(((pages-actPage+1) * sec))
+  dur=$((dur/60))
+  if [[ $dur -gt 1439 ]]; then
+    d=$((dur/1440))
+    dur=$((dur%1440))
+    h=$((dur/60))
+    min=$((dur%60))
+    tell "Duration: ${d}d ${h}h ${min}min. Page ${actPage}/${pages}"
+  elif [[ $dur -gt 59 ]]; then
+    h=$((dur/60))
+    min=$((dur%60))
+    tell "Duration: ${h}h ${min}min. Page ${actPage}/${pages}"
+  else
+    tell "Duration: ${dur}min. Page ${actPage}/${pages}"
+  fi
+  while [[ $actPage -lt $pages ]]; do
+    ((actPage++))
+    note $sec "Page ${actPage}/${pages}"
+  done
+  note $sec "Ready with $pages pages!"
+else
+  tell "Page $actPage"
+  while [[ $actPage -lt $pages ]]; do
+    ((actPage++))
+    note $sec "Page $actPage"
+  done
+  note $sec "$pages pages done! Please start me again!"
+fi
