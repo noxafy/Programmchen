@@ -1,0 +1,169 @@
+#!/bin/bash
+desttime=0
+help='Sends a notification to the system at given \e[4mtime\e[0m with given or default \e[4mmessage\e[0m and shows
+the remaining time in the shell. If no \e[4mtime\e[0m given, it sends the notification instantly.
+Usage: \e[1mnote\e[0m -h | \e[4mtime\e[0m [\e[4mmes\e[0m \e[4m...\e[0m] | \e[4mmes\e[0m \e[4m...\e[0m
+	\e[1m-h\e[0m	Displays this help message and exists.
+	\e[4mtime\e[0m	Can be
+		 - an integer, so it will be interpreted as seconds to count down
+		 - an endtime in format (H)H:MM(:SS), so maximal a time within the next 
+		   24 hours is possible.
+		 - a string in the form
+		   \e[4mtime\e[0m = d | h | m | s
+		   d    = 0"d"(h | m | s)
+		   h    = 0"h"(m | s)
+		   m    = 0"m"(s)
+		   s    = 0"s"
+                   0    = [0-9]+
+		   while
+		   - "d" stands for days
+		   - "h" stands for hours
+		   - "m" stands for minutes
+		   - "s" stands for seconds
+		   Examples: "5d2h45m", "30m45s", "5h2s", "6m", ...
+	\e[4mmes\e[0m	The message that should be sent when time is up. (Default: "Time is up!")
+'
+
+asUptime() {
+  now=$(date "+%s")
+  desttime=$(($1 + now))
+}
+
+asSeconds() {
+  desttime=$((desttime + 60*$1))
+  numberbuffer=
+}
+
+asMinutes() {
+  asSeconds $((60*$1))
+}
+
+asHours() {
+  asMinutes $((24*$1))
+}
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -*)
+    printf "Wrong argument.\n$help"
+    exit 1
+    ;;
+  "")
+    printf "Please specify a time and/or message.\n$help"
+    exit 1
+    ;;
+  [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9])
+    desttime=$(date -jf "%H:%M:%S" "$1:00" "+%s")
+    ((desttime--))
+    ;;
+  [0-9]:[0-5][0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9]:[0-5][0-9])
+    desttime=$(date -jf "%H:%M:%S" $1 "+%s")
+    ((desttime--))
+    ;;
+  *)
+    if [[ $1 =~ ^[[:digit:]]+(d([[:digit:]]+(h([[:digit:]]+(m([[:digit:]]+s)?|s))?|m([[:digit:]]+s)?|s))?|h([[:digit:]]+(m([[:digit:]]+s)?|s))?|m([[:digit:]]+s)?|s)?$ ]]; then
+      timestring="$1"
+      i=0
+      numberbuffer=
+      while [[ $i -lt ${#timestring} ]]; do
+        nextchar="${timestring:$i:1}"
+        case $nextchar in
+          [0-9])
+            numberbuffer+=$nextchar
+            ;;
+          d|D)
+            asHours $numberbuffer
+            ;;
+          h|H)
+            asMinutes $numberbuffer
+            ;;
+          m|M)
+            asSeconds $numberbuffer
+            ;;
+          s|S)
+            desttime=$((desttime + numberbuffer))
+            ;;
+        esac
+        ((i++))
+      done
+      if [[ $desttime -eq 0 ]]; then
+        asUptime $numberbuffer
+      else
+        asUptime $desttime
+      fi
+    else
+      mes="$*"
+    fi
+    ;;
+esac
+shift
+
+timeout() {
+  time=$((desttime - $(date "+%s")))
+  if [ $time -ge 86400 ]; then
+    days=$((time / 86400))
+    lefttoday=$((time % 86400))
+    hours=$((lefttoday / 3600))
+    lefttohour=$((lefttoday % 3600))
+    mins=$((lefttohour / 60))
+    secs=$((lefttohour % 60))
+    countdown "${days}d ${hours}h ${mins}min"
+  elif [ $time -ge 3600 ]; then
+    hours=$((time / 3600))
+    lefttohour=$((time % 3600))
+    mins=$((lefttohour / 60))
+    secs=$((lefttohour % 60))
+    countdown "${hours}h ${mins}min"
+  elif [ $time -ge 60 ]; then
+    mins=$((time / 60))
+    secs=$((time % 60))
+    countdown "${mins}min"
+  else
+    secs=$time
+    countend
+  fi
+}
+
+countdown() {
+  while [ $secs -gt -1 ]; do
+    printf "\r\e[KTime left: $1 %ss" $secs
+    ((secs--))
+    sleep 1
+  done
+  timeout #correct every minute
+}
+
+countend() {
+  while [ $secs -gt 0 ]; do
+    printf "\r\e[KTime left: %ss" $secs
+    ((secs--))
+    sleep 1
+  done
+}
+
+if [[ $desttime -gt 0 ]]; then
+  #see if it is on next day
+  if [[ $desttime -lt $(date "+%s") ]]; then
+    echo "Reminder will be on the next day."
+    desttime=$((desttime + 86400))
+  fi
+
+  #read out the optional message
+  mes=${*-"Time is up!"}
+
+  timeout
+  printf "\r\e[KTime left: 0s"
+fi
+
+scriptcmd="tell app \"System Events\" to display notification \"$mes\""
+osascript -e "$scriptcmd"
+if [[ $desttime -gt 0 ]]; then
+  printf "\r\e[K"
+fi
+
+if [[ $1 == "test" ]]; then
+  date
+fi
