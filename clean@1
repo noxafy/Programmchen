@@ -1,0 +1,160 @@
+#!/bin/bash
+# Version 1
+
+evil=('.DS_Store') #things to be deleted
+removed=0 #counter for removed things
+foldersVisited=0 #counter for visited dirs
+verbose=1 #0=be silent, 1=only say when sth has been removed, 2=verbose everything
+rec="active" #by default clean will clean recursively
+cleanedUp=0 #storage freed in bytes
+path="" #path as root for cleaning
+help="Cleans up the current (or given) directory recursively from ${evil[@]}.
+Usage: \e[1mclean\e[0m [ -h | [-s|-v] [-t] [-a] [\e[4mpath\e[0m] ]
+	\e[1m-h\e[0m	Displays this help message and exits.
+	\e[1m-s\e[0m	Silence.
+	\e[1m-v\e[0m	Verbose everything.
+	\e[1m-t\e[0m	Clean only the current (or given) dir (−> not recursively).
+	\e[1m-a\e[0m	Remove temporary files (\"~\\\$*\") as well. [not stable]
+	\e[4mpath\e[0m	Cleans up a given path instead of current.
+"
+
+trap 'resumee; echo "Last file visited: $file";exit 0' 2
+
+while [[ -n "$*" ]]; do
+  case "$1" in
+    -v)
+      verbose=2
+      ;;
+    -t|this)
+      rec=""
+      ;;
+    -s)
+      verbose=0
+      ;;
+    -a)
+      evil+=("~\$*")
+      ;;
+    -h|"-?")
+      printf "$help"
+      exit 0
+      ;;
+    -*)
+      printf "Wrong argument.\n$help"
+      exit 1
+      ;;
+    *)
+      if [[ -e $1 && -d $1 ]]; then
+        path="$1"
+      else
+        echo "$1 is not a directory."
+        exit 1
+      fi
+      ;;
+  esac
+  shift
+done
+
+sizeFormat() {
+  if [[ $1 -ge 100000000000 ]]; then
+    printf "%.0f GB" $(echo "scale=1; $1/1000000000" | bc)
+  elif [[ $1 -ge 10000000000 ]]; then
+    printf "%.1f GB" $(echo "scale=2; $1/1000000000" | bc)
+  elif [[ $1 -ge 1000000000 ]]; then
+    printf "%.2f GB" $(echo "scale=3; $1/1000000000" | bc)
+  elif [[ $1 -ge 100000000 ]]; then
+    printf "%.0f MB" $(echo "scale=1; $1/1000000" | bc)
+  elif [[ $1 -ge 10000000 ]]; then
+    printf "%.1f MB" $(echo "scale=2; $1/1000000" | bc)
+  elif [[ $1 -ge 1000000 ]]; then
+    printf "%.2f MB" $(echo "scale=3; $1/1000000" | bc)
+  elif [[ $1 -ge 100000 ]]; then
+    printf "%.0f kB" $(echo "scale=1; $1/1000" | bc)
+  elif [[ $1 -ge 10000 ]]; then
+    printf "%.1f kB" $(echo "scale=2; $1/1000" | bc)
+  elif [[ $1 -ge 1000 ]]; then
+    printf "%.2f kB" $(echo "scale=3; $1/1000" | bc)
+  else
+    printf "$1 Bytes"
+  fi
+}
+
+clean() {
+  ((foldersVisited++))
+  if [[ $verbose -ge 2 ]]; then
+    ausg="${file//\?/\ }"
+    echo "#$foldersVisited: $ausg"
+  fi
+  for file in "$1".* "$1"*; do
+    #echo $file
+    #skipping . and ..
+    if [[ "$file" == $1"." ]] || [[ "$file" == $1".." ]]; then
+      continue
+    fi
+    #killing evils
+    for ev in "${evil[@]}"; do
+      if [[ "$file" =~ "$1$ev" ]]; then
+        spacereplace="${file// /?}"
+        storage=$(stat -f %Z $file)
+        ausg=$(rm -f $spacereplace 2>&1)
+        if [[ "$ausg" ]]; then
+          if [[ $verbose -ge 1 ]]; then
+            echo $ausg
+          fi
+        else
+          if [[ $verbose -ge 1 ]]; then
+            printf "$file removed (%s)\n" "$(sizeFormat $storage)"
+          fi
+          cleanedUp=$((cleanedUp + storage))
+          ((removed++))
+        fi
+#     else
+#       echo "$file does not match $1$ev"
+      fi 
+    done
+    #go recursive
+    if [[ $rec ]] && test -d "$file" && ! (test -L "$file"); then
+      #replacing spaces
+      #echo "dirfile found: $file"
+      #echo "file before: $file"
+      file="${file// /?}"
+      #echo "file after: $file"
+      clean "$file/"
+    fi
+  done
+}
+
+resumee() {
+  if [[ $verbose -gt 0 ]]; then
+    if [[ $removed -eq 0 ]]; then
+      printf "No file "
+    elif [[ $removed -eq 1 ]]; then
+       printf "1 file "
+    else
+       printf "$removed files "
+    fi
+
+    if [[ -n $rec ]]; then
+      if [[ $foldersVisited == 1 ]]; then
+        printf "in 1 directory "
+      else
+        printf "in $foldersVisited directories "
+      fi
+    fi
+  
+    printf "removed"
+
+    if [[ $removed -gt 0 ]]; then
+      printf ". Approximately %s of storage freed" "$(sizeFormat $cleanedUp)"
+      if [[ $cleanedUp -gt 1000 ]]; then
+        printf " ($cleanedUp Bytes).\n"
+      else
+        printf ".\n"
+      fi
+    else
+      printf "\n"
+    fi
+  fi
+}
+
+clean "$path"
+resumee
