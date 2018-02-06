@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [[ "$2" ]]; then
+  multi=1
+fi
+
+f_gitcnt() {
+  git log --shortstat --author "$1" | grep "files\? changed" | awk '{files+=$1; inserted+=$4; deleted+=$6} END {print "Files changed:", files, "\t Lines inserted:", inserted, "\t Lines deleted:", deleted}'
+}
+
+while [[ "$@" ]]; do
+  if [[ $multi ]]; then
+    echo "$1:"
+  fi
+  f_gitcnt "$1"
+  shift
+done
