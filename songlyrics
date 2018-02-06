@@ -1,0 +1,467 @@
+#!/bin/bash
+
+header='Accept-Language: de,en-US;q=0.7,en;q=0.3'
+CURL="curl -s -A 'Mozilla/5.0'";
+sites="songtexte.com songlyrics.com musixmatch.com azlyrics.com genius.com plyrics.com"
+#Search with ecosia for (compatibility with special characters and) easier grep
+GOOG_URL='https://www.ecosia.org/search'
+VERBOSE=
+urlonly=
+# prevent sed error on bad encoded characters by reading as ascii
+# test for failing: https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas (greek text)
+LC_CTYPE=C
+LANG=C
+
+#adding new lyrics sites:
+#  add new site hostname to $sites
+#  find xml-elements directly before and after the text
+#  add ${site%.*} function name with a awk matching pattern
+#  add filter for lyrics-sites to google function if applicable
+#  add filter for site-specific non-lyrics line-contents (awk grep only whole lines, so every outside of diamons is shown)
+#  add site to usage message
+
+# This is used to get the url for the lyrics
+function google {
+  stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
+  #echo "link: ${GOOG_URL}?q=$*" >&2
+  res=$(echo "$stream" | grep -o "result-url\" href=\"[^\"]*" | sed 's/result-url" href="//')
+  if [[ -n $(echo "$res" | grep "songtexte\.com") ]]; then
+    res=$(echo "$res" | grep "/songtext/")
+  elif [[ -n $(echo "$res" | grep "azlyrics\.com") ]]; then
+      res=$(echo "$res" | grep "/lyrics/")
+  elif [[ -n $(echo "$res" | grep "songlyrics\.com") ]]; then
+      res=$(echo "$res" | grep -- "-lyrics/")
+  elif [[ -n $(echo "$res" | grep "genius\.com") ]]; then
+      res=$(echo "$res" | grep -- "-lyrics")
+  elif [[ -n $(echo "$res" | grep "musixmatch\.com") ]]; then
+      res=$(echo "$res" | grep "/lyrics/")
+  fi
+  echo "$res"
+}
+
+# get resulting text from website
+function fetchResult() {
+  echo "open $1" >&2
+  
+  #test if url exists, print http state
+  if [[ -n $VERBOSE ]]; then
+    echo
+    echo "Fetching header: $CURL -H \"$header\" -SI \"$1\""
+  fi
+  testUrl=$($CURL -H "$header" -SI "$1" 2>&1)
+  state=$(echo "$testUrl" | sed -n 1p)
+  if [[ $state != *200* ]]; then
+    echo "Error in fetching site: $state"
+    res=$($CURL -H "$header" "$1");
+    printf "Do you want to see details? (${#testUrl}/${#res}) (y/n) [n]: "
+    read ans
+    case $ans in
+    y)
+      echo "Command: $CURL -H \"$header\" \"$1\""
+      echo "Command: $CURL -H \"$header\" \"$1\"
+      
+      Answer-Header (${#testUrl}):
+      $testUrl
+      
+      Answer (${#res}):
+      $res" | less
+      ;;
+    esac
+    return
+  fi
+  if [[ -n $VERBOSE ]]; then
+    echo "******Answer-Header (START)******"
+    printf "%s" "$testUrl" >&2
+    echo "******Answer-Header (END)*********"
+    echo
+  else
+    echo "$state" >&2
+  fi
+
+  #awk lyrics from site
+  if [[ -n $VERBOSE ]]; then
+    echo "Fetching lyrics: $CURL -H \"$header\" \"$1\""
+  fi
+  res=$($CURL -H "$header" "$1" | awk "$2");
+  if [[ -n $VERBOSE ]]; then
+    if [[ -n $res ]]; then
+      echo "Lyrics in site found! (lenght: ${#res})"
+    else
+      echo "Extracting lyrics failed on awk (or curl))!"
+      return;
+    fi
+  fi
+  
+  #reove site-specific non-lyrics line-contents
+  if [[ -n $(echo "$1" | grep "musixmatch\.com") ]]; then
+    res=$(echo "$res" | sed 's/.*<p class="mxm-lyrics__content ">//'| sed 's/<\/p>.*//')
+  fi
+  
+  #further beautifying
+  res=$(echo "$res" | node -e 'process.stdin.resume(); process.stdin.setEncoding("utf8");
+       var content = "";
+
+       process.stdin.on("data", function(chunk) {
+           content+=chunk
+       });
+
+       process.stdin.on("end", function() {
+         var result="";
+         var nextchar = "";
+         var skip = false;
+
+         for (i = 0; i <= content.length; i++) {
+           nextchar = content.charAt(i);
+           // console.error(i + ": " + nextchar)
+
+           if (skip) {
+             if (nextchar == ">"){
+               skip = false;
+             }
+           } else {
+             switch (nextchar) {
+               case "<":
+                 skip = true;
+                 break;
+               default:
+                 result+=nextchar;
+             }
+           }
+         }
+         console.log(result)
+       });' \
+      | perl -pe 's/^[ \t]+//' \
+      | recode html..latin1 \
+      | grep -v "Zur deutschen Übersetzung" \
+      | grep -v "Noch keine Übersetzung vorhanden." \
+      | grep -v "Jetzt Übersetzung hinzufügen" \
+      | grep -v "Leider kein Songtext vorhanden." \
+      | sed 's/^ *//g' \
+      | sed '/^$/N;/^\n$/D');
+#      | sed 's/’//g' \
+#      | sed 's/‘//g' \
+#      | sed 's/”/"/g' \
+#      | sed 's/“/"/g' \
+#      | sed 's/…/.../g' \
+#      | sed 's/[fF][uU][cC][kK]/[32mF***[39m/g' \
+#      | sed 's/[sS][hH][iI][tT]/[32mS***[39m/g' \
+  
+  if [[ -z $res ]]; then
+    echo "There might be missing some lyrics..." >&2
+  fi
+}
+
+function songtexte() {
+  fetchResult "$1" '/<div id=\"lyrics\">/, /<div class=\"mobileShare\">/'
+}
+
+function songlyrics() {
+  fetchResult "$1" '/<p id=\"songLyricsDiv\"/, /<\/p>/'
+}
+
+function musixmatch() {
+  fetchResult "$1" '/<p class=\"mxm-lyrics__content \">/, /<\/p>/'
+}
+
+function azlyrics() {
+  fetchResult "$1" '/<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->/, /<\/div>/'
+}
+
+function genius() {
+  fetchResult "$1" '/<div class=\"lyrics\">/, /<\/div>/'
+}
+
+function plyrics() {
+  fetchResult "$1" '/start of lyric/, /end of lyric/'
+}
+
+function finishIt() {
+  if [[ -n $1 && -n $2 ]]; then
+    printf "\n\e[1;4m%s - %s\e[0m\n" "$1" "$2"
+  fi
+  #guarantee one newline before...
+  if [[ ! "$res" =~ ^[[:space:]] ]]; then
+    echo
+  fi
+  echo "$res"
+  #... and one newline after
+  if [[ ! "$res" =~ [[:space:]]$ ]]; then
+    echo
+  fi
+}
+
+function tryURL() {
+  if [[ $1 == "urlonly" ]]; then
+    urlonly=1
+    shift
+  fi
+  for site in $sites; do
+    if [[ "$(echo $1 | grep -i "https\?://.*$site")" ]]; then
+      ${site%.*} "$1"
+      if [[ -n $urlonly ]]; then
+        if [[ -n $res ]]; then
+          finishIt
+        else
+          echo "Sorry, couldn't extract lyrics from that URL...";
+        fi
+        exit 0;
+      fi
+    fi
+  done
+}
+
+function withHyphen0() {
+  echo "$*" | sed 's/ /-/g' | sed 's/-\{2,\}/-/g'
+}
+
+function withHyphen() {
+  withHyphen0 $(echo "$*" | sed "s/'/-/g" | sed "s/&//g")
+}
+
+function withHyphen2() {
+  withHyphen0 $(echo "$*" | sed "s/'//g" | sed "s/&/and/g")
+}
+
+function noSpaces() {
+  echo "$*" | sed "s/'//g" | sed 's/ //g' | sed 's/&//g'
+}
+
+function preformat() {
+  echo "$*" | sed 's/\./-/g' | sed -e 's/ä/a/g' | sed -e 's/ü/u/g' | sed -e 's/ö/o/g'
+}
+
+function findLyrics() {
+  echo "Artist: $1"
+  echo "Title: $2"
+  echo
+  
+  tileInUrl=$(preformat $2 | sed 's/ - [Ll]ive.*//g')
+  titleWithHyphen=$(withHyphen $tileInUrl)
+  titleWithHyphen2=$(withHyphen2 $tileInUrl)
+  titleNoSpaces=$(noSpaces $tileInUrl)
+  artistInUrl=$(preformat $1)
+  artistWithHyphen=$(withHyphen $artistInUrl)
+  artistWithHyphen2=$(withHyphen2 $artistInUrl)
+  artistNoSpaces=$(noSpaces $artistInUrl)
+  
+  if [[ -n $VERBOSE ]]; then
+    echo "******Debug matching title and artist******"
+    echo "titleInUrl: $tileInUrl"
+    echo "titleWithHyphen: $titleWithHyphen"
+    echo "titleWithHyphen2: $titleWithHyphen2"
+    echo "titleNoSpaces: $titleNoSpaces"
+    echo "artistInUrl: $artistInUrl"
+    echo "artistWithHyphen: $artistWithHyphen"
+    echo "artistWithHyphen2: $artistWithHyphen2"
+    echo "artistNoSpaces: $artistNoSpaces"
+    echo "********************************************"
+  fi
+  
+  OVERALL=()
+  for site in $sites; do
+    printf "Looking for lyrics at %s: " "$site"
+    if [[ -n $VERBOSE ]]; then
+      echo
+    fi
+    ALL=($(google "$1 $2 lyrics site:$site"));
+    #skip if no results found
+    if [[ -z ${ALL[@]} ]]; then
+      echo "No results. Lets try another...";
+      continue;
+    fi
+
+    # try to validate self
+    for i in "${ALL[@]}"; do
+      if [[ -n $(echo "$i" | grep -i "$titleWithHyphen" | grep -i "$artistWithHyphen")
+        || -n $(echo "$i" | grep -i "$titleNoSpaces" | grep -i "$artistNoSpaces")
+        || -n $(echo "$i" | grep -i "$titleWithHyphen2" | grep -i "$artistWithHyphen2") ]]; then
+        echo "Lyrics found!"
+
+        ${site%.*} $i
+
+        if [[ -n $res ]]; then
+          finishIt "$1" "$2"
+          exit 0;
+        else
+          echo "Well, that URL sucked. Lets try another...";
+        fi
+      elif [[ -n $VERBOSE ]]; then
+        echo "URL not matching: $i"
+      fi
+    done
+    
+    #add ALL to OVERALL and try to find in next site
+    OVERALL+=("${ALL[@]}")
+    echo "No matching site found. Lets try another site..."
+  done
+  
+  printf "No matching site found in all sites. "
+  
+  if [[ -n ${OVERALL[@]} ]]; then
+    echo "Anyway, some sites where found:"
+    while [[ -n "${OVERALL[@]}" ]]; do
+      j=1
+      for resURL in ${OVERALL[@]}; do
+        echo "$j: $resURL"
+        ((j++))
+      done
+      printf "Is there anyone right? (1-${#OVERALL[@]} / q (= quit)) [q]: "
+      read ans
+      if [[ $ans =~ ^[0-9]+$ ]]; then
+        if [[ $ans -le ${#OVERALL[@]} ]]; then
+          ((ans--))
+          tryURL "${OVERALL[$ans]}"
+
+          if [[ -n $res ]]; then
+            finishIt "$1" "$2"
+            exit 0;
+          else
+            echo "Well, that URL sucked. Lets try another...";
+            echo "DEBUG: $res"
+            #remove that URL from OVERALL
+            OVERALL=("${OVERALL[@]:0:$ans}" "${OVERALL[@]:((ans+1))}")
+          fi
+        else
+          echo "That number was too high..."
+          break;
+        fi
+      else
+        break;
+      fi
+    done
+  fi
+  
+  echo "Ooops, no site left. Givin' up now :("
+  
+  #Get searching site for copy & paste
+  #Replace &, " and space
+  Q="$1 $2 lyrics"
+  Q=${Q//&/%26}
+  Q=${Q//\"/%22}
+  Q=${Q//\ /+}
+  echo "${GOOG_URL}?q=$Q"
+}
+
+################################################################################
+# Look up the title and artist in spotify
+# Sets the global ARTIST and TITLE varibles
+################################################################################
+function lookupSpotifyInfo() {
+  # Checks $OSTYPE to determine the proper command for artist/title query
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    ARTIST="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 \
+		org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' \
+			| grep -A 3 artist | grep string | grep -v xesam | sed 's/^\s*//' | cut -d ' ' -f 2- \
+				| tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
+    TITLE="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 \
+		org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' \
+			| grep -A 3 title | grep string | grep -v xesam | sed 's/^\s*//' | sed 's/^variant\s*//' \
+				| cut -d ' ' -f 2- | tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    #precautionally open it
+    if [[ $(ps -x | grep 'Spotify.app' | wc -l) -eq 1 ]]; then
+      echo "Opening Spotify at first ..."
+      open -j /Applications/Spotify.app/ && sleep 3
+    fi
+    ARTIST="$(osascript -e 'tell application "Spotify" to artist of current track as string')";
+    TITLE="$(osascript -e 'tell application "Spotify" to name of current track as string')";
+  else
+    echo "Your OS doesn't appear to be supported"
+  fi
+
+  if [[ -z "$ARTIST" || -z "$TITLE" ]]; then
+    echo "There was a problem getting the currently playing info from spotify";
+    exit 1;
+  fi
+}
+
+################################################################################
+# Look up the song info for the currently playing song in Rhythmbox
+# Sets the global ARTIST and TITLE varibles
+################################################################################
+function lookupRhythmboxInfo() {
+  # This is a nasty one-liner that returns data like this:
+  # string "artist"
+  # variant             string "City and Colour"
+  # --
+  # string "title"
+  # variant             string "Like Knives"
+
+  ALL="$(dbus-send --print-reply --dest=org.gnome.Rhythmbox /org/gnome/Rhythmbox/Shell \
+           org.gnome.Rhythmbox.Shell.getSongProperties string:$(dbus-send --print-reply --dest=org.gnome.Rhythmbox \
+           /org/gnome/Rhythmbox/Player org.gnome.Rhythmbox.Player.getPlayingUri | grep string | sed 's/^\s*//g' \
+           | cut -d ' ' -f 2 | sed 's/"//g') | sed 's/^\s*//' | grep 'string "artist"\|string "title"' -A 1)";
+
+  # Get the Artist out of the dbus call
+  ARTIST="$(echo  "$ALL" | grep artist -A 1  | grep variant | cut -d ' ' -f 15- | sed 's/"//g')";
+  # Get the Title out of the dbus call
+  TITLE="$(echo "$ALL" | grep title -A 1  | grep variant | cut -d ' ' -f 15- | sed 's/"//g')";    
+}
+
+################################################################################
+# Usage info
+################################################################################
+function usage() {
+  echo "$(basename $0) - Find out the songlyrics for a currently playing song.
+
+This script is capable of finding out the Artist and Title of the currently
+playing song. If, you are using Rhythmbox or Spotify. See usage message below.
+
+Do it like this:
+  $(basename $0) <artist> <title>       - To look up lyrics for a song
+  $(basename $0) spotify                - To look up info for the currently playing song in Spotify
+  $(basename $0) rhythmbox|rbox         - To look up info for the currently playing song in Rhythmbox
+Also, you can give an url for extracting directly: 
+  $(basename $0) <songtexte.com url>    - To display the lyrics from a given songtexte.com url
+  $(basename $0) <songlyrics.com url>   - To display the lyrics from a given songlyrics.com url
+  $(basename $0) <genius.com url>       - To display the lyrics from a given genius.com url
+  $(basename $0) <musixmatch.com url>   - To display the lyrics from a given musixmatch.com url
+  $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
+  $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
+
+Dependency to \"recode\"."
+
+  # Print the args if any were passed
+  if [[ -n "$1" ]];then
+    echo -e "\nERROR:\n$1"
+  fi
+  exit 0;
+}
+
+################################################################################
+# Main (Arg parsing crap)
+################################################################################
+
+#If -v, turn verbose mode on
+if [[ $1 == -v ]]; then
+  VERBOSE=true
+  shift
+fi
+
+# If given an url, just browse it
+tryURL "urlonly" "$1"
+
+# else see which function is wanted
+case $1 in
+  rhythmbox|rbox)
+    lookupRhythmboxInfo
+    echo "Looking up title by Rhythmbox artist and title...";
+    findLyrics "$ARTIST" "$TITLE";
+    ;;
+  spotify)
+    lookupSpotifyInfo
+    echo "Looking up title by Spotify artist and title...";
+    findLyrics "$ARTIST" "$TITLE";
+    ;;
+  -h|--help)
+    usage
+    ;;
+  *)
+    # 1=Artist 2=Title
+    if [[ -n "$1" ]]; then
+      findLyrics "$1" "$2";
+    else
+      usage 
+    fi
+    ;;
+esac
