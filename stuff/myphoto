@@ -1,0 +1,178 @@
+#!/bin/bash
+
+resdir="$HOME/Desktop/Result" #alternative output?!!
+sourcepath="$HOME/Pictures" #alternative source?
+maximgdim=1600 #see Z argument of sips
+verbose=""
+piccnt=0
+
+case $1 in 
+  -v)
+    verbose="active"
+    ;;
+  -h)
+    printf "No help available."
+    exit 0
+    ;;
+  -*)
+    printf "Wrong argument.\nNo help available."
+    exit 1
+    ;;
+esac
+exit 0
+
+#assert existence of resdir
+cnter=0
+while [ $cnter -lt 10 ]
+  do
+    if [ -e $resdir ]
+      then
+        ((cnter++))
+        if [ $cnter != 1 ]
+          then
+            resdir="${resdir:0:`expr ${#resdir} - 1`}$cnter"
+          else
+            resdir="$resdir$cnter"
+        fi
+      else
+        mkdir $resdir
+        break
+    fi
+done        
+if [ $cnter == 10 ]
+  then
+    echo "Too many "Result"-folders are wasting space on Desktop. Please remove some."
+    exit 1
+fi
+
+#assert HOME/Pictures/
+if [ ! -e $sourcepath ]
+  then
+    echo "Please create $sourcepath and store the .photoslibrary-files there."
+    echo "Do you wish to create $sourcepath now?"
+    read answ
+    case $answ in
+      y*)
+        mkdir $sourcepath
+        echo "Please put your .photoslibrary-files in $sourcepath (will open now) and start this script again"
+        sleep 5
+        open $sourcepath
+        ;;
+      *)
+        ;;
+    esac                                                    
+    exit 1
+fi
+
+#test on existence of sips
+if [ ! sips ]
+  then
+    echo "Please install sips at first!"
+    exit 1
+fi
+
+#copy all image-files
+copyRec() {
+  for file in $1/*
+    do
+      if [ -d "$file" ]
+        then
+          copyRec "$file"
+        else
+          if [ `file -b --mime-type "$file" | grep "image"` ]
+            then
+              ((piccnt++))
+              nfile=`printf "$resdir/%05d.jpg" $piccnt`
+              if [ $verbose ]
+                then
+                  cp -vn "$file" "$nfile"
+                else
+                  cp -n "$file" "$nfile"
+              fi
+              file="$nfile"
+              imgw=`sips -g pixelWidth "$file"`
+              imgw=${imgw:$((${#imgw}-4)):4}
+              imgh=`sips -g pixelHeight "$file"`
+              imgh=${imgh:$((${#imgh}-4)):4}
+              if [ $imgw -gt $imgh ]
+                then
+                  imgdim=$imgw
+                else
+                  imgdim=$imgh
+              fi
+              #resize that image
+              #echo "imgw: $imgw, imgh: $imgh, imgd: $imgdim"
+              if [ $imgdim -gt $maximgdim ]
+                then
+                  sips -Z $maximgdim $file &> /dev/null
+                  if [ $verbose ]
+                    then
+                      imgnw=`sips -g pixelWidth "$file"`
+                      imgnw=${imgnw:$((${#imgnw}-4)):4}
+                      imgnh=`sips -g pixelHeight "$file"`
+                      imgnh=${imgnh:$((${#imgnh}-4)):4}
+                      echo "$file resized from $imgw x $imgh to $imgnw x $imgnh"
+                  fi
+                elif [ $verbose ]
+                  then
+                     echo "Skipped $file because dimensions ($imgw x $imgh) are too low (Max for skipping: $maximgdim)"
+              fi
+          fi
+      fi
+  done
+}
+
+libraries=0
+for file in $sourcepath/*.photoslibrary
+  do
+    ((libraries++))
+    if [ $verbose ]
+      then
+        echo "Library found: $file"
+    fi
+    copyRec $file/Masters
+done
+
+if [ $libraries == 0 ]
+  then
+    echo "No libraries found. Please put some in $sourcepath."
+  else
+    echo "$libraries libraries found."
+fi
+
+#resize images
+resize() {
+for file in $resdir/*
+  do
+    if [ `file -b --mime-type $file | grep "image"` ]
+      then
+        imgw=`sips -g pixelWidth $file`
+        imgw=${imgw:$((${#imgw}-4)):4}
+        imgh=`sips -g pixelHeight $file`
+        imgh=${imgh:$((${#imgh}-4)):4}
+        if [ $imgw -gt $imgh ]
+          then
+            imgdim=$imgw
+          else
+            imgdim=$imgh
+        fi
+        #echo "imgw: $imgw, imgh: $imgh, imgd: $imgdim"
+        if [ $imgdim -gt $maximgdim ]
+          then
+            sips -Z $maximgdim $file &> /dev/null
+            if [ $verbose ]
+              then
+                imgnw=`sips -g pixelWidth $file`
+                imgnw=${imgnw:$((${#imgnw}-4)):4}
+                imgnh=`sips -g pixelHeight $file`
+                imgnh=${imgnh:$((${#imgnh}-4)):4}
+                echo "$file resized from $imgw x $imgh to $imgnw x $imgnh"
+            fi
+          elif [ $verbose ]
+            then
+              echo "Skipped $file because dimensions ($imgw x $imgh) are too low (Max for skipping: $maximgdim)"
+        fi
+    fi
+done
+}
+echo "done :)"
