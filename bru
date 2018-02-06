@@ -1,0 +1,51 @@
+#!/bin/bash
+
+dest="$HOME/brewupdate.log"
+timeout=12
+delim="******************************************"
+cmds=(update upgrade cleanup doctor)
+help="An updater script for homebrew.
+Executes the commands: ${cmds[*]} 
+Logs the results to $dest.
+	\e[1m-h\e[0m	displays this message and exits.\n"
+
+trap "echo 'Interrupted.' | tee -a $dest; end; exit 1" 2
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -*)
+    printf "Wrong argument.\n$help"
+    exit 1
+    ;;
+  "")
+    ;;
+  *)
+    echo "Arguments will be ignored."
+    ;;
+esac
+
+end() {
+  printf "END on $(date)\n$delim\n" >> $dest
+}
+
+start() { 
+  printf "START on $(date)\n" >> $dest
+}
+
+#test internet connection
+waitnet -s -t $timeout
+
+start
+#execute
+for cmd in ${cmds[*]}; do
+  title=$(echo "$cmd" | awk '{print toupper($0)}')
+  echo "$title" | tee -a "$dest"
+  res=$(printf "%s" "$(brew $cmd 2>&1)")
+  if [[ -n $res ]]; then
+    printf "%s\n" "$res" | tee -a "$dest"
+  fi
+done
+end
