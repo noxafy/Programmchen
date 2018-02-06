@@ -1,0 +1,12 @@
+#!/bin/bash
+
+case $1 in
+  -h)
+    echo "Try it out :D"
+    exit 0
+    ;;
+  *)
+    ;;
+esac
+
+cat $IT/Programmchen/stuff/xmas
