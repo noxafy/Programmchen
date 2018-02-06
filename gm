@@ -1,0 +1,26 @@
+#!/bin/bash
+
+API_KEY="***REMOVED***"
+
+die() {
+  echo "$*"
+  exit 1
+}
+
+origin=$1
+destination=$2
+if [[ -z $origin ]]; then
+  echo "Please specify the origin of your route as first argument."
+  exit 1
+elif [[ -z $destination ]]; then
+  echo "Please specify the destination of your route as second argument."
+  exit 1
+fi
+
+#curl -s "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY"
+ans=$(curl -s "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY" || die "Fetching route failed.");
+if [[ $ans == '<!DOCTYPE html>'* ]]; then
+  echo "$ans"
+else
+  node gm.js "$ans"
+fi
