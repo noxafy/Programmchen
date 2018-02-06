@@ -1,0 +1,273 @@
+#!/bin/bash
+
+file="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/Englisch.csv"
+vocs="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/vocs"
+unknowns="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/unknowns"
+appendToFile="$vocs"
+training=0
+othersDetected=0
+justPrint=0
+word=
+translation=
+additional=
+help='Reads vocabularies from an csv (does not write) and asks them randomly and two-way.
+Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m | -s \e[4mword\e[0m
+	\e[1m-h\e[0m	Display this message and exit.
+	\e[1m-n\e[0m	Open a new window and test you from there in training mode.
+	\e[1m-t\e[0m	Start training mode in this window (not recommended, use \e[1m-n\e[0m).
+	\e[4mfile\e[0m	Read the specified vokabulary csv. First and second arguments are meanings, 
+		third can be used for comments. Be aware of the required formatting shown below.
+		Default path is $file.
+	\e[1m-o\e[0m	Open the vocabulary list ($vocs).
+        \e[1m-a\e[0m	Add a new word to the vocabulary list.
+	\e[1m-s\e[0m	Search a word in both, vocabulary list and vocabulary database.
+
+Create the .csv in following form:
+ "word","meaning","helping comment for memorizing or pronouncing"
+'
+help=${help//\$file/$file}
+help=${help//\$vocs/$vocs}
+#TODO after search, provide open when found
+#TODO provide sorting (sort ignoring "to"'s)
+
+searchFor() {
+  res=$(cat -n "$1" | grep -- "$2")
+  if [[ -n $res ]]; then
+    declare -i reslen=$(echo "$res" | wc -l)
+    othersDetected=1
+    echo "Word in $(basename $1) detected: $reslen"
+    if [[ $reslen -gt 5 ]]; then
+      echo "$res" | sed -n 1,5p
+      printf "Do you want to see all $reslen results? (y/n) [n]: "
+      read ans
+      case $ans in
+        y|Y|yes|Yes|YES|ja|Ja|JA|jo|Jo|JO|jap|Jap)
+          printf "\e[A\r\e[K"
+          echo "$res" | sed -n '6,$p'
+          ;;
+        *)
+          ;;
+      esac
+    else
+      echo "$res"       
+    fi
+  fi
+}
+
+searchForInAll() {
+  searchFor "$file" "$1"
+  searchFor "$vocs" "$1"
+  searchFor "$unknowns" "$1"
+  if [[ $othersDetected -ne 0 && $justPrint -eq 0 ]]; then
+    printf "Do you want to continue adding anyway? (y/n) [n]: "
+    read ans
+    case $ans in
+      y|Y|yes|Yes|YES|ja|Ja|JA|jo|Jo|JO|jap|Jap)
+        ;;
+      *)
+        echo "Nothing added."
+        exit 0
+        ;;
+    esac
+  fi
+}
+
+addInteractive() {
+  cnt=0
+  while [[ ( $cnt -eq 0 || $(basename $appendToFile) != unknowns ) && ( -z "$word" || "$word" == - ) ]]; do
+    if [[ $cnt -gt 0 ]]; then
+      [[ $cnt -eq 3 ]] && echo "You're an idiot. Nothing added." && exit 1
+      printf "Word cannot be empty! "
+    fi
+    printf "Please give a word: "
+    read word
+    ((cnt++))
+  done
+  
+  cnt=0
+  while [[ ( $cnt -eq 0 || $(basename $appendToFile) != unknowns ) && ( -z "$translation" || "$translation" == - ) ]]; do
+    if [[ $cnt -gt 0 ]]; then
+      [[ $cnt -eq 3 ]] && echo "You're an idiot. Nothing added." && exit 1
+      printf "Translation cannot be empty! "
+    fi
+    printf "Please give a translation: "
+    read translation
+    ((cnt++))
+  done
+
+  if [[ $additional == - ]]; then
+    additional=""
+  elif [[ -z $additional ]]; then
+    printf "Some additional information? (for memorizing or pronouncing): "
+    read additional
+  fi
+}
+
+addEntry() {
+  addInteractive
+  if [[ -n $additional && ${additional:0:1} == "[" && ${additional:${#additional}-1} != "]" ]]; then
+    additional=${additional}]
+  fi
+  entry="\"$word\",\"$translation\",\"$additional\",\"$(date '+%s')000\""
+  if [[ $(tail -c 1 "$vocs") == "" ]]; then
+    echo "$entry" >> "$appendToFile" && echo "Successfully added to $(basename $appendToFile) $entry"
+  else
+    printf "\n%s\n" "$entry" >> "$appendToFile" && echo "Successfully added to $(basename $appendToFile) $entry"
+  fi
+}
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -n)
+    osascript -e 'tell application "Terminal" to do script "voc -t; exit"' >& /dev/null
+    exit 0
+    ;;
+  -t)
+    training=1
+    if [[ $2 ]]; then
+      file="$2"
+    fi
+    ;;
+  -a)
+    if [[ $2 == -u ]]; then
+      appendToFile="$unknowns"
+      shift
+    fi
+    if [[ $2 == -o ]]; then
+      openVocs=true
+      shift
+    fi
+    if [[ $2 == "to" && -n $3 && $3 != -o ]]; then
+      searchForInAll "$3"
+      word="$2 $3"
+      translation="$4"
+      additional="$5"
+      if [[ $6 == -o ]]; then
+        openVocs=true
+      elif [[ $5 == -o ]]; then
+        openVocs=true
+        additional=
+      elif [[ $4 == -o ]]; then
+        openVocs=true
+        translation=
+        additional=
+      fi
+    elif [[ -n $2 ]]; then
+      searchForInAll "$2"
+      word="$2"
+      translation="$3"
+      additional="$4"
+      if [[ $5 == -o ]]; then
+        openVocs=true
+      elif [[ $4 == -o ]]; then
+        openVocs=true
+        translation=
+      elif [[ $3 == -o ]]; then
+        openVocs=true
+        translation=
+        additional=
+      fi
+    fi
+    addEntry
+    if [[ -n $openVocs ]]; then
+      if [[ -n $word ]]; then
+        vocslength=$(wc -l $vocs | awk '{print $1}')
+        mate -l $vocslength-$((vocslength+1)) $appendToFile 2> /dev/null || open $appendToFile
+      else
+        mate $appendToFile 2> /dev/null || open $appendToFile
+      fi
+    fi
+    exit 0
+    ;;
+  -o)
+    if [[ $2 == -u ]]; then
+      appendToFile="$unknowns"
+      shift
+    fi
+    mate $appendToFile || open $appendToFile
+    exit 0
+    ;;
+  -s)
+    if [[ $2 == to && -n $3 ]]; then
+      shift
+    fi
+    justPrint=1
+    searchForInAll "$2"
+    if [[ $othersDetected -eq 0 ]]; then
+      echo "No matching entry found."
+    fi
+    exit 0
+    ;;
+  -*)
+    echo "Wrong argument: $1"
+    printf "$help"
+    exit 1
+    ;;
+  "")
+    ;;
+  *)
+    file="$1"
+    ;;
+esac
+shift
+
+if [[ -e "$file" ]]; then
+  if [[ -d "$file" ]]; then
+    echo "$file is a directory. Please give a file."
+    exit 1
+  elif [[ ! -r "$file" ]]; then
+    echo "$file is not readable."
+    exit 1
+  fi
+else
+  echo "File $file does not exist."
+  exit 1
+fi
+
+vocCache=$(cat "$file" | sed s/,\"\"//g | sed s/\ /=/g | sed s/\",\"/\"\ \"/g)
+voclength=$(echo "$vocCache" | wc -l)
+if [[ $voclength -gt 32767 ]]; then
+  echo "Too many vocabularies to process. Please split it into multiple files."
+fi
+
+askfor() {
+  fst=${1:1:$(( ${#1} - 2))}
+  fst=${fst//=/ }
+  snd=${2:1:$(( ${#2} - 2))}
+  snd=${snd//=/ }
+  printf "$fst ? "
+  read trash
+  printf "$snd"
+  if [[ $3 && ! $3 =~ ^\"[0-9]+\"$ ]]; then
+    trd=${3:1:$(( ${#3} - 2))}
+    trd=${trd//=/ }
+    printf "\n\t\e[2m$trd\e[0m"
+  fi
+  if [[ training -eq 0 ]]; then
+    echo ""
+  fi
+}
+
+testVok() {
+  if [[ $RANDOM -gt 16384 ]]; then
+    askfor "$1" "$2" "$3"
+  else
+    askfor "$2" "$1" "$3"
+  fi
+}
+if [[ training -gt 0 ]]; then
+  printf "\e[8;4;60t"
+fi
+
+while true; do
+  if [[ training -gt 0 ]]; then
+    clear
+  fi
+  randnum="$(($RANDOM % $voclength))p"
+  vok=$(echo "$vocCache" | sed -n $randnum)
+  testVok $vok
+  read trash
+done
