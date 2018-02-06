@@ -1,0 +1,113 @@
+#/bin/bash
+
+timeout=60
+sendNote=
+output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output 
+help="Test for internet connection estabilshed.
+Usage: \e[1mwaitnet\e[0m [-h] | [-q] [-n] [-s] [-t \e[4mtimeout\e[0m]
+	\e[1m-h\e[0m	Show this help message and exit.
+	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
+	\e[1m-t\e[0m	Specify a timeout in seconds (default: 60).
+	\e[1m-s\e[0m	No output on success without waiting.
+	\e[1m-q\e[0m	No console output, except errors.
+"
+
+while [[ -n $1 ]]; do
+  case $1 in
+    -h)
+      printf "$help"
+      exit 0
+      ;;
+    -n)
+      sendNote=1
+      ;;
+    -q)
+      output=
+      ;;
+    -s)
+      output=1
+      ;;
+    -t)
+      case $2 in
+        [0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|[0-9])
+          #if [[ $timeout -lt 3 ]]; then
+          #   echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767)."
+          #   exit 1
+          #fi
+          timeout=$2
+          shift
+          ;;
+        *)
+          echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767)."
+          printf "$help"
+          exit 1
+          ;;
+      esac
+      ;;
+    *)
+      echo "Wrong argument: $1 - Please give a timeout in seconds (3-32767)."
+      printf "$help"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+log() {
+  if [[ $output ]]; then
+    echo "$@"
+  fi
+}
+
+sendNoteF() {
+  if [[ $sendNote ]]; then
+    note "$1"
+  fi
+}
+
+fail() {
+  sendNoteF '$* failed!'
+  log '$* failed!'
+  exit 1
+}
+
+#toggle wifi on
+wifiDevice=$(networksetup -listallhardwareports | grep -A 2 "Wi-Fi" | grep "Device" | awk '{print $2}')
+if [[ -n $(networksetup -getairportpower "$wifiDevice" | grep Off) ]]; then
+  log "Toggling Wi-Fi ($wifiDevice) on ..."
+  networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
+fi
+
+#test on ssid connected
+wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
+while [[ ${#wifi} -lt 19 ]]; do
+  waitflag=1
+  log "Waiting for SSID ..."
+  sleep 3
+  timeout=$((timeout-3))
+  if [[ $timeout -le 0 ]]; then
+    fail "Auto-connecting to a SSID"
+  fi
+  wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
+done
+if [[ $output -gt 1 || -n $waitflag ]]; then
+  wifi=$(echo "${wifi}" | xargs)
+  log "Connected to $wifi"
+fi
+
+#test on internet connection
+wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
+while [[ $? -ne 0 ]]; do
+  waitflag=1
+  log "Waiting for internet connection ..."
+  sleep 3
+  timeout=$((timeout-3))
+  if [[ $timeout -le 0 ]]; then
+    fail "Internet connection detection"
+  fi
+  wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
+done
+sendNoteF 'Internet connection avaliable!'
+if [[ $output -gt 1 || -n $waitflag ]]; then
+  log 'Internet connection avaliable!'
+fi
