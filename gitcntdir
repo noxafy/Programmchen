@@ -1,0 +1,30 @@
+#!/bin/bash
+
+gitcnt() {
+  git log --shortstat --author "$1" | grep "files\? changed" | awk '{files+=$1; inserted+=$4; deleted+=$6} END {print "Files changed:", files, "\t Lines inserted:", inserted, "\t Lines deleted:", deleted}'
+}
+
+while [[ $@ ]]; do
+  echo "${1}:"
+  for dir in *; do
+    if [ -d "$dir" ] && [ -d "$dir/.git" ]; then
+      printf "  ${dir}/"
+      if [[ ${#dir} -lt 5 ]]; then
+        printf "\t\t\t\t"
+      elif [[ ${#dir} -lt 13 ]]; then
+        printf "\t\t\t"
+      elif [[ ${#dir} -lt 20 ]]; then
+        printf "\t\t"
+      elif [[ ${#dir} -lt 27 ]]; then
+        printf "\t"
+      else
+        printf "\t\t\t"
+      fi
+      printf ": "
+      pushd "$dir" &> /dev/null
+      gitcnt "$1"
+      popd &> /dev/null
+    fi
+  done
+  shift
+done
