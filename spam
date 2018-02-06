@@ -1,0 +1,196 @@
+#!/bin/bash
+readspeed=24 #chars per second
+stars=42 #number of stars between the messages
+maxlen=1000
+maxspeed=99
+defaultSpeed=15
+boring=6
+slowSpeed=9
+medSpeed=15
+highSpeed=27
+extreme=42
+readspeed=$defaultSpeed #chars per second
+help="Gives an endless stream of sayings by fortune (including the offensives).
+Usage: \e[1mspam\e[0m [ -h | [-l \e[4mlength\e[0m] [-r \e[4mspeed\e[0m | [-r] \e[4mdefaultSpeed\e[0m] ]
+        \e[1m-h\e[0m		Display this message and exit.
+	\e[1m-l\e[0m \e[4mlength\e[0m	Max length for a saying printed. (10-999)
+	\e[1m-r\e[0m \e[4mspeed\e[0m	The speed of reading in chars per second. (1-$maxspeed, default: $defaultSpeed).
+			For each saying there will be another two seconds added for 
+			recognizing and reflecting. There are also defaults:
+			  boring | slow | medium | fast | extreme | default
+                        which can also be given without preceding argument \e[1m-r\e[0m.
+
+	While running, you can use the following commands:
+	[Enter]|n	Next quote
+        s		Slower
+        f		Faster
+        q               Exit
+"
+
+printDelimiter() {
+  cnt=0
+  while [[ $cnt -lt $stars ]]; do
+    printf "*"
+    ((cnt++))
+  done
+  printf "\n"
+}
+
+end() {
+  printf "\e[0m\n"
+  printDelimiter
+  exit 0
+}
+
+trap 'end' 2
+
+while [[ $* ]]; do
+  case $1 in
+    -l)
+      shift
+      case $1 in
+        [1-9][0-9]|[1-9][0-9][0-9])
+          maxlen=$1
+          ;;
+        *)
+          printf "Wrong syntax for argument \"-l\".\n$help"
+          exit 1
+          ;;
+      esac
+      ;;
+    -r)
+      shift
+      case $1 in
+        [0-9]|[0-9][0-9])
+          if [[ $1 -eq 0 ]]; then
+            printf "Wrong syntax for argument \"-r\". Zero produces no output. Try a number between 1 and $maxspeed. Default is 12.\n"
+            exit 1
+          else
+           readspeed=$1
+          fi
+          ;;
+        max|100)
+          while true; do
+            fortune -a
+            cnt=0
+            while [[ $cnt -lt $stars ]]; do
+              printf "*"
+              ((cnt++))
+            done
+            printf "\n"
+          done
+          exit 0
+          ;;
+        boring)
+          readspeed=$boring
+          ;;
+        slow)
+          readspeed=$slowSpeed
+          ;;
+        default)
+          readspeed=$defaultSpeed
+          ;;
+        med|medium)
+          readspeed=$medSpeed
+          ;;
+        fast)
+          readspeed=$highSpeed
+          ;;
+        extreme)
+          readspeed=$extreme
+          ;;
+        *)
+          printf "Wrong syntax.\n$help"
+          exit 1
+          ;;
+      esac
+      ;;
+    -h)
+      printf "$help"
+      exit 0
+      ;;
+    boring)
+      readspeed=$boring
+      ;;
+     slow)
+       readspeed=$slowSpeed
+       ;;
+     default)
+       readspeed=$defaultSpeed
+       ;;
+     med|medium)
+       readspeed=$medSpeed
+       ;;
+     fast)
+       readspeed=$highSpeed
+       ;;
+     extreme)
+       readspeed=$extreme
+       ;;
+    -*|*)
+      printf "Wrong argument \"%s\".\n$help" "$1"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+while true; do
+  # get saying
+  msg=$(fortune -a)
+  # test on right length
+  if [[ ${#msg} -gt $maxlen ]]; then
+    continue;
+  fi
+  printDelimiter
+  # print saying
+  echo "$msg"
+  # prepare countdown
+  dur=$((${#msg} / readspeed + 2))
+  time=0
+  # do countdown
+  while [[ $dur -gt 0 ]]; do
+    printf "\r\e[2m\e[K${#msg} Zeichen - %ss" $dur
+    # read one char, let one sec timeout
+    read -n 1 -t 1 inp
+    if [[ $? = 0 ]]; then
+      case "$inp" in
+        q)
+          end
+          ;;
+        "")
+          # reset opacity and continue with next saying
+          printf "\e[0m";
+          continue 2;
+          ;;
+        n)
+          # del n and print newline
+          printf "\e[D\e[K\e[0m\n";
+          continue 2;
+          ;;
+        s)
+          if [[ $readspeed -gt 1 ]]; then
+            ((readspeed--))
+            printf "\e[0m\nReadspeed is now $readspeed.\n"
+          else
+            printf "\e[0m\nReadspeed cannot be lower than 1 character per second.\n"
+          fi
+          ;;
+        f)
+          if [[ $readspeed -lt $maxspeed ]]; then
+            ((readspeed++))
+            printf "\e[0m\nReadspeed is now $readspeed.\n"
+          else
+            printf "\e[0m\nReadspeed cannot be higher than $maxspeed character per second.\n"
+          fi
+          ;;
+      esac
+      dur=$((${#msg} / readspeed + 2 - time))
+    else
+      ((dur--))
+      ((time++))
+    fi
+  done
+  # print wasted time again
+  printf "\r\e[K${#msg} Zeichen - $((${#msg} / readspeed + 2))s\e[0m\n"
+done
