@@ -1,0 +1,253 @@
+#!/bin/bash
+
+all=0 #by default only exact results are shown
+verbose=0
+pagesconfirmfrom=4
+openDirect=
+timeout=2
+help='Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
+Usage: \e[1mdicc\e[0m [-h] | [-o|-a|-r] [-v] []\e[4mkey\e[0m \e[4m...\e[0m]
+	\e[1m-h\e[0m	Display this help message and exit.
+	\e[1m-o\e[0m	Opens the site directly in your default browser.
+	\e[1m-a\e[0m	Show all translations from the first page. Will be shown automatically 
+		if there are no exact results available.
+	\e[1m-r\e[0m	Show all entries of all pages. This may take a while.
+	\e[1m-v\e[0m	Verbose a little bit.
+	\e[4mkey\e[0m	The keyword to search translations for.
+'
+
+#resolve wholepage (-a) and multipage search (-r), open link (-o), verbose (-v) and help (-h)
+while [ "$*" ]; do
+ case $1 in  
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -a)
+    all=1
+    ;;
+  -o)
+    openDirect=1
+    ;;
+  -r)
+    all=2
+    ;;
+  -v)
+    verbose=1
+    ;;
+  -*)
+    printf "Wrong argument: $1\n$help"
+    exit 1
+    ;;
+  *)
+    key="$*"
+    break;
+    ;;
+ esac
+ shift
+done
+
+#prepare key word(s)
+key=${key// /+}
+
+#ensure internet connection
+waitnet -s
+
+if [[ -n "$key" ]]; then
+  site="https://www.dict.cc/?s=$key"
+else
+  open "https://www.dict.cc/"
+  exit 0
+fi
+
+#open website if desired
+if [[ -n $openDirect ]]; then
+  open "$site"
+  exit 0
+fi
+
+#give information before downloading, but only if user is not expecting of waiting longer
+if [[ $all == 2 && $verbose != 0 ]]; then
+  echo "open https://www.dict.cc/?s=$key"
+fi
+srcf=$(curl -s -m $timeout "https://www.dict.cc/?s=$key")
+
+if [[ -z "$srcf" ]]; then
+  echo "Failed to fetch from $site"
+  printf "Want to see header communication? (y/n) [n]: "
+  read ans
+  case $ans in
+    y)
+      curl -Iv -m $timeout "https://www.dict.cc/?s=$key"
+      ;;
+  esac
+  exit 1
+fi
+
+#fetch pagecount
+pagemax=$(echo $srcf | grep -o -e "\d\+\">V")
+pagemax=${pagemax/\">V/}
+if [[ -z "$pagemax" ]]; then
+  pagemax=1
+fi
+if [[ $verbose != 0 ]]; then
+  printf "$pagemax pages found for keyword: $key\n"
+fi
+
+#unset -r if only one page available and 
+#ask for confirmation if number of pages is greater than $pagesconfirmfrom
+if [[ $all == 2 ]]; then
+  if [[ $pagemax == 1 ]]; then
+    all=1
+  elif [[ $pagemax -ge $pagesconfirmfrom ]]; then
+    printf "Do you really want to show $pagemax pages? (y/n) "
+    read inp
+    case $inp in
+      y*|Y*)
+        ;;
+      *)
+        printf "How many pages do you want to read out? (0-$pagemax) "
+        read inp2
+        case $inp2 in
+          [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
+            if [[ $inp2 -gt $pagemax ]]; then
+              printf "There are only $pagemax pages..."
+              exit 1 
+            elif [[ $inp2 -eq 1 ]]; then
+              all=1
+            else
+              pagemax=$inp2
+            fi
+            ;;
+        esac
+        ;;
+    esac
+  fi
+fi
+
+#go through all sites or else only the first and create translation list
+if [[ $all -eq 2 ]]; then
+  echo "generating site..."    
+  var1="var c1Arr = new Array(\"\""
+  var2="var c2Arr = new Array(\"\""
+  cnt=1
+  while [[ $cnt -le $pagemax ]]; do
+    echo "$cnt/$pagemax: open https://www.dict.cc/?s=$key&pagenum=$cnt"
+    vars=$(echo $srcf | grep -o "var c1Arr.*; var c2Arr.*; var hlRows" | grep -o ".*;")
+    temp1=$(echo $vars | grep -o "c1Arr.*; var c2Arr" | grep -o ".*;")
+    var1+=${temp1:20:$(( ${#temp1} - 22))}
+    temp2=$(echo $vars | grep -o "c2Arr.*")
+    var2+=${temp2:20:$(( ${#temp2} - 22))}
+    ((cnt++))
+    srcf=$(curl -s -m 2 "https://www.dict.cc/?s=$key&pagenum=$cnt")
+    # test on internet connection
+    if [[ -z "$srcf" ]]; then
+      echo "Internet connection on page $cnt failed. Printing all downloaded translations..."
+      sleep 3
+      break;
+    fi
+  done
+  var1+=");"
+  var2+=");"
+  #echo "srcf: $srcf"
+  #echo "var1: $var1"
+  #echo "var2: $var2"
+else
+  vars=$(echo $srcf | grep -o "var c1Arr.*; var c2Arr.*; var hlRows" | grep -o ".*;")
+  var1=$(echo $vars | grep -o "c1Arr.*; var c2Arr" | grep -o ".*;")
+  var2=$(echo $vars | grep -o "c2Arr.*")
+  #echo "srcf: $srcf"
+  #echo "vars: $vars"
+  #echo "var1: $var1"
+  #echo "var2: $var2"
+fi
+
+key=${key//+/ }
+key=$(echo $key | tr '[:upper:]' '[:lower:]')
+js='var key = "$key";
+var c1Arr;
+var c2Arr;
+$var1
+$var2
+if (!c1Arr || !c2Arr) console.log("No translation found.");
+else if ($all) {
+    var logged = 0;
+	var skipped = 0;
+    for (var i = 1; i < c1Arr.length; i++) {
+		var c1 = c1Arr[i];
+		var c2 = c2Arr[i];
+        if (c1.toLowerCase() === key || c1.toLowerCase() === "to " + key) {
+        	if (c2) {
+				console.log(c2);
+            	logged++;
+			} else {
+				skipped++;
+			}
+        }
+        if (c2.toLowerCase() === key) {
+			if (c1) {
+	            console.log(c1);
+	            logged++;
+			} else {
+				skipped++;
+			}
+        }
+    }
+    if (logged === 0) {
+		if (skipped !== 0) {
+        	console.log(skipped + " skipped translation(s) found. Nevertheless showing all results of the first page now.");
+		} else {
+        	console.log("No exact translation found. Showing all results of the first page now.");
+		}
+		setTimeout(listAll, 1500);
+    }
+} else { 
+  listAll();
+}
+
+function listAll() {
+    if (contains(c2Arr, key) && !contains(c1Arr, key)) {
+      var temp = c1Arr;
+      c1Arr = c2Arr;
+      c2Arr = temp;
+    }
+    for (var i = 1; i < c1Arr.length; i++) {
+		var c2 = c2Arr[i];
+		if(!c2) {
+			continue;
+		}
+        var c1 = c1Arr[i];
+        var outp = "";
+        if (c1 === c1Arr[i - 1]) outp += "\t\t\t\t\t\t";
+        else {
+            outp += c1;
+            tabs=5-c1.length/8
+            do {
+              outp += "\t";
+              tabs--;
+            } while (tabs > 0);
+        }
+        if (c2 !== c2Arr[i-1]) {
+          outp += c2;
+        }
+        else {
+          outp = "\t" + outp.trim();
+        }
+        console.log(outp);
+    }
+}
+
+function contains(a, obj) {
+    for (var i = 0; i < a.length; i++) {
+        if (a[i].toLowerCase() === obj) {
+            return true;
+        }
+    }
+    return false;
+}'
+js=${js/\$var1/$var1}
+js=${js/\$var2/$var2}
+js=${js//\$key/$key}
+allCh=$([ $all == 0 ] && echo "true" || echo "false")
+js=${js//\$all/$allCh}
+node -e "$js"
