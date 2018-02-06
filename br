@@ -1,0 +1,54 @@
+#!/bin/bash
+
+help='Adjusting the brightness of macs display. Depends on "brightness" (https://github.com/nriley/brightness).
+Usage: \e[1mbr\e[0m [ -h | [+|-]\e[4mbrightness\e[0m ]
+	\e[1m-h\e[0m		Displays this message and exits.
+	\e[4mbrightness\e[0m	The percentage of display brightness. Give a number in format [x]x[.x[x]] 
+			(or 100) between 0 and 100). If the number is signed, "-" will cause 
+			display dimming at that percentage, "+" will brighten. 
+	If no argument given, it prints the actual percentage of display brightness.
+'
+
+type brightness >/dev/null 2>&1 || (echo "Please install \"brightness\" first!" && exit 1)
+
+actual=$(brightness -l | echo "$(grep -o -e '0\.\(\d\)\+' || echo 1)*100" | bc)
+
+case $1 in
+ "100"|"100.0"|"100.00")
+    value=100
+    ;;
+ [0-9]|[0-9][0-9]|[0-9].[0-9]|[0-9][0-9].[0-9]|[0-9].[0-9][0-9]|[0-9][0-9].[0-9][0-9])
+    value=$1
+    ;;
+ -[0-9]|-[0-9][0-9]|-[0-9].[0-9]|-[0-9][0-9].[0-9]|-[0-9].[0-9][0-9]|-[0-9][0-9].[0-9][0-9])
+    value=$(echo "$actual$1" | bc)
+    if [[ $(echo "$value < 0" | bc) -eq 1 ]]; then
+      value=0
+    fi
+    ;;
+ +[0-9]|+[0-9][0-9]|+[0-9].[0-9]|+[0-9][0-9].[0-9]|+[0-9].[0-9][0-9]|+[0-9][0-9].[0-9][0-9])
+    value=$(echo "$actual$1" | bc)
+    if [[ $(echo "$value > 100" | bc) -eq 1 ]]; then
+      value=100
+    fi
+    ;;
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -*)
+    printf "Wrong argument.\n$help"
+    exit 1
+    ;;
+  "")
+    printf "%.0f %s\n" $actual '%'
+    exit 0
+    ;;
+  *)
+    printf "Please specify a number in percent.\n$help"
+    exit 1
+    ;;    
+esac
+
+value=$(echo "scale=4;$value/100" | bc)
+brightness $value
