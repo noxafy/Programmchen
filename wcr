@@ -1,0 +1,168 @@
+#!/bin/bash
+path=""
+verbose=1 # 0=verbose only resumee message 1=verbose skipped files too (default) 2=verbose all files
+filecnt=0
+dircnt=1 #startdir is first
+skipcnt=0
+help='Summarizes recursively the exact number of bytes of all data in a directory using wc -c." 
+Usage: \e[1mwcr\e[0m [ -h | [-v|-s] [\e[4mpath\e[0m] ]
+	\e[1m-h\e[0m	Display this message and exit.
+	\e[1m-v\e[0m	Verbose all passed files.
+        \e[1m-s\e[0m	Conceal skipped files.
+	\e[4mpath\e[0m	An alternative path to a directory.
+'
+trap 'resumee; exit 0' 2
+
+while [[ $* ]]; do
+ case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -v)
+    verbose=2
+    ;;
+  -s)
+    verbose=0
+    ;;
+  -*)
+    printf "Wrong argument.\n$help"
+    exit 1
+    ;;
+  "")
+    ;;
+  *)
+    if [[ -e $1 ]]; then
+      if [[ -d $1 ]]; then
+        path="$1"
+      else
+        echo "$1 is not a directory."
+        exit 1
+      fi
+    else
+      echo "$1 does not exist."
+      exit 1
+    fi
+    ;;
+ esac
+ shift
+done
+
+sizeFormat() {
+  if [[ $1 -ge 100000000000 ]]; then
+    printf "%.0f GB" $(echo "scale=1; $1/1000000000" | bc)
+  elif [[ $1 -ge 10000000000 ]]; then
+    printf "%.1f GB" $(echo "scale=2; $1/1000000000" | bc)
+  elif [[ $1 -ge 1000000000 ]]; then
+    printf "%.2f GB" $(echo "scale=3; $1/1000000000" | bc)
+  elif [[ $1 -ge 100000000 ]]; then
+    printf "%.0f MB" $(echo "scale=1; $1/1000000" | bc)
+  elif [[ $1 -ge 10000000 ]]; then
+    printf "%.1f MB" $(echo "scale=2; $1/1000000" | bc)
+  elif [[ $1 -ge 1000000 ]]; then
+    printf "%.2f MB" $(echo "scale=3; $1/1000000" | bc)
+  elif [[ $1 -ge 100000 ]]; then
+    printf "%.0f kB" $(echo "scale=1; $1/1000" | bc)
+  elif [[ $1 -ge 10000 ]]; then
+    printf "%.1f kB" $(echo "scale=2; $1/1000" | bc)
+  elif [[ $1 -ge 1000 ]]; then
+    printf "%.2f kB" $(echo "scale=3; $1/1000" | bc)
+  else
+    printf "$1 Bytes"
+  fi
+}
+
+res=0
+wcr() {
+  for file in "$1".* "$1"*; do
+    if [ "$file" == "$1." ] || [ "$file" == "$1.." ] || [ ! -e "$file" ]; then
+      continue;
+    fi
+    if [ ! -r "$file" ]; then
+      ((skipcnt++))
+      echo "Permission denied: $file"
+      continue;
+    fi
+    if [ -L "$file" ]; then
+      ((skipcnt++))
+      echo "Symlink skipped: $file"
+      continue;
+    fi    
+    if [ ! -d "$file" ]; then
+      ((filecnt++)) 
+      size=$(wc -c "$file" | grep -o -e "\d\+" | sed -n 1p)
+      ((res+=size))
+    else
+      ((dircnt++))
+      wcr "$file/"
+    fi
+  done
+}
+
+wcrv() {
+  for file in "$1".* "$1"*; do
+    if [ "$file" == "$1." ] || [ "$file" == "$1.." ] || [ ! -e "$file" ]; then
+      continue;
+    fi
+    if [ ! -r "$file" ]; then
+      ((skipcnt++))
+      echo "Permission denied: $file"
+      continue;
+    fi
+    if [ -L "$file" ]; then
+      ((skipcnt++))
+      echo "Symlink skipped: $file"
+      continue;
+    fi
+    if [ ! -d "$file" ]; then
+      ((filecnt++))
+      size=$(wc -c "$file" | grep -o -e "\d\+" | sed -n 1p)
+      ((res+=size))
+      echo "$file : $size ($res)"
+    else
+      ((dircnt++))
+      wcrv "$file/"
+    fi
+  done
+}
+
+wcrs() {
+  for file in "$1".* "$1"*; do
+    if [ "$file" == "$1." ] || [ "$file" == "$1.." ]; then
+      continue;
+    fi
+    if [ ! -r "$file" ] || [ -L "$file" ]; then
+      ((skipcnt++))
+      continue;
+    fi
+    if [ ! -d "$file" ]; then
+      ((filecnt++))
+      ((res+=$(wc -c "$file" | grep -o -e "\d\+" | sed -n 1p)))
+    else
+      ((dircnt++))
+      wcrs "$file/"
+    fi
+  done
+}
+
+resumee() {
+  if [ $filecnt -gt 0  ]; then
+    printf "%s $([ $res -gt 1000 ] && echo \($res Bytes\)) in $filecnt $([ $filecnt == 1 ] && echo file || echo files)" "$(sizeFormat $res)"
+    printf " in $dircnt $([ $dircnt == 1 ] && echo directory || echo directories)."
+  else
+    printf "No contents found."
+  fi
+  if [ $skipcnt -gt 0 ]; then
+    printf " $skipcnt $([ $skipcnt == 1 ] && echo file has || echo files have) been skipped."
+  fi
+  printf "\n"
+}
+
+if [ $verbose -eq 2 ]; then
+  wcrv "$path"
+elif [ $verbose -eq 1 ]; then
+  wcr "$path" 
+else
+  wcrs "$path"
+fi
+resumee
