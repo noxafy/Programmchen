@@ -1,0 +1,56 @@
+#!/bin/bash
+openlink=""
+help='Searchs and prints german synonyms for \e[4mkey\e[0m from http://openthesaurus.de. 
+No argument opens the website.
+Usage: \e[1msyn\e[0m [ -h | [-l] \e[4mkey\e[0m \e[4m...\e[0m ]
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-l\e[0m	Opens the corresponding website.
+	\e[4mkey\e[0m	The word(s) whose synonyms you want to know.
+'
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -l)
+    openlink=1
+    shift
+    ;;
+  -*)
+    printf "Wrong argument.\n$help"
+    exit 1
+    ;;
+esac
+
+if [[ $* ]]
+  then
+    key="$*"
+    key=${key// /+}
+    key=${key//ä/ae}
+    key=${key//Ä/Ae}
+    key=${key//ö/oe}
+    key=${key//Ö/Oe}
+    key=${key//ü/ue}
+    key=${key//Ü/Ue}
+    key=${key//ß/ss}
+    if [[ $openlink ]]; then
+      open "https://www.openthesaurus.de/synonyme/$key"
+    else
+      # test on wifi con
+      wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
+      if [[ -z "$wifi" ]]; then
+        echo "Please turn on wifi first."
+        exit 1
+      fi
+      srcf=$(curl -s -m 2 "https://www.openthesaurus.de/synonyme/$key")
+      [[ -z $srcf ]] && echo "No internet connection available." && exit 1
+       ans=$(echo "$srcf" | grep -o -e "Gefundene Synonyme:.*\"/>" | sed -e 's/,\ "\/>/\ /' | recode utf-8..latin1 | perl -MHTML::Entities -pe 'decode_entities($_);' | recode latin1..utf-8)
+      [[ -n "$ans" ]] && echo $ans || echo "Keine Synonyme gefunden"
+    fi
+  elif [[ $openlink ]]; then
+    printf "Please give a keyword to open the link for.\n$help"
+    exit 1
+  else
+    open https://www.openthesaurus.de/
+fi
