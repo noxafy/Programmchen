@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+  echo "Please give a link"
+elif [[ -z $2 ]]; then
+  link="$1"
+  echo "<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv=\"refresh\" content=\"0; $link\">
+    <title>Link to $link</title>
+  </head>
+  <body>
+    <a href=\"$link\">$link</a>  
+  </body>
+</html>" >> "forwarding.html"
+else
+  content="<!DOCTYPE html>
+<html>
+  <head>
+    <title>Multiple Links</title>
+  </head>
+  <body style=\"margin: auto;\">
+    <ul>
+"
+  while [[ -n $* ]]; do
+    content+="      <li><a href=\"$1\">$1</a></li>
+"
+    shift
+  done
+  content+="    </ul>
+  </body>
+</html>"
+  echo $content >> multiple_links.html
+fi
