@@ -1,0 +1,25 @@
+#!/bin/bash
+
+help='Usage: \e[1mclat\e[0m [ -h | \e[4mfile\e[0m ]
+Compiles an tex file multiple times, so bib and pdf is right.
+'
+
+if [[ $1 -eq -h ]]; then
+  printf "$help"
+  exit 0
+elif [[ $1 ]]; then
+ file="$1"
+ if [[ ! -r "$1" ]]; then
+  echo "Please give an existing and readable file."
+  exit 1
+ fi
+else
+ printf "Please give a file.\n$help"
+ exit 1
+fi
+
+latex -interaction=batchmode "$file"
+bibtex "${file:0:$((${#file}-3))}aux"
+latex -interaction=batchmode "$file"
+latex -interaction=batchmode "$file"
+pdflatex -interaction=batchmode "$file"
