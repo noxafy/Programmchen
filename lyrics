@@ -1,0 +1,9 @@
+#!/bin/bash
+
+waitnet -s
+
+if [[ -z "$*" ]]; then
+  songlyrics spotify 
+else
+  songlyrics "$@"
+fi
