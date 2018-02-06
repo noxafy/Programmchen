@@ -1,0 +1,49 @@
+#!/bin/bash
+
+help='Provides an interactive recipe for cooking a poket soup.
+Usage: \e[1mfertigtüte\e[0m [ -h ]
+	\e[1m-h\e[0m	Display this message and exit.
+'
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -*)
+    printf "Wrong argument.\n$help"
+    exit 1
+    ;;
+esac
+
+cnt=0
+
+tell() {
+  ((cnt++))
+  printf "\e[F\e[K"
+  echo "${cnt}. $1"
+  printf "(Enter zum ${2-"Fortfahren"})"
+  read waste
+}
+
+tellTimer() {
+  note $1 "$2"
+  ((cnt++))
+  printf "\e[F\e[K"
+  echo "${cnt}. $2"
+  mplayer -really-quiet ~/IdeaProjects/denkbares/ServiceMatePlatform/ServiceMate/src/main/webapp/resources/audio/ctu24_ring.mp3
+}
+
+echo ""
+tell "Finde einen Topf mit min. 2 Liter Volumen."
+tell "Fülle 500ml hinein."
+tell "Herdplatte auf max, darauf den mit etwas Wasser gefüllten Topf stellen."
+tell "Tüteninhalt einschütten und einrühren."
+tell "Aufkochen lassen."
+tell "Herdplatte auf mittlere Hitze stellen." "Starten des Timers"
+printf "\e[F"
+tellTimer 120 'umrühren und auf 6 stellen' #2
+tellTimer 120 'umrühren! Kocht es noch? (ggf. auf 7)' #4
+tellTimer 150 'umrühren!' #6,5
+tellTimer 90 'umrühren!' #8
+tellTimer 60 'fertig!' #9
