@@ -1,0 +1,50 @@
+#!/bin/bash
+
+xact=false
+help="Searches in all directories defined by \$PATH for \e[4mkey\e[0m.
+Usage: \e[1mfip\e[0m [ -h | [-x] \e[4mkey\e[0m ]
+        \e[1m-h\e[0m	Displays this messages and exits.
+        \e[1m-x\e[0m	Finds only exact matches.
+        \e[4mkey\e[0m	The query keyword. No keyword prints all files in PATH.
+"
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -x)
+    xact=true
+    shift
+    ;;
+  -*)
+    printf "Wrong argument.\n$help"
+    exit 1
+    ;;
+  *)
+    ;;
+esac
+
+if [[ -t 1 && -z $1 ]]; then
+  printf "Do you really want to see \e[4mall\e[0m available executables in \$PATH? (y/n) [n]: "
+  read ans
+  case $ans in
+    y)
+      ;;
+    *)
+      exit 0
+      ;;
+   esac
+fi 
+
+for path in `echo $PATH | sed s/:/\ /g`; do
+  cd "$path" || continue
+  if $xact; then
+    res=$(ls -l | grep " $1 \| ${1}$")
+  else
+    res=$(ls -l | grep "$1")
+  fi
+  if [[ -n "$res" ]]; then
+    printf "$path\n$res\n"
+  fi
+done
