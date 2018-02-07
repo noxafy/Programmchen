@@ -3,15 +3,17 @@
 file="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/Englisch.csv"
 vocs="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/vocs"
 unknowns="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/unknowns"
-appendToFile="$vocs"
+appendToFile=$vocs
 training=0
 othersDetected=0
 justPrint=0
 word=
 translation=
 additional=
+openVocs=
+reslnnrs=
 help='Reads vocabularies from an csv (does not write) and asks them randomly and two-way.
-Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m | -s \e[4mword\e[0m
+Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m [-o] | -s [-o] \e[4mword\e[0m [-o]
 	\e[1m-h\e[0m	Display this message and exit.
 	\e[1m-n\e[0m	Open a new window and test you from there in training mode.
 	\e[1m-t\e[0m	Start training mode in this window (not recommended, use \e[1m-n\e[0m).
@@ -34,8 +36,12 @@ searchFor() {
   res=$(cat -n "$1" | grep -- "$2")
   if [[ -n $res ]]; then
     declare -i reslen=$(echo "$res" | wc -l)
+    reslnnrs+=$(echo "$res" | awk '{print $1}')
     othersDetected=1
     echo "Word in $(basename $1) detected: $reslen"
+    if [[ -n $openVocs ]]; then
+      openLine "$1" $reslnnrs
+    fi
     if [[ $reslen -gt 5 ]]; then
       echo "$res" | sed -n 1,5p
       printf "Do you want to see all $reslen results? (y/n) [n]: "
@@ -54,11 +60,16 @@ searchFor() {
   fi
 }
 
+openLine() {
+  #TODO: let user choose which one to open
+  mate -l $2-$(($2+1)) "$1" 2> /dev/null || open "$1"
+}
+
 searchForInAll() {
   searchFor "$file" "$1"
   searchFor "$vocs" "$1"
   searchFor "$unknowns" "$1"
-  if [[ $othersDetected -ne 0 && $justPrint -eq 0 ]]; then
+  if [[ $justPrint -eq 0 && $othersDetected -ne 0 ]]; then
     printf "Do you want to continue adding anyway? (y/n) [n]: "
     read ans
     case $ans in
@@ -113,6 +124,15 @@ addEntry() {
     echo "$entry" >> "$appendToFile" && echo "Successfully added to $(basename $appendToFile) $entry"
   else
     printf "\n%s\n" "$entry" >> "$appendToFile" && echo "Successfully added to $(basename $appendToFile) $entry"
+  fi
+  
+  if [[ -n $openVocs ]]; then
+    if [[ -n $word ]]; then
+      vocslength=$(wc -l "$appendToFile" | awk '{print $1}')
+      openLine "$appendToFile" $vocslength
+    else
+      mate "$appendToFile" 2> /dev/null || open "$appendToFile"
+    fi
   fi
 }
 
@@ -172,14 +192,6 @@ case $1 in
       fi
     fi
     addEntry
-    if [[ -n $openVocs ]]; then
-      if [[ -n $word ]]; then
-        vocslength=$(wc -l $vocs | awk '{print $1}')
-        mate -l $vocslength-$((vocslength+1)) $appendToFile 2> /dev/null || open $appendToFile
-      else
-        mate $appendToFile 2> /dev/null || open $appendToFile
-      fi
-    fi
     exit 0
     ;;
   -o)
@@ -191,8 +203,15 @@ case $1 in
     exit 0
     ;;
   -s)
+    if [[ $2 == -o ]]; then
+      openVocs=true
+      shift
+    fi
     if [[ $2 == to && -n $3 ]]; then
       shift
+    fi
+    if [[ $3 == -o ]]; then
+      openVocs=true
     fi
     justPrint=1
     searchForInAll "$2"
