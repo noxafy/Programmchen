@@ -12,7 +12,7 @@ translation=
 additional=
 openVocs=
 reslnnrs=
-help='Reads vocabularies from an csv (does not write) and asks them randomly and two-way.
+help="Reads vocabularies from an csv (does not write) and asks them randomly and two-way.
 Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m [-o] | -s [-o] \e[4mword\e[0m [-o]
 	\e[1m-h\e[0m	Display this message and exit.
 	\e[1m-n\e[0m	Open a new window and test you from there in training mode.
@@ -25,10 +25,8 @@ Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m
 	\e[1m-s\e[0m	Search a word in both, vocabulary list and vocabulary database.
 
 Create the .csv in following form:
- "word","meaning","helping comment for memorizing or pronouncing"
-'
-help=${help//\$file/$file}
-help=${help//\$vocs/$vocs}
+ \"word\",\"meaning\",\"helping comment for memorizing or pronouncing\"
+"
 #TODO after search, provide open when found
 #TODO provide sorting (sort ignoring "to"'s)
 
@@ -36,7 +34,7 @@ searchFor() {
   res=$(cat -n "$1" | grep -- "$2")
   if [[ -n $res ]]; then
     declare -i reslen=$(echo "$res" | wc -l)
-    reslnnrs+=$(echo "$res" | awk '{print $1}')
+    reslnnrs=$(echo "$res" | awk '{print $1}')
     othersDetected=1
     echo "Word in $(basename $1) detected: $reslen"
     if [[ -n $openVocs ]]; then
@@ -55,7 +53,7 @@ searchFor() {
           ;;
       esac
     else
-      echo "$res"       
+      echo "$res"
     fi
   fi
 }
