@@ -10,6 +10,7 @@ wa="https://web.whatsapp.com/"
 
 psy="https://lexikon.stangl.eu/alphabetisches-inhaltsverzeichnis/"
 acc="https://www.overleaf.com/13407653ymrhxyttcrpc#/51720050/"
+
 #
 #
 #
@@ -52,6 +53,7 @@ options="
 	    wa		$wa
 	    mensa	$mensa
 	    psy		$psy
+	    mail	$mail
 
 	  Option type 2 processes directly a search with given keywords on a particular site.
 	  Without any other argument the related home page will be opened.
@@ -139,6 +141,9 @@ case $1 in
   acc)
     fire "$acc"
     ;;
+  mail)
+	fire "$mail"
+	;;
 #  wg)
 #    fire "$wg"
 #    ;;
@@ -262,21 +267,10 @@ elif [ ! -t 0 ]; then
 fi
 
 #preparing key
-if [[ $key ]]; then
-  key=${key// /+}
-#  if [[ "$site" == "$g" ]]; then
-#    key=${key//ä/ae}
-#    key=${key//Ä/Ae}
-#    key=${key//ö/oe}
-#    key=${key//Ö/Oe}
-#    key=${key//ü/ue}
-#    key=${key//Ü/Ue}
-#    key=${key//ß/ss}
-#  fi
-  key=${key//&/%26}
-  key=${key//\"/%22}
+if [[ -n $key ]]; then
+  key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/%20/+/g')
   fire "${site}$key"
+else
+  #for empty key just open firefox / bring it to front
+  open /Applications/FireFox.app/
 fi
-
-#for empty key just open firefox / bring it to front
-open /Applications/FireFox.app/
