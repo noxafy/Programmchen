@@ -38,7 +38,7 @@ idealo_def="https://www.idealo.de/"
 site=$e #default
 
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
-Usage: \e[1mf\e[0m [ -h | [-y] \e[4moption1\e[0m | [-y] [\33[4moption2\e[0m] [-y] \e[4mkey\e[0m \e[4m...\e[0m ]
+Usage: \e[1mf\e[0m [ -h | [-y] \e[4moption1\e[0m | [-y] [\33[4moption2\e[0m|--] [-y] \e[4mkey\e[0m \e[4m...\e[0m ]
 	\e[1m-h\e[0m	Display this message and exit.
 	\e[1m-y\e[0m	Print resulting link, add it to clipboard and exit.
 	\e[4mkey\e[0m	The query keywords
@@ -68,7 +68,7 @@ options="
 	    s		$scholar\$key
 
 	  Any other first word will be interpreted as part of the query phrase and searched by 
-	  default search engine.
+	  default search engine. Type -- for treating an option as query.
 	When piped it will read the first non-empty line and search it by default search engine.
 	No argument will just open Firefox. (Therefrom its name..)
 "
@@ -112,6 +112,8 @@ case $1 in
   -y)
     openLink=""
     shift
+    ;;
+  --)
     ;;
   -*)
     echo "Wrong argument. Try -h for help."
@@ -247,6 +249,13 @@ case $1 in
       fire "$scholar_def"
     fi
     ;;
+  --)
+    shift
+    if [[ $1 == -y ]]; then
+      openLink=""
+      shift
+    fi
+    ;;
   *)
     key=$1
     if [[ $key =~ ^www\..* ]]; then
@@ -274,3 +283,4 @@ else
   #for empty key just open firefox / bring it to front
   open /Applications/FireFox.app/
 fi
+
