@@ -1,14 +1,16 @@
 #!/bin/bash
 desttime=0
+verbose=1 #1=show remaining time, 0=don't
 help='Sends a notification to the system at given \e[4mtime\e[0m with given or default \e[4mmessage\e[0m and shows
 the remaining time in the shell. If no \e[4mtime\e[0m given, it sends the notification instantly.
-Usage: \e[1mnote\e[0m -h | \e[4mtime\e[0m [\e[4mmes\e[0m \e[4m...\e[0m] | \e[4mmes\e[0m \e[4m...\e[0m
+Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [\e[4mmes\e[0m \e[4m...\e[0m] | \e[4mmes\e[0m \e[4m...\e[0m
 	\e[1m-h\e[0m	Displays this help message and exists.
+	\e[1m-s\e[0m	Do not display the remaining time (for running in background).
 	\e[4mtime\e[0m	Can be
 		 - an integer, so it will be interpreted as seconds to count down
 		 - an endtime in format (H)H:MM(:SS), so maximal a time within the next 
-		   24 hours is possible.
-		 - a string in the form
+		   24 hours is possible
+		 - a string in the form:
 		   \e[4mtime\e[0m = d | h | m | s
 		   d    = 0"d"(h | m | s)
 		   h    = 0"h"(m | s)
@@ -42,10 +44,14 @@ asHours() {
   asMinutes $((24*$1))
 }
 
-case $1 in
+while [[ -n $* ]]; do
+  case $1 in
   -h)
     printf "$help"
     exit 0
+    ;;
+  -s)
+    verbose=0
     ;;
   -*)
     printf "Wrong argument.\n$help"
@@ -96,10 +102,12 @@ case $1 in
       fi
     else
       mes="$*"
+      break;
     fi
     ;;
-esac
-shift
+  esac
+  shift
+done
 
 timeout() {
   time=$((desttime - $(date "+%s")))
@@ -128,20 +136,27 @@ timeout() {
 }
 
 countdown() {
-  while [ $secs -gt -1 ]; do
-    printf "\r\e[KTime left: $1 %ss" $secs
-    ((secs--))
-    sleep 1
-  done
+  count -1 "$1"
   timeout #correct every minute
 }
 
 countend() {
-  while [ $secs -gt 0 ]; do
-    printf "\r\e[KTime left: %ss" $secs
-    ((secs--))
-    sleep 1
-  done
+  count 0 "$1"
+}
+
+count() {
+  if [[ $verbose -eq 1 ]]; then
+    while [ $secs -gt $1 ]; do
+      printf "\r\e[KTime left: $2 %ss" $secs
+      ((secs--))
+      sleep 1
+    done
+  else
+    while [ $secs -gt $1 ]; do
+      ((secs--))
+      sleep 1
+    done
+  fi
 }
 
 if [[ $desttime -gt 0 ]]; then
@@ -155,15 +170,13 @@ if [[ $desttime -gt 0 ]]; then
   mes=${*-"Time is up!"}
 
   timeout
-  printf "\r\e[KTime left: 0s"
+  if [[ $verbose -eq 1 ]]; then
+    printf "\r\e[KTime left: 0s"
+  fi
 fi
 
 scriptcmd="tell app \"System Events\" to display notification \"$mes\""
 osascript -e "$scriptcmd"
-if [[ $desttime -gt 0 ]]; then
+if [[ $desttime -gt 0 && $verbose -eq 1 ]]; then
   printf "\r\e[K"
-fi
-
-if [[ $1 == "test" ]]; then
-  date
 fi
