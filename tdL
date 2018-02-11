@@ -3,6 +3,7 @@
 help='List directories with "\e[1mtree\e[0m" to a particular depth.
 Usage: \e[1mtdl\e[0m [-S] \e[4mdepth\e[0m
 	\e[1m-S\e[0m	Sort entries by size.
+  \e[1m-Sh\e[0m Sort entries by size, but let size "human-readable".
 	\e[4mdepth\e[0m	Depth of directories listed (1 to 5; default: 1).
 '
 
@@ -31,6 +32,9 @@ while [[ -n $1 ]]; do
     -S)
       sort=1
       ;;
+    -Sh)
+      sort=2
+      ;;
     -h)
       printf "$help"
       exit 0
@@ -49,10 +53,44 @@ done
 #  exit 1
 #fi
 
+sizeFormat() {
+  if [[ $1 -ge 100000000000 ]]; then
+    printf "%.0fG" $(echo "scale=1; $1/1000000000" | bc)
+  elif [[ $1 -ge 10000000000 ]]; then
+    printf "%.1fG" $(echo "scale=2; $1/1000000000" | bc)
+  elif [[ $1 -ge 1000000000 ]]; then
+    printf "%.2fG" $(echo "scale=3; $1/1000000000" | bc)
+  elif [[ $1 -ge 100000000 ]]; then
+    printf "%.0fM" $(echo "scale=1; $1/1000000" | bc)
+  elif [[ $1 -ge 10000000 ]]; then
+    printf "%.1fM" $(echo "scale=2; $1/1000000" | bc)
+  elif [[ $1 -ge 1000000 ]]; then
+    printf "%.2fM" $(echo "scale=3; $1/1000000" | bc)
+  elif [[ $1 -ge 100000 ]]; then
+    printf "%.0fK" $(echo "scale=1; $1/1000" | bc)
+  elif [[ $1 -ge 10000 ]]; then
+    printf "%.1fK" $(echo "scale=2; $1/1000" | bc)
+  elif [[ $1 -ge 1000 ]]; then
+    printf "%.2fK" $(echo "scale=3; $1/1000" | bc)
+  else
+    printf "$1B"
+  fi
+}
+
 if [[ -n $sort ]]; then
   dirtree=$(tree -fapFN --du | grep /$)
   res="$(grep_it $depth)"
-  echo "$res" | sed -e 's/[│   ]*.── \[drwxr-xr-x //; s/\]//' | sort -r
+  res=$(echo "$res" | sed -e 's/[│   ]*.── \[d[-rwx]* //; s/\]//' | sort -r)
+  if [[ $sort -gt 1 ]]; then
+    IFS="
+"
+    for entry in $res; do
+      
+      printf "%s\t%s\n" $(sizeFormat $(echo "$entry" | awk '{print $1}')) $(echo "$entry" | awk '{$1=""; print $0}')
+    done
+  else
+    echo "$res"
+  fi
 else
   dirtree=$(tree -faphFN --du | grep /$)
   res="$(grep_it $depth)"
