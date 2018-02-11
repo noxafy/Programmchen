@@ -3,7 +3,7 @@
 help='List directories with "\e[1mtree\e[0m" to a particular depth.
 Usage: \e[1mtdl\e[0m [-S] \e[4mdepth\e[0m
 	\e[1m-S\e[0m	Sort entries by size.
-	\e[4mdepth\e[0m	Depth of directories listed (1 to 5).
+	\e[4mdepth\e[0m	Depth of directories listed (1 to 5; default: 1).
 '
 
 grep_it() {
@@ -43,7 +43,7 @@ while [[ -n $1 ]]; do
   shift
 done
 
-[ -z $depth ] && depth=1
+[[ -z $depth ]] && depth=1
 #if [[ -z $depth ]]; then 
 #  echo "Please give a number 1-5."
 #  exit 1
