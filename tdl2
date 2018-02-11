@@ -3,7 +3,7 @@
 help='List directories with "\e[1mtree\e[0m" to a particular depth.
 Usage: \e[1mtdl\e[0m [-S] \e[4mdepth\e[0m
 	\e[1m-S\e[0m	Sort entries by size.
-  \e[1m-Sh\e[0m Sort entries by size, but let size "human-readable".
+ 	\e[1m-Sh\e[0m	Sort entries by size, but let size "human-readable".
 	\e[4mdepth\e[0m	Depth of directories listed (1 to 5; default: 1).
 '
 
