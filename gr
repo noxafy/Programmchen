@@ -2,13 +2,14 @@
 
 obj=""
 
-help='Prints all recent Gronkh videos on YouTube.
+site="https://www.youtube.com/user/Gronkh/videos"
+help="Prints all recent Gronkh videos on YouTube.
 Usage: \e[1mgr\e[0m [ -h | -o | \e[4mseries\e[0m ]
 	\e[1m-h\e[0m	Displays this message and exists.
-	\e[1m-o\e[0m	Opens Gronkhs YouTube-site.
-        \e[1m-l\e[0m	Display no links.
+	\e[1m-o\e[0m	Opens Gronkhs YouTube-site directly.
 	\e[4mseries\e[0m	Filters for special series containing \e[4mseries\e[0m (case insensitive).
-'
+Used site: $site
+"
 
 case "$1" in
   -h)
@@ -16,7 +17,7 @@ case "$1" in
     exit 0
     ;;
   -o)
-    open https://www.youtube.com/user/Gronkh/videos
+    f "$site"
     exit 0
     ;;
   -l)
@@ -30,15 +31,64 @@ case "$1" in
     obj="$1"
     ;;
 esac
-src=$(curl -s https://www.youtube.com/user/Gronkh/videos)
-if [[ $src ]]; then
-  if [[ $noLinks ]]; then
-    res=$(echo $src | grep -o 'href="/watch?v=[^"]*">[^<]*' | sed 's/href="[^"]*">//' | sed 's/">/'$'\t''/' | grep "$obj")
+
+waitnet -s
+
+src=$(curl -s "$site")
+if [[ -n $src ]]; then
+  content=$(echo "$src" | pup --charset utf8 '.yt-lockup-content')
+  linksHTML=$(echo "$content" | pup --charset utf8 "div h3 a" | grep "$obj")
+  titles=$(echo "$linksHTML" | pup --charset utf8 'a attr{title}' | perl -MHTML::Entities -pe 'decode_entities($_);')
+  links=$(echo "$linksHTML" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/')
+
+  cnt=0
+  IFS="
+"
+  for title in $titles; do
+    ((cnt++))
+    echo "$cnt: $title"
+  done
+
+  if [[ $cnt -eq 0 ]]; then
+    if [[ -n $obj ]]; then
+      echo "No results found for \"$obj\". Try another."
+    else
+      echo "No results found. Probably a sript failure."
+    fi
+  elif [[ $cnt -eq 1 ]]; then
+    printf "Only one result found. Do you want to open it? (y/n) [y]: "
+    read ans
+    case $ans in
+    ""|j|y|J|Y|Yes)
+      f "$links"
+      ;;
+    *)
+      ;;
+    esac
   else
-    res=$(echo $src | grep -o 'href="/watch?v=[^"]*">[^<]*' | sed 's/href="/https:\/\/www.youtube.com/' | sed 's/">/'$'\t''/' | grep "$obj")
+    printf "Which one do you want to see? (1-${cnt}/q) [q]: "
+    read ans
+    if [[ $ans =~ ^[0-9]+$ ]]; then
+      if [[ $ans -gt 0 && $ans -le $cnt ]]; then
+        f $(echo "$links" | sed -n "${ans}p")
+      else
+        echo "Wrong answer. Integer is zero or too high: $ans."
+      fi
+    else
+      case $ans in
+      q|"")
+        ;;
+      *)
+        echo "Wrong answer. No integer: $ans"
+        ;;
+      esac
+    fi
   fi
-  res=$(echo "$res" | perl -MHTML::Entities -pe 'decode_entities($_);')
-  echo "$res"
+  #if [[ $noLinks ]]; then
+    #res=$(echo $src | grep -o 'href="/watch?v=[^"]*">[^<]*' | sed 's/href="[^"]*">//' | sed 's/">/'$'\t''/' | grep "$obj")
+    #else
+    #res=$(echo $src | grep -o 'href="/watch?v=[^"]*">[^<]*' | sed 's/href="/https:\/\/www.youtube.com/' | sed 's/">/'$'\t''/' | grep "$obj")
+    #fi
 else
-  echo "No internet connection available."
+  echo "Fetching from $site failed."
 fi
