@@ -1,5 +1,15 @@
 #!/bin/bash
 
+if [[ ! -d .git ]]; then
+  echo "This is not a git repository."
+  exit 1
+fi
+
+if [[ -z $1 ]]; then
+  echo "Please specify a name to grab from gitlog."
+  exit 1
+fi
+
 if [[ "$2" ]]; then
   multi=1
 fi
