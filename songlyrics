@@ -5,6 +5,8 @@ CURL="curl -s -A 'Mozilla/5.0'";
 sites="songtexte.com songlyrics.com musixmatch.com azlyrics.com genius.com plyrics.com"
 #Search with ecosia for (compatibility with special characters and) easier grep
 GOOG_URL='https://www.ecosia.org/search'
+ARTIST=
+TITLE=
 VERBOSE=
 urlonly=
 # prevent sed error on bad encoded characters by reading as ascii
@@ -176,8 +178,8 @@ function plyrics() {
 }
 
 function finishIt() {
-  if [[ -n $1 && -n $2 ]]; then
-    printf "\n\e[1;4m%s - %s\e[0m\n" "$1" "$2"
+  if [[ -n "$ARTIST" && -n "$TITLE" ]]; then
+    printf "\n\e[1;4m%s - %s\e[0m\n" "$ARTIST" "$TITLE"
   fi
   #guarantee one newline before...
   if [[ ! "$res" =~ ^[[:space:]] ]]; then
@@ -231,15 +233,16 @@ function preformat() {
 }
 
 function findLyrics() {
-  echo "Artist: $1"
-  echo "Title: $2"
+  echo "Artist: $ARTIST"
+  echo "Title: $TITLE"
   echo
   
-  tileInUrl=$(preformat $2 | sed 's/ - [Ll]ive.*//g')
+  tileInUrl=$(preformat $TITLE | sed 's/ - [Ll]ive.*//g')
   titleWithHyphen=$(withHyphen $tileInUrl)
   titleWithHyphen2=$(withHyphen2 $tileInUrl)
   titleNoSpaces=$(noSpaces $tileInUrl)
-  artistInUrl=$(preformat $1)
+
+  artistInUrl=$(preformat $ARTIST)
   artistWithHyphen=$(withHyphen $artistInUrl)
   artistWithHyphen2=$(withHyphen2 $artistInUrl)
   artistNoSpaces=$(noSpaces $artistInUrl)
@@ -250,6 +253,7 @@ function findLyrics() {
     echo "titleWithHyphen: $titleWithHyphen"
     echo "titleWithHyphen2: $titleWithHyphen2"
     echo "titleNoSpaces: $titleNoSpaces"
+
     echo "artistInUrl: $artistInUrl"
     echo "artistWithHyphen: $artistWithHyphen"
     echo "artistWithHyphen2: $artistWithHyphen2"
@@ -263,7 +267,7 @@ function findLyrics() {
     if [[ -n $VERBOSE ]]; then
       echo
     fi
-    ALL=($(google "$1 $2 lyrics site:$site"));
+    ALL=($(google "$ARTIST $TITLE lyrics site:$site"));
     #skip if no results found
     if [[ -z ${ALL[@]} ]]; then
       echo "No results. Lets try another...";
@@ -280,7 +284,7 @@ function findLyrics() {
         ${site%.*} $i
 
         if [[ -n $res ]]; then
-          finishIt "$1" "$2"
+          finishIt
           exit 0;
         else
           echo "Well, that URL sucked. Lets try another...";
@@ -313,7 +317,7 @@ function findLyrics() {
           tryURL "${OVERALL[$ans]}"
 
           if [[ -n $res ]]; then
-            finishIt "$1" "$2"
+            finishIt
             exit 0;
           else
             echo "Well, that URL sucked. Lets try another...";
@@ -335,7 +339,7 @@ function findLyrics() {
   
   #Get searching site for copy & paste
   #Replace &, " and space
-  Q="$1 $2 lyrics"
+  Q="$ARTIST $TITLE lyrics"
   Q=${Q//&/%26}
   Q=${Q//\"/%22}
   Q=${Q//\ /+}
@@ -408,7 +412,7 @@ This script is capable of finding out the Artist and Title of the currently
 playing song. If, you are using Rhythmbox or Spotify. See usage message below.
 
 Do it like this:
-  $(basename $0) <artist> <title>       - To look up lyrics for a song
+  $(basename $0) <artist> <title>       - To look up lyrics for a song (give \"-\" if artist unknown)
   $(basename $0) spotify                - To look up info for the currently playing song in Spotify
   $(basename $0) rhythmbox|rbox         - To look up info for the currently playing song in Rhythmbox
 Also, you can give an url for extracting directly: 
@@ -446,12 +450,12 @@ case $1 in
   rhythmbox|rbox)
     lookupRhythmboxInfo
     echo "Looking up title by Rhythmbox artist and title...";
-    findLyrics "$ARTIST" "$TITLE";
+    findLyrics
     ;;
   spotify)
     lookupSpotifyInfo
     echo "Looking up title by Spotify artist and title...";
-    findLyrics "$ARTIST" "$TITLE";
+    findLyrics
     ;;
   -h|--help)
     usage
@@ -459,7 +463,11 @@ case $1 in
   *)
     # 1=Artist 2=Title
     if [[ -n "$1" ]]; then
-      findLyrics "$1" "$2";
+      if [[ $1 != - ]]; then
+        ARTIST=$1
+      fi
+      TITLE=$2
+      findLyrics
     else
       usage 
     fi
