@@ -42,8 +42,7 @@ if [[ -n $src ]]; then
   links=$(echo "$linksHTML" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/')
 
   cnt=0
-  IFS="
-"
+  IFS=$'\n'
   for title in $titles; do
     ((cnt++))
     echo "$cnt: $title"

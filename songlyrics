@@ -9,8 +9,7 @@ ARTIST=
 TITLE=
 VERBOSE=
 urlonly=
-# prevent sed error on bad encoded characters by reading as ascii
-# test for failing: https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas (greek text)
+# prevent sed error on bad encoded characters by reading as ascii (test for failing (greek text): https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas)
 LC_CTYPE=C
 LANG=C
 

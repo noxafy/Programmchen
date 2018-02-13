@@ -82,8 +82,7 @@ if [[ -n $sort ]]; then
   res="$(grep_it $depth)"
   res=$(echo "$res" | sed -e 's/[│   ]*.── \[d[-rwx]* //; s/\]//' | sort -r)
   if [[ $sort -gt 1 ]]; then
-    IFS="
-"
+    IFS=$'\n'
     for entry in $res; do
       
       printf "%s\t%s\n" $(sizeFormat $(echo "$entry" | awk '{print $1}')) $(echo "$entry" | awk '{$1=""; print $0}')
