@@ -1,9 +1,47 @@
 #!/bin/bash
+regex='^(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+
+output=
+usage="Usage: \e[1mgenlink\e[0m -h | [-o \e[4moutfile\e[0m] \e[4mlinks\e[0m \e[4m...\e[0m"
+help="Generates a html file which redirects to the given link. If multiple links given, the html provides them.
+$usage
+	\e[1m-h\e[0m	Displays this help message and exits.
+	\e[4mlinks\e[0m	A link where the html should redirect or multiple links.
+	\e[1m-o\e[0m	Give an output file where to write the html content.
+"
+
+case $1 in
+  -h)
+	printf "$help"
+	exit 0
+	;;
+  -o)
+    if [[ -z $2 ]]; then
+      printf "Please give an output file for the html content. See -h for more help."
+      exit 1
+    fi
+    output=$2
+    shift 2
+	;;
+  -*)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
+esac
 
 if [[ -z $1 ]]; then
-  echo "Please give a link"
-elif [[ -z $2 ]]; then
+  echo "Please give a link to generate a redirecting html from. See -h for more help."
+  exit 1
+elif [[ -n $1 && -z $2 ]]; then
   link="$1"
+  if [[ $link =~ ^www\..* ]]; then
+    link="https://$1"
+  fi
+  if [[ ! $link =~ $regex ]]; then
+    echo "Invalid link: $link"
+    echo "Please give a full specified, valid link."
+    exit 1
+  fi
   echo "<!DOCTYPE html>
 <html>
   <head>
@@ -13,8 +51,9 @@ elif [[ -z $2 ]]; then
   <body>
     <a href=\"$link\">$link</a>  
   </body>
-</html>" >> "forwarding.html"
+</html>" > ${output:-forwarding.html}
 else
+	printf "" > ${output:-multiple_links.html}
   content="<!DOCTYPE html>
 <html>
   <head>
@@ -23,13 +62,22 @@ else
   <body style=\"margin: auto;\">
     <ul>
 "
-  while [[ -n $* ]]; do
-    content+="      <li><a href=\"$1\">$1</a></li>
+  while [[ -n $1 ]]; do
+    link="$1"
+    if [[ $link =~ ^www\..* ]]; then
+      link="https://$1"
+    fi
+    if [[ ! $link =~ $regex ]]; then
+      echo "Invalid link: $link"
+      echo "Please give only full specified, valid links."
+      exit 1
+    fi
+    content+="      <li><a href=\"$link\">$link</a></li>
 "
     shift
   done
   content+="    </ul>
   </body>
 </html>"
-  echo $content >> multiple_links.html
+  echo $content >> ${output:-multiple_links.html}
 fi
