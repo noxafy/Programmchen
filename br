@@ -1,13 +1,14 @@
 #!/bin/bash
 
-help='Adjusting the brightness of macs display. Depends on "brightness" (https://github.com/nriley/brightness).
-Usage: \e[1mbr\e[0m [ -h | [+|-]\e[4mbrightness\e[0m ]
+usage="Usage: \e[1mbr\e[0m -h | [[+|-]\e[4mbrightness\e[0m]"
+help="Adjusting the brightness of macs display. Depends on \"brightness\" (https://github.com/nriley/brightness).
+$usage
 	\e[1m-h\e[0m		Displays this message and exits.
 	\e[4mbrightness\e[0m	The percentage of display brightness. Give a number in format [x]x[.x[x]] 
-			(or 100) between 0 and 100). If the number is signed, "-" will cause 
-			display dimming at that percentage, "+" will brighten. 
+			(or 100) between 0 and 100). If the number is signed, \"-\" will cause 
+			display dimming at that percentage, \"+\" will brighten. 
 	If no argument given, it prints the actual percentage of display brightness.
-'
+"
 
 type brightness >/dev/null 2>&1 || (echo "Please install \"brightness\" first!" && exit 1)
 
@@ -37,7 +38,7 @@ case $1 in
     exit 0
     ;;
   -*)
-    printf "Wrong argument.\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   "")
@@ -45,7 +46,7 @@ case $1 in
     exit 0
     ;;
   *)
-    printf "Please specify a number in percent.\n$help"
+    printf "Please specify a number in percent. See -h for more help.\n"
     exit 1
     ;;    
 esac

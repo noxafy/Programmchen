@@ -10,9 +10,10 @@ medSpeed=15
 highSpeed=27
 extreme=42
 readspeed=$defaultSpeed #chars per second
+usage="Usage: \e[1mspam\e[0m -h | [-l \e[4mlength\e[0m] [-r \e[4mspeed\e[0m | [-r] \e[4mdefaultSpeed\e[0m]"
 help="Gives an endless stream of sayings by fortune (including the offensives).
-Usage: \e[1mspam\e[0m [ -h | [-l \e[4mlength\e[0m] [-r \e[4mspeed\e[0m | [-r] \e[4mdefaultSpeed\e[0m] ]
-        \e[1m-h\e[0m		Display this message and exit.
+$usage
+	\e[1m-h\e[0m		Displays this message and exits.
 	\e[1m-l\e[0m \e[4mlength\e[0m	Max length for a saying printed. (10-999)
 	\e[1m-r\e[0m \e[4mspeed\e[0m	The speed of reading in chars per second. (1-$maxspeed, default: $defaultSpeed).
 			For each saying there will be another two seconds added for 
@@ -22,9 +23,9 @@ Usage: \e[1mspam\e[0m [ -h | [-l \e[4mlength\e[0m] [-r \e[4mspeed\e[0m | [-r] \e
 
 	While running, you can use the following commands:
 	[Enter]|n	Next quote
-        s		Slower
-        f		Faster
-        q               Exit
+	s		Slower
+	f		Faster
+	q		Exit
 "
 
 printDelimiter() {
@@ -53,7 +54,7 @@ while [[ $* ]]; do
           maxlen=$1
           ;;
         *)
-          printf "Wrong syntax for argument \"-l\".\n$help"
+          echo "Wrong syntax for argument \"-l\". See -h for more help."
           exit 1
           ;;
       esac
@@ -63,7 +64,7 @@ while [[ $* ]]; do
       case $1 in
         [0-9]|[0-9][0-9])
           if [[ $1 -eq 0 ]]; then
-            printf "Wrong syntax for argument \"-r\". Zero produces no output. Try a number between 1 and $maxspeed. Default is 12.\n"
+            echo "Wrong syntax for argument \"-r\". Zero produces no output. Try a number between 1 and $maxspeed. Default is 12."
             exit 1
           else
            readspeed=$1
@@ -100,7 +101,7 @@ while [[ $* ]]; do
           readspeed=$extreme
           ;;
         *)
-          printf "Wrong syntax.\n$help"
+          echo "Wrong syntax. See -h for more help."
           exit 1
           ;;
       esac
@@ -128,7 +129,7 @@ while [[ $* ]]; do
        readspeed=$extreme
        ;;
     -*|*)
-      printf "Wrong argument \"%s\".\n$help" "$1"
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       exit 1
       ;;
   esac

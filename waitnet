@@ -2,10 +2,11 @@
 
 timeout=60
 sendNote=
-output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output 
+output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
+usage="Usage: \e[1mwaitnet\e[0m -h | [-q] [-n] [-s] [-t \e[4mtimeout\e[0m]"
 help="Test for internet connection estabilshed.
-Usage: \e[1mwaitnet\e[0m [-h] | [-q] [-n] [-s] [-t \e[4mtimeout\e[0m]
-	\e[1m-h\e[0m	Show this help message and exit.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
 	\e[1m-t\e[0m	Specify a timeout in seconds (default: 60).
 	\e[1m-s\e[0m	No output on success without waiting (best for scripts).
@@ -38,15 +39,13 @@ while [[ -n $1 ]]; do
           shift
           ;;
         *)
-          echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767)."
-          printf "$help"
+          echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767). See -h for more help."
           exit 1
           ;;
       esac
       ;;
     *)
-      echo "Wrong argument: $1 - Please give a timeout in seconds (3-32767)."
-      printf "$help"
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       exit 1
       ;;
   esac

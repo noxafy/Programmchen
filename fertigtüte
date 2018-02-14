@@ -1,8 +1,9 @@
 #!/bin/bash
 
+usage="Usage: \e[1mfertigtüte\e[0m [-h]"
 help='Provides an interactive recipe for cooking a poket soup.
-Usage: \e[1mfertigtüte\e[0m [ -h ]
-	\e[1m-h\e[0m	Display this message and exit.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
 '
 
 case $1 in
@@ -11,7 +12,7 @@ case $1 in
     exit 0
     ;;
   -*)
-    printf "Wrong argument.\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
 esac

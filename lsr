@@ -5,15 +5,16 @@ rec=1 #for standard rec is on
 dirCnt=0
 fileCnt=0
 path=""
+usage="Usage: \e[1mlsr\e[0m -h | [-d|-f|-c] [-t] [-g \e[4mgrep\e[0m] [\e[4mpath\e[0m]"
 help="Prints recursively all files with full path, current location by default.
-Usage: \e[1mlsr\e[0m [ -h | [-d|-f|-c] [-t] \e[4mpath\e[0m ]
-        \e[1m-h\e[0m	Displays this help messages and exits.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-d\e[0m	Prints directories only.
-        \e[1m-f\e[0m	Prints files only.
-        \e[1m-c\e[0m	Prints nothing as the count message at the end.
-        \e[1m-t\e[0m	Don't search recursively.
-        \e[1m-g\e[0m	Grep something.
-	\e[4mpath\e[0m	List in a given path instead of current.
+	\e[1m-f\e[0m	Prints files only.
+	\e[1m-c\e[0m	Prints nothing as the count message at the end.
+	\e[1m-t\e[0m	Don't list recursively.
+	\e[1m-g\e[0m	Grep something. (grepping from outside is faster...)
+	\e[4mpath\e[0m	List starting from a given path instead of current.
 "
 
 trap 'printf "To file [$file]:\n"; resumee; exit 1' 2
@@ -41,7 +42,7 @@ while [ "$*" ]; do
       shift
       ;;
     -*)
-      printf "Wrong argument.\n$help"
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       exit 1
       ;;
     *)
@@ -49,11 +50,11 @@ while [ "$*" ]; do
         if [[ -d $1 ]]; then
           path="$1"
         else
-          echo "$1 is not a directory."
+          echo "$1 is not a directory. See -h for more help."
           exit 1
         fi
       else
-        echo "$1 does not exist."
+        echo "$1 does not exist. See -h for more help."
         exit 1
       fi
       if [[ ${path:((${#path}-1)):${#path}} != '/' ]]; then

@@ -3,8 +3,9 @@
 sec=90 # amount of time in seconds for one page
 pages=1000 # amount of pages
 actPage=0 # actual page
+usage="Usage: \e[1mlearn\e[0m -h | [\e[4mactPages\e[0m] [\e[4mpages\e[0m] [-t \e[4mtimeout\e[0m]"
 help="Says every $sec seconds via notification (depends on \"note\") on which page you have to be.
-Usage: \e[1mlearn\e[0m -h | [\e[4mactPages\e[0m] [\e[4mpages\e[0m] [-t \e[4mtimeout\e[0m]
+$usage
 	\e[1m-h\e[0m	Displays this message and exits.
         \e[4mactPage\e[0m	The page where you gonna start (1-999).
 	\e[4mpages\e[0m	Number of pages in the script (1-999). If not given it ends after 1000 
@@ -41,18 +42,18 @@ while [[ $* ]]; do
           sec=$2
           ;;
         *)
-          printf "Please specify a valid timeout with argument -t.\n$help"
+          echo "Please specify a valid timeout with argument -t. See -h for more help."
           exit 1
           ;;
       esac
       shift
       ;;
     -*)
-      printf "Wrong argument.\n$help"
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       exit 1
       ;;
     *)
-      printf "Please specify a valid actual page number.\n$help"
+      echo "Please specify a valid actual page number. See -h for more help."
       exit 1
       ;;
   esac

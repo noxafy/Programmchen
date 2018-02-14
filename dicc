@@ -5,16 +5,17 @@ verbose=0
 pagesconfirmfrom=4
 openDirect=
 timeout=2
-help='Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
-Usage: \e[1mdicc\e[0m [-h] | [-o|-a|-r] [-v] []\e[4mkey\e[0m \e[4m...\e[0m]
-	\e[1m-h\e[0m	Display this help message and exit.
+usage="Usage: \e[1mdicc\e[0m -h | [-o|-a|-r] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
+help="Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-o\e[0m	Opens the site directly in your default browser.
 	\e[1m-a\e[0m	Show all translations from the first page. Will be shown automatically 
 		if there are no exact results available.
 	\e[1m-r\e[0m	Show all entries of all pages. This may take a while.
 	\e[1m-v\e[0m	Verbose a little bit.
 	\e[4mkey\e[0m	The keyword to search translations for.
-'
+"
 
 #resolve wholepage (-a) and multipage search (-r), open link (-o), verbose (-v) and help (-h)
 while [ "$*" ]; do
@@ -36,7 +37,7 @@ while [ "$*" ]; do
     verbose=1
     ;;
   -*)
-    printf "Wrong argument: $1\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   *)
@@ -55,9 +56,9 @@ waitnet -s
 
 if [[ -n "$key" ]]; then
   site="https://www.dict.cc/?s=$key"
-else
-  open "https://www.dict.cc/"
-  exit 0
+elif [[ -z $openDirect ]]; then
+  echo "Please specify some key words to search for. See -h for more help."
+  exit 1
 fi
 
 #open website if desired

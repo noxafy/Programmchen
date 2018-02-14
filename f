@@ -37,14 +37,13 @@ idealo_def="https://www.idealo.de/"
 
 site=$e #default
 
+usage="Usage: \e[1mf\e[0m -h | [-y] [\e[4moption1\e[0m] | [-y] [\33[4moption2\e[0m|--] [-y] \e[4mkey\e[0m \e[4m...\e[0m"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
-Usage: \e[1mf\e[0m [ -h | [-y] \e[4moption1\e[0m | [-y] [\33[4moption2\e[0m|--] [-y] \e[4mkey\e[0m \e[4m...\e[0m ]
-	\e[1m-h\e[0m	Display this message and exit.
-	\e[1m-y\e[0m	Print resulting link, add it to clipboard and exit.
-	\e[4mkey\e[0m	The query keywords
-	\e[4moption\e[0m	Is one of:"
-
-options="
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-y\e[0m	Prints the resulting link, adds it to clipboard and exits.
+	\e[4mkey\e[0m	The query keywords to look for a translation.
+	\e[4moption\e[0m	Is one of:
 	  Option type 1 opens a specific web page. Any following arguments will be ignored.
 	    OPTION1	SITE
 	    w		$w
@@ -95,7 +94,7 @@ fire() {
       startFireFox
     fi
     # open link
-    open "$1" || exit 1
+    open "$1" || (echo "Failed to open $1" && exit 1)
   else
     if [[ -t 1 ]]; then
       echo "$1 (copied to clipboard)"
@@ -110,7 +109,7 @@ fire() {
 
 case $1 in
   -h|--help)
-    printf "$help%s" "$options"
+    printf "$help"
     exit 0
     ;;
   -y)
@@ -120,7 +119,7 @@ case $1 in
   --)
     ;;
   -*)
-    echo "Wrong argument. Try -h for help."
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
 esac

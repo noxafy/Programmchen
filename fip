@@ -1,11 +1,12 @@
 #!/bin/bash
 
 xact=false
+usage="Usage: \e[1mfip\e[0m -h | [-x] [\e[4mkey\e[0m]"
 help="Searches in all directories defined by \$PATH for \e[4mkey\e[0m.
-Usage: \e[1mfip\e[0m [ -h | [-x] \e[4mkey\e[0m ]
-        \e[1m-h\e[0m	Displays this messages and exits.
+$usage
+        \e[1m-h\e[0m	Displays this message and exits.
         \e[1m-x\e[0m	Finds only exact matches.
-        \e[4mkey\e[0m	The query keyword. No keyword prints all files in PATH.
+        \e[4mkey\e[0m	The query keyword. Empty keyword prints all files in PATH.
 "
 
 case $1 in
@@ -18,7 +19,7 @@ case $1 in
     shift
     ;;
   -*)
-    printf "Wrong argument.\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   *)

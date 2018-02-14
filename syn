@@ -1,12 +1,13 @@
 #!/bin/bash
 openlink=""
-help='Searchs and prints german synonyms for \e[4mkey\e[0m from http://openthesaurus.de. 
+usage="Usage: \e[1msyn\e[0m -h | [-l] [\e[4mkey\e[0m \e[4m...\e[0m]"
+help="Searchs and prints german synonyms for \e[4mkey\e[0m from http://openthesaurus.de. 
 No argument opens the website.
-Usage: \e[1msyn\e[0m [ -h | [-l] \e[4mkey\e[0m \e[4m...\e[0m ]
+$usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-l\e[0m	Opens the corresponding website.
 	\e[4mkey\e[0m	The word(s) whose synonyms you want to know.
-'
+"
 
 case $1 in
   -h)
@@ -18,7 +19,7 @@ case $1 in
     shift
     ;;
   -*)
-    printf "Wrong argument.\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
 esac
@@ -49,7 +50,7 @@ if [[ $* ]]
       [[ -n "$ans" ]] && echo $ans || echo "Keine Synonyme gefunden"
     fi
   elif [[ $openlink ]]; then
-    printf "Please give a keyword to open the link for.\n$help"
+    echo "Please give a keyword to open the link for. See -h for more help."
     exit 1
   else
     open https://www.openthesaurus.de/

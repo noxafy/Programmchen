@@ -1,9 +1,10 @@
 #!/bin/bash
 desttime=0
 verbose=1 #1=show remaining time, 0=don't
-help='Sends a notification to the system at given \e[4mtime\e[0m with given or default \e[4mmessage\e[0m and shows
+usage="Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [\e[4mmes\e[0m \e[4m...\e[0m] | \e[4mmes\e[0m \e[4m...\e[0m"
+help="Sends a notification to the system at given \e[4mtime\e[0m with given or default \e[4mmessage\e[0m and shows
 the remaining time in the shell. If no \e[4mtime\e[0m given, it sends the notification instantly.
-Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [\e[4mmes\e[0m \e[4m...\e[0m] | \e[4mmes\e[0m \e[4m...\e[0m
+$usage
 	\e[1m-h\e[0m	Displays this help message and exists.
 	\e[1m-s\e[0m	Do not display the remaining time (for running in background).
 	\e[4mtime\e[0m	Can be
@@ -12,19 +13,19 @@ Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [\e[4mmes\e[0m \e[4m...\e[0m] | \
 		   24 hours is possible
 		 - a string in the form:
 		   \e[4mtime\e[0m = d | h | m | s
-		   d    = 0"d"(h | m | s)
-		   h    = 0"h"(m | s)
-		   m    = 0"m"(s)
-		   s    = 0"s"
+		   d    = 0\"d\"(h | m | s)
+		   h    = 0\"h\"(m | s)
+		   m    = 0\"m\"(s)
+		   s    = 0\"s\"
                    0    = [0-9]+
 		   while
-		   - "d" stands for days
-		   - "h" stands for hours
-		   - "m" stands for minutes
-		   - "s" stands for seconds
-		   Examples: "5d2h45m", "30m45s", "5h2s", "6m", ...
-	\e[4mmes\e[0m	The message that should be sent when time is up. (Default: "Time is up!")
-'
+		   - \"d\" stands for days
+		   - \"h\" stands for hours
+		   - \"m\" stands for minutes
+		   - \"s\" stands for seconds
+		   Examples: \"5d2h45m\", \"30m45s\", \"5h2s\", \"6m\", ...
+	\e[4mmes\e[0m	The message that should be sent as time is up. (Default: \"Time is up!\")
+"
 
 asUptime() {
   now=$(date "+%s")
@@ -54,11 +55,11 @@ while [[ -n $* ]]; do
     verbose=0
     ;;
   -*)
-    printf "Wrong argument.\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   "")
-    printf "Please specify a time and/or message.\n$help"
+    echo "Please specify a time and/or message. See -h for more help."
     exit 1
     ;;
   [0-9]:[0-5][0-9]|[0-2][0-9]:[0-5][0-9])

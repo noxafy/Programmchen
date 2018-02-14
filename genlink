@@ -5,7 +5,7 @@ output=
 usage="Usage: \e[1mgenlink\e[0m -h | [-o \e[4moutfile\e[0m] \e[4mlinks\e[0m \e[4m...\e[0m"
 help="Generates a html file which redirects to the given link. If multiple links given, the html provides them.
 $usage
-	\e[1m-h\e[0m	Displays this help message and exits.
+	\e[1m-h\e[0m	Displays this message and exits.
 	\e[4mlinks\e[0m	A link where the html should redirect or multiple links.
 	\e[1m-o\e[0m	Give an output file where to write the html content.
 "
@@ -17,7 +17,7 @@ case $1 in
 	;;
   -o)
     if [[ -z $2 ]]; then
-      printf "Please give an output file for the html content. See -h for more help."
+      printf "Please give an output file for the html content with argument -o. See -h for more help."
       exit 1
     fi
     output=$2

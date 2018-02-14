@@ -8,10 +8,11 @@ rec="active" #by default clean will clean recursively
 cleanedUp=0 #storage freed in bytes
 path="." #path as root for cleaning
 uselocate=0
+usage="Usage: \e[1mclean@2\e[0m -h | [-s|-v] [-l | [-t] [-a] [\e[4mpath\e[0m]]"
 help="Cleans up the current (or given) directory recursively from ${evil[@]}.
-Usage: \e[1mclean\e[0m [ -h | [-s|-v] [ -l | [-t] [-a] \e[4mpath\e[0m ] ]
-	\e[1m-h\e[0m	Displays this help message and exits.
-	\e[1m-s\e[0m	Silence.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-s\e[0m	Silence. Show errors only.
 	\e[1m-v\e[0m	Verbose everything.
 	\e[1m-l\e[0m	Using locate instead of find. Deleting from all indexed dirs.
 		Overwrites \e[1m-t\e[0m.
@@ -42,14 +43,14 @@ while [[ -n "$*" ]]; do
       exit 0
       ;;
     -*)
-      printf "Wrong argument: $1\n$help"
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       exit 1
       ;;
     *)
       if [[ -e $1 && -d $1 ]]; then
           path="$1"
         else
-          echo "$1 is not a directory."
+          echo "$1 is not a directory. See -h for more help."
           exit 1
       fi
       ;;

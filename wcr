@@ -4,13 +4,14 @@ verbose=1 # 0=verbose only resumee message 1=verbose skipped files too (default)
 filecnt=0
 dircnt=1 #startdir is first
 skipcnt=0
-help='Summarizes recursively the exact number of bytes of all data in a directory using wc -c." 
-Usage: \e[1mwcr\e[0m [ -h | [-v|-s] [\e[4mpath\e[0m] ]
-	\e[1m-h\e[0m	Display this message and exit.
-	\e[1m-v\e[0m	Verbose all passed files.
-        \e[1m-s\e[0m	Conceal skipped files.
+usage="Usage: \e[1mwcr\e[0m -h | [-v|-s] [\e[4mpath\e[0m]"
+help="Summarizes recursively the exact number of bytes of all data in a directory using wc -c.
+$usage
+	\e[1m-h\e[0m	Displays this message and exit.
+	\e[1m-v\e[0m	Verboses all passed files.
+        \e[1m-s\e[0m	Conceals skipped files.
 	\e[4mpath\e[0m	An alternative path to a directory.
-'
+"
 trap 'resumee; exit 0' 2
 
 while [[ $* ]]; do
@@ -26,7 +27,7 @@ while [[ $* ]]; do
     verbose=0
     ;;
   -*)
-    printf "Wrong argument.\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   "")
@@ -36,11 +37,11 @@ while [[ $* ]]; do
       if [[ -d $1 ]]; then
         path="$1"
       else
-        echo "$1 is not a directory."
+        echo "$1 is not a directory. See -h for more help."
         exit 1
       fi
     else
-      echo "$1 does not exist."
+      echo "$1 does not exist. See -h for more help."
       exit 1
     fi
     ;;

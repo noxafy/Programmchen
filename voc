@@ -12,19 +12,20 @@ translation=
 additional=
 openVocs=
 reslnnrs=
+usage="Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m [-o] | -s [-o] \e[4mword\e[0m [-o]"
 help="Reads vocabularies from an csv (does not write) and asks them randomly and two-way.
-Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m [-o] | -s [-o] \e[4mword\e[0m [-o]
-	\e[1m-h\e[0m	Display this message and exit.
-	\e[1m-n\e[0m	Open a new window and test you from there in training mode.
-	\e[1m-t\e[0m	Start training mode in this window (not recommended, use \e[1m-n\e[0m).
-	\e[4mfile\e[0m	Read the specified vokabulary csv. First and second arguments are meanings, 
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-n\e[0m	Opens a new window and tests you from there in training mode.
+	\e[1m-t\e[0m	Starts training mode in this window (not recommended, use \e[1m-n\e[0m).
+	\e[4mfile\e[0m	Reads the specified vokabulary csv. First and second arguments are meanings, 
 		third can be used for comments. Be aware of the required formatting shown below.
 		Default path is $file.
-	\e[1m-o\e[0m	Open the vocabulary list ($vocs).
-        \e[1m-a\e[0m	Add a new word to the vocabulary list.
-	\e[1m-s\e[0m	Search a word in both, vocabulary list and vocabulary database.
+	\e[1m-o\e[0m	Opens the vocabulary list ($vocs).
+        \e[1m-a\e[0m	Adds a new word to the vocabulary list.
+	\e[1m-s\e[0m	Searches a word in both, vocabulary list and vocabulary database.
 
-Create the .csv in following form:
+Create the .csv in the following form:
  \"word\",\"meaning\",\"helping comment for memorizing or pronouncing\"
 "
 #TODO after search, provide open when found
@@ -219,8 +220,7 @@ case $1 in
     exit 0
     ;;
   -*)
-    echo "Wrong argument: $1"
-    printf "$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   "")
@@ -233,14 +233,14 @@ shift
 
 if [[ -e "$file" ]]; then
   if [[ -d "$file" ]]; then
-    echo "$file is a directory. Please give a file."
+    echo "$file is a directory. Please give a file. See -h for more help."
     exit 1
   elif [[ ! -r "$file" ]]; then
-    echo "$file is not readable."
+    echo "$file is not readable. See -h for more help."
     exit 1
   fi
 else
-  echo "File $file does not exist."
+  echo "File $file does not exist. See -h for more help."
   exit 1
 fi
 

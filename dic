@@ -1,9 +1,10 @@
 #!/bin/bash
-help='Sends \e[4mkey\e[0m as search request to Dictionary.app. No argument will nevertheless open it.
-Usage: \e[1mdic\e[0m [ -h | \e[4mkey\e[0m \e[4m...\e[0m ]
-	\e[1m-h\e[0m	Displays this help message and exists.
+usage="Usage: \e[1mdic\e[0m -h | [\e[4mkey\e[0m \e[4m...\e[0m]"
+help="Sends \e[4mkey\e[0m as search request to Dictionary.app. No argument will nevertheless open it.
+$usage
+	\e[1m-h\e[0m	Displays this message and exists.
 	\e[4mkey\e[0m	The query keywords.
-'
+"
 
 case $1 in
   -h)
@@ -11,7 +12,7 @@ case $1 in
     exit 0
     ;;
   -*)
-    printf "Wrong argument.\n$help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
 esac

@@ -1,11 +1,12 @@
 #!/bin/bash
 
-help='List directories with "\e[1mtree\e[0m" to a particular depth.
-Usage: \e[1mtdl\e[0m [-S] \e[4mdepth\e[0m
+usage="Usage: \e[1mtdl\e[0m [-S] [\e[4mdepth\e[0m]"
+help="List directories with \"\e[1mtree\e[0m\" to a particular depth.
+$usage
 	\e[1m-S\e[0m	Sort entries by size.
- 	\e[1m-Sh\e[0m	Sort entries by size, but let size "human-readable".
+ 	\e[1m-Sh\e[0m	Sort entries by size, but let size \"human-readable\".
 	\e[4mdepth\e[0m	Depth of directories listed (1 to 5; default: 1).
-'
+"
 
 grep_it() {
   if [[ $1 =~ -?1 ]]; then
@@ -40,7 +41,7 @@ while [[ -n $1 ]]; do
       exit 0
       ;;
     *)
-      echo "Unknown argument: $1"
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       exit 1
       ;;
   esac
@@ -84,7 +85,6 @@ if [[ -n $sort ]]; then
   if [[ $sort -gt 1 ]]; then
     IFS=$'\n'
     for entry in $res; do
-      
       printf "%s\t%s\n" $(sizeFormat $(echo "$entry" | awk '{print $1}')) $(echo "$entry" | awk '{$1=""; print $0}')
     done
   else

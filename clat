@@ -1,15 +1,24 @@
 #!/bin/bash
 
-help='Usage: \e[1mclat\e[0m [ -h | \e[4mfile\e[0m ]
-Compiles an tex file multiple times, so bib and pdf is right.
-'
+usage="Usage: \e[1mclat\e[0m -h | \e[4mfiles\e[0m \e[4m...\e[0m"
+help="Compiles one or multiple tex file multiple times, so bib and pdf is right.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[4mfiles\e[0m	.tex-files which sould get compiled.
+		Ensure existence of linked files (.aux, .bib, other .tex, ...)
+"
 
-if [[ $1 = -h ]]; then
-  printf "$help"
-  exit 0
+if [[ $1 = -* ]]; then
+  if [[ $1 = -h ]]; then
+    printf "$help"
+    exit 0
+  else
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+  fi
 elif [[ -n $1 ]]; then
  if [[ ! -r "$1" ]]; then
-  echo "Please give an existing and readable file."
+  echo "Please give an existing and readable file. See -h for more help."
   exit 1
  fi
  for file in $@; do
@@ -21,6 +30,6 @@ elif [[ -n $1 ]]; then
    pdflatex -interaction=batchmode "$file"
  done
 else
- printf "Please give a file.\n$help"
+ echo "Please give a file. See -h for more help."
  exit 1
 fi

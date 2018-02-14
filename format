@@ -1,13 +1,14 @@
 #!/bin/bash
 
-help='Prints formatting codes in a table. With no argument it prints all formatting codes.
-Usage: \e[1mformatstr\e[0m [-s|\e[4mnumber\e[0m|-a|-h]
+usage="Usage: \e[1mformat\e[0m [-h|-s|\e[4mnumber\e[0m|-a]"
+help="Prints formatting codes in a table. With no argument it prints all formatting codes.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-s\e[0m	Prints only the non-color options.
 	\e[4mnumber\e[0m	Prints all numbers to there (1-999).
 	\e[1m-a\e[0m	Prints all numbers to 108 (last one).
-	\e[1m-h\e[0m	Prints this message and exits.
 More infomation: https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_codes
-'
+"
 
 formatted="0 1 2 4 5 7 8 $(seq 30 37) $(seq 40 47) $(seq 90 97) $(seq 100 107)"
 show() {
@@ -41,6 +42,6 @@ case $1 in
     exit 0
     ;;
   *)
-    printf "Wrong argument $help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
 esac
