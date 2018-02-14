@@ -97,7 +97,11 @@ fire() {
     # open link
     open "$1" || exit 1
   else
-    echo "$1"
+    if [[ -t 1 ]]; then
+      echo "$1 (copied to clipboard)"
+    else
+      echo "$1"
+    fi
     #save to clipboard
     printf "%s" "$1" | pbcopy
   fi
