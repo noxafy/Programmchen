@@ -34,7 +34,7 @@ if [[ -t 1 && -z $1 ]]; then
     *)
       exit 0
       ;;
-   esac
+  esac
 fi 
 
 for path in `echo $PATH | sed s/:/\ /g`; do
