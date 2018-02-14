@@ -3,8 +3,9 @@
 obj=""
 
 site="https://www.youtube.com/user/Gronkh/videos"
+usage="Usage: \e[1mgr\e[0m -h | -o | [\e[4mseries\e[0m]"
 help="Prints all recent Gronkh videos on YouTube.
-Usage: \e[1mgr\e[0m [ -h | -o | \e[4mseries\e[0m ]
+$usage
 	\e[1m-h\e[0m	Displays this message and exists.
 	\e[1m-o\e[0m	Opens Gronkhs YouTube-site directly.
 	\e[4mseries\e[0m	Filters for special series containing \e[4mseries\e[0m (case insensitive).
@@ -20,11 +21,8 @@ case "$1" in
     f "$site"
     exit 0
     ;;
-  -l)
-    noLinks=1
-    ;;
   -*)
-    printf "Wrong argument. $help"
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   *)
@@ -84,11 +82,6 @@ if [[ -n $src ]]; then
       esac
     fi
   fi
-  #if [[ $noLinks ]]; then
-    #res=$(echo $src | grep -o 'href="/watch?v=[^"]*">[^<]*' | sed 's/href="[^"]*">//' | sed 's/">/'$'\t''/' | grep "$obj")
-    #else
-    #res=$(echo $src | grep -o 'href="/watch?v=[^"]*">[^<]*' | sed 's/href="/https:\/\/www.youtube.com/' | sed 's/">/'$'\t''/' | grep "$obj")
-    #fi
 else
   echo "Fetching from $site failed."
 fi
