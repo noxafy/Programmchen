@@ -46,13 +46,16 @@ function fetchResult() {
   
   #test if url exists, print http state
   if [[ -n $VERBOSE ]]; then
-    echo
-    echo "Fetching header: $CURL -H \"$header\" -SI \"$1\""
+    echo "
+Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
   fi
   testUrl=$($CURL -H "$header" -SI "$1" 2>&1)
   state=$(echo "$testUrl" | sed -n 1p)
   if [[ $state != *200* ]]; then
-    echo "Error in fetching site: $state"
+    echo "Error in fetching site: $state" >&2
+    if [[ ! -t 1 ]]; then
+      exit 1
+    fi
     res=$($CURL -H "$header" "$1");
     printf "Do you want to see details? (${#testUrl}/${#res}) (y/n) [n]: "
     read ans
@@ -71,24 +74,24 @@ function fetchResult() {
     return
   fi
   if [[ -n $VERBOSE ]]; then
-    echo "******Answer-Header (START)******"
+    echo "******Answer-Header (START)******" >&2
     printf "%s" "$testUrl" >&2
-    echo "******Answer-Header (END)*********"
-    echo
+    echo "******Answer-Header (END)*********
+" >&2
   else
     echo "$state" >&2
   fi
 
   #awk lyrics from site
   if [[ -n $VERBOSE ]]; then
-    echo "Fetching lyrics: $CURL -H \"$header\" \"$1\""
+    echo "Fetching lyrics: $CURL -H \"$header\" \"$1\"" >&2
   fi
   res=$($CURL -H "$header" "$1" | awk "$2");
   if [[ -n $VERBOSE ]]; then
     if [[ -n $res ]]; then
-      echo "Lyrics in site found! (lenght: ${#res})"
+      echo "Lyrics in site found! (lenght: ${#res})" >&2
     else
-      echo "Extracting lyrics failed on awk (or curl))!"
+      echo "Extracting lyrics failed on awk (or curl))!" >&2
       return;
     fi
   fi
@@ -178,7 +181,11 @@ function plyrics() {
 
 function finishIt() {
   if [[ -n "$ARTIST" && -n "$TITLE" ]]; then
-    printf "\n\e[1;4m%s - %s\e[0m\n" "$ARTIST" "$TITLE"
+    if [[ -t 1 ]]; then
+      printf "\n\e[1;4m%s - %s\e[0m\n" "$ARTIST" "$TITLE"
+    else
+      printf "%s - %s\n" "$ARTIST" "$TITLE"
+    fi
   fi
   #guarantee one newline before...
   if [[ ! "$res" =~ ^[[:space:]] ]]; then
@@ -203,7 +210,7 @@ function tryURL() {
         if [[ -n $res ]]; then
           finishIt
         else
-          echo "Sorry, couldn't extract lyrics from that URL...";
+          echo "Sorry, couldn't extract lyrics from that URL..." >&2
         fi
         exit 0;
       fi
@@ -232,9 +239,9 @@ function preformat() {
 }
 
 function findLyrics() {
-  echo "Artist: $ARTIST"
-  echo "Title: $TITLE"
-  echo
+  echo "Artist: $ARTIST
+Title: $TITLE
+" >&2
   
   tileInUrl=$(preformat $TITLE | sed 's/ - [Ll]ive.*//g')
   titleWithHyphen=$(withHyphen $tileInUrl)
@@ -247,29 +254,29 @@ function findLyrics() {
   artistNoSpaces=$(noSpaces $artistInUrl)
   
   if [[ -n $VERBOSE ]]; then
-    echo "******Debug matching title and artist******"
-    echo "titleInUrl: $tileInUrl"
-    echo "titleWithHyphen: $titleWithHyphen"
-    echo "titleWithHyphen2: $titleWithHyphen2"
-    echo "titleNoSpaces: $titleNoSpaces"
+    echo "******Debug matching title and artist******
+titleInUrl: $tileInUrl
+titleWithHyphen: $titleWithHyphen
+titleWithHyphen2: $titleWithHyphen2
+titleNoSpaces: $titleNoSpaces
 
-    echo "artistInUrl: $artistInUrl"
-    echo "artistWithHyphen: $artistWithHyphen"
-    echo "artistWithHyphen2: $artistWithHyphen2"
-    echo "artistNoSpaces: $artistNoSpaces"
-    echo "********************************************"
+artistInUrl: $artistInUrl
+artistWithHyphen: $artistWithHyphen
+artistWithHyphen2: $artistWithHyphen2
+artistNoSpaces: $artistNoSpaces
+********************************************" >&2
   fi
   
   OVERALL=()
   for site in $sites; do
-    printf "Looking for lyrics at %s: " "$site"
+    printf "Looking for lyrics at %s: " "$site" >&2
     if [[ -n $VERBOSE ]]; then
-      echo
+      echo >&2
     fi
     ALL=($(google "$ARTIST $TITLE lyrics site:$site"));
     #skip if no results found
     if [[ -z ${ALL[@]} ]]; then
-      echo "No results. Lets try another...";
+      echo "No results. Lets try another..." >&2
       continue;
     fi
 
@@ -278,7 +285,7 @@ function findLyrics() {
       if [[ -n $(echo "$i" | grep -i "$titleWithHyphen" | grep -i "$artistWithHyphen")
         || -n $(echo "$i" | grep -i "$titleNoSpaces" | grep -i "$artistNoSpaces")
         || -n $(echo "$i" | grep -i "$titleWithHyphen2" | grep -i "$artistWithHyphen2") ]]; then
-        echo "Lyrics found!"
+        echo "Lyrics found!" >&2
 
         ${site%.*} $i
 
@@ -286,29 +293,29 @@ function findLyrics() {
           finishIt
           exit 0;
         else
-          echo "Well, that URL sucked. Lets try another...";
+          echo "Well, that URL sucked. Lets try another..." >&2
         fi
       elif [[ -n $VERBOSE ]]; then
-        echo "URL not matching: $i"
+        echo "URL not matching: $i" >&2
       fi
     done
     
     #add ALL to OVERALL and try to find in next site
     OVERALL+=("${ALL[@]}")
-    echo "No matching site found. Lets try another site..."
+    echo "No matching site found. Lets try another site..." >&2
   done
   
-  printf "No matching site found in all sites. "
+  printf "No matching site found in all sites. " >&2
   
   if [[ -n ${OVERALL[@]} ]]; then
-    echo "Anyway, some sites where found:"
+    echo "Anyway, some sites where found:" >&2
     while [[ -n "${OVERALL[@]}" ]]; do
       j=1
       for resURL in ${OVERALL[@]}; do
-        echo "$j: $resURL"
+        echo "$j: $resURL" >&2
         ((j++))
       done
-      printf "Is there anyone right? (1-${#OVERALL[@]} / q (= quit)) [q]: "
+      printf "Is there anyone right? (1-${#OVERALL[@]} / q (= quit)) [q]: " >&2
       read ans
       if [[ $ans =~ ^[0-9]+$ ]]; then
         if [[ $ans -le ${#OVERALL[@]} ]]; then
@@ -319,13 +326,13 @@ function findLyrics() {
             finishIt
             exit 0;
           else
-            echo "Well, that URL sucked. Lets try another...";
-            echo "DEBUG: $res"
+            echo "Well, that URL sucked. Lets try another..." >&2
+            echo "DEBUG: $res" >&2
             #remove that URL from OVERALL
             OVERALL=("${OVERALL[@]:0:$ans}" "${OVERALL[@]:((ans+1))}")
           fi
         else
-          echo "That number was too high..."
+          echo "That number was too high..." >&2
           break;
         fi
       else
@@ -334,7 +341,7 @@ function findLyrics() {
     done
   fi
   
-  echo "Ooops, no site left. Givin' up now :("
+  echo "Ooops, no site left. Givin' up now :(" >&2
   
   #Get searching site for copy & paste
   #Replace &, " and space
@@ -342,7 +349,7 @@ function findLyrics() {
   Q=${Q//&/%26}
   Q=${Q//\"/%22}
   Q=${Q//\ /+}
-  echo "${GOOG_URL}?q=$Q"
+  echo "${GOOG_URL}?q=$Q" >&2
 }
 
 ################################################################################
@@ -363,17 +370,17 @@ function lookupSpotifyInfo() {
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     #precautionally open it
     if [[ $(ps -x | grep 'Spotify.app' | wc -l) -eq 1 ]]; then
-      echo "Opening Spotify at first ..."
+      echo "Opening Spotify at first ..." &>2
       open -j /Applications/Spotify.app/ && sleep 3
     fi
     ARTIST="$(osascript -e 'tell application "Spotify" to artist of current track as string')";
     TITLE="$(osascript -e 'tell application "Spotify" to name of current track as string')";
   else
-    echo "Your OS doesn't appear to be supported"
+    echo "Your OS doesn't appear to be supported" >&2
   fi
 
   if [[ -z "$ARTIST" || -z "$TITLE" ]]; then
-    echo "There was a problem getting the currently playing info from spotify";
+    echo "There was a problem getting the currently playing info from spotify" >&2
     exit 1;
   fi
 }
@@ -448,12 +455,12 @@ tryURL "urlonly" "$1"
 case $1 in
   rhythmbox|rbox)
     lookupRhythmboxInfo
-    echo "Looking up title by Rhythmbox artist and title...";
+    echo "Looking up title by Rhythmbox artist and title..." >&2
     findLyrics
     ;;
   spotify)
     lookupSpotifyInfo
-    echo "Looking up title by Spotify artist and title...";
+    echo "Looking up title by Spotify artist and title..." >&2
     findLyrics
     ;;
   -h|--help)
