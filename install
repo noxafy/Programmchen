@@ -1,29 +1,32 @@
 #!/bin/bash
 
-##########################
-### Preparation
-##########################
+usage="\e[1minstall\e[0m [-h]"
+help="An install script for computer reset.
+$usage
+	\e[1m-h\e[0m	Displays this message and exists.
+	
+Warning: Do NOT put in \$PATH! Leave in place.
+"
 
-#copy:
-# - .bash_profile .m2/settings.xml .tm_properties .ssh/
-# - Thunderbird folder
-# - keyboard layout
-# - IdeaProjects
-# - IntelliJ config folder
-# - Documents, Pictures, Music
-# - minecraft launcher
-#export:
-# - Terminal layout Homebrew
-# - Newflow OPML
-# - keychain (microsoft, wlans)
-# - firefox bookmarks
-#ensure:
-# - adobe installer
-# - Dashboard apps
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  *)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
+esac
 
 ##########################
 ### Install
 ##########################
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
 
 #home: .bash_profile .m2/settings.xml .tm_properties .ssh/
 #keyboard layout

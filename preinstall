@@ -1,0 +1,75 @@
+#!/bin/bash
+
+target=
+usage="\e[1mpreinstall\e[0m -h | -t \e[4mdir\e[0m"
+help="An preparation script for the install script for computer reset.
+$usage
+	\e[1m-h\e[0m	Displays this message and exists.
+	\e[1m-t\e[0m	Give a target folder where the data should be stored.
+"
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -t)
+    if [[ -z $2 ]]; then
+      printf "Please give a target folder with argument -t. See -h for more help."
+      exit 1
+    elif [[ ! -e $2 ]]; then
+      printf "Please give an existing target folder with argument -t. See -h for more help."
+      exit 1
+    elif [[ ! -w $2 ]]; then
+      printf "Please give a writeale target folder with argument -t. See -h for more help."
+      exit 1
+    elif [[ ! -d $2 ]]; then
+      printf "Please give a target folder, not a file, with argument -t. See -h for more help."
+      exit 1
+    fi
+    target=$2
+    ;;
+  *)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
+esac
+
+if [[ -z $target ]]; then
+  printf "Please give a target folder. See -h for more help."
+  exit 1
+fi
+
+##########################
+### Preparation
+##########################
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+#copy to target
+ctt() {
+  while [[ -n $1 ]]; do
+    cp -a "$1" "$target/" || die "Copying $1 to $target failed"
+    shift
+  done
+}
+
+# Copy
+# - .bash_profile .m2/settings.xml .tm_properties .ssh/
+# - Thunderbird folder
+# - keyboard layout
+# - IdeaProjects
+# - IntelliJ config folder
+# - Documents, Pictures, Music
+# - minecraft launcher
+#export:
+# - Terminal layout Homebrew
+# - Newflow OPML
+# - keychain (microsoft, wlans)
+# - firefox bookmarks
+#ensure:
+# - adobe installer
+# - Dashboard apps
