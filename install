@@ -1,0 +1,64 @@
+#!/bin/bash
+
+##########################
+### Preparation
+##########################
+
+#copy:
+# - .bash_profile .m2/settings.xml .tm_properties .ssh/
+# - Thunderbird folder
+# - keyboard layout
+# - IdeaProjects
+# - IntelliJ config folder
+# - Documents, Pictures, Music
+# - minecraft launcher
+#export:
+# - Terminal layout Homebrew
+# - Newflow OPML
+# - keychain (microsoft, wlans)
+# - firefox bookmarks
+#ensure:
+# - adobe installer
+# - Dashboard apps
+
+##########################
+### Install
+##########################
+
+#home: .bash_profile .m2/settings.xml .tm_properties .ssh/
+#keyboard layout
+#install terminal layout
+#let user choose layout and restart terminal & install script
+#prepare installs:
+#install keychains
+#wlan login
+#install dashboard apps
+#install brew
+#brew install dropbox
+#log in
+#open app store for apple id
+#install adobe, user must give key
+#IntelliJ config folder
+#install intelliJ, user must gui install and key
+#install microsoft programs
+#install brew
+#brew cask install
+#brew install
+#app store
+#Thunderbird folder
+#IdeaProjects
+#other files (documents, pictures, music)
+#place minecraft in /Appications
+#xcode-select --install ?
+#copy power point draft uniwue
+
+##########################
+### Manual
+##########################
+
+# - notational velocity: ~/Dropbox/Org/Notational/
+# - spofity login
+# - one note login, ggf Excel, Word, PowerPoint
+# - import firefox bookmarks
+# - calender login google
+# - import newsflow opml
