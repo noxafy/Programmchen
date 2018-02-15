@@ -6,7 +6,7 @@ help="Sends a notification to the system at given \e[4mtime\e[0m with given or d
 the remaining time in the shell. If no \e[4mtime\e[0m given, it sends the notification instantly.
 $usage
 	\e[1m-h\e[0m	Displays this help message and exists.
-	\e[1m-s\e[0m	Do not display the remaining time (for running in background).
+	\e[1m-s\e[0m	Do not display the remaining time (for running in background, also detected automatically).
 	\e[4mtime\e[0m	Can be
 		 - an integer, so it will be interpreted as seconds to count down
 		 - an endtime in format (H)H:MM(:SS), so maximal a time within the next 
@@ -159,6 +159,15 @@ count() {
     done
   fi
 }
+
+case $(ps -o stat= -p $$) in
+  *+*) 
+    #foreground
+    ;;
+  *)
+    verbose=0
+    ;;
+esac
 
 if [[ $desttime -gt 0 ]]; then
   #see if it is on next day
