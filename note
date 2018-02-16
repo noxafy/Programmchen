@@ -179,9 +179,11 @@ if [[ $desttime -gt 0 ]]; then
   #read out the optional message
   mes=${*-"Time is up!"}
 
-  timeout
   if [[ $verbose -eq 1 ]]; then
+    timeout
     printf "\r\e[KTime left: 0s"
+  else
+    sleep $((desttime - $(date "+%s")))
   fi
 fi
 
