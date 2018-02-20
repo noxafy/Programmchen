@@ -94,7 +94,7 @@ fire() {
       startFireFox
     fi
     # open link
-    open "$1" || (echo "Failed to open $1" && exit 1)
+    open "$1" || echo "Failed to open $1" && exit 1
   else
     if [[ -t 1 ]]; then
       echo "$1 (copied to clipboard)"
