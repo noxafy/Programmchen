@@ -5,7 +5,7 @@ verbose=0
 pagesconfirmfrom=4
 openDirect=
 timeout=2
-usage="Usage: \e[1mdicc\e[0m -h | [-o|-a|-r] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1mdicc\e[0m -h | [-o|-a|-r|-x] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
 help="Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
@@ -13,6 +13,7 @@ $usage
 	\e[1m-a\e[0m	Show all translations from the first page. Will be shown automatically 
 		if there are no exact results available.
 	\e[1m-r\e[0m	Show all entries of all pages. This may take a while.
+	\e[1m-x\e[0m	Show exact matching results only. This is the default.
 	\e[1m-v\e[0m	Verbose a little bit.
 	\e[4mkey\e[0m	The keyword to search translations for.
 "
@@ -32,6 +33,9 @@ while [ "$*" ]; do
     ;;
   -r)
     all=2
+    ;;
+  -x)
+    all=0
     ;;
   -v)
     verbose=1
@@ -172,79 +176,79 @@ $var1
 $var2
 if (!c1Arr || !c2Arr) console.log("No translation found.");
 else if ($all) {
-    var logged = 0;
+	var logged = 0;
 	var skipped = 0;
-    for (var i = 1; i < c1Arr.length; i++) {
+	for (var i = 1; i < c1Arr.length; i++) {
 		var c1 = c1Arr[i];
 		var c2 = c2Arr[i];
-        if (c1.toLowerCase() === key || c1.toLowerCase() === "to " + key) {
-        	if (c2) {
+		if (c1.toLowerCase() === key || c1.toLowerCase() === "to " + key) {
+			if (c2) {
 				console.log(c2);
-            	logged++;
+				logged++;
 			} else {
 				skipped++;
 			}
-        }
-        if (c2.toLowerCase() === key) {
+		}
+		if (c2.toLowerCase() === key) {
 			if (c1) {
-	            console.log(c1);
-	            logged++;
+				console.log(c1);
+				logged++;
 			} else {
 				skipped++;
 			}
-        }
-    }
-    if (logged === 0) {
+		}
+	}
+	if (logged === 0) {
 		if (skipped !== 0) {
-        	console.log(skipped + " skipped translation(s) found. Nevertheless showing all results of the first page now.");
+			console.log(skipped + " skipped translation(s) found. Nevertheless showing all results of the first page now.");
 		} else {
-        	console.log("No exact translation found. Showing all results of the first page now.");
+			console.log("No exact translation found. Showing all results of the first page now.");
 		}
 		setTimeout(listAll, 1500);
-    }
-} else { 
-  listAll();
+	}
+} else {
+	listAll();
 }
 
 function listAll() {
-    if (contains(c2Arr, key) && !contains(c1Arr, key)) {
-      var temp = c1Arr;
-      c1Arr = c2Arr;
-      c2Arr = temp;
-    }
-    for (var i = 1; i < c1Arr.length; i++) {
+	if (contains(c2Arr, key) && !contains(c1Arr, key)) {
+		var temp = c1Arr;
+		c1Arr = c2Arr;
+		c2Arr = temp;
+	}
+	for (var i = 1; i < c1Arr.length; i++) {
 		var c2 = c2Arr[i];
 		if(!c2) {
 			continue;
 		}
-        var c1 = c1Arr[i];
-        var outp = "";
-        if (c1 === c1Arr[i - 1]) outp += "\t\t\t\t\t\t";
-        else {
-            outp += c1;
-            tabs=5-c1.length/8
-            do {
-              outp += "\t";
-              tabs--;
-            } while (tabs > 0);
-        }
-        if (c2 !== c2Arr[i-1]) {
-          outp += c2;
-        }
-        else {
-          outp = "\t" + outp.trim();
-        }
-        console.log(outp);
-    }
+		var c1 = c1Arr[i];
+		var outp = "";
+		if (c1 === c1Arr[i - 1]) outp += "\t\t\t\t\t\t";
+		else {
+			outp += c1;
+			tabs=5-c1.length/8
+			do {
+				outp += "\t";
+				tabs--;
+			} while (tabs > 0);
+		}
+		if (c2 !== c2Arr[i-1]) {
+			outp += c2;
+		}
+		else {
+			outp = "\t" + outp.trim();
+		}
+		console.log(outp);
+	}
 }
 
 function contains(a, obj) {
-    for (var i = 0; i < a.length; i++) {
-        if (a[i].toLowerCase() === obj) {
-            return true;
-        }
-    }
-    return false;
+	for (var i = 0; i < a.length; i++) {
+		if (a[i].toLowerCase() === obj) {
+			return true;
+		}
+	}
+	return false;
 }'
 js=${js/\$var1/$var1}
 js=${js/\$var2/$var2}
