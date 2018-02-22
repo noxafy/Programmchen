@@ -4,7 +4,7 @@ timeout=60
 sendNote=
 output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
 usage="Usage: \e[1mwaitnet\e[0m -h | [-q] [-n] [-s] [-t \e[4mtimeout\e[0m]"
-help="Test for internet connection estabilshed.
+help="Test for internet connection establishment.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
