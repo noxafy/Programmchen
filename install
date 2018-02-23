@@ -28,7 +28,7 @@ die() {
   exit 1
 }
 
-#home: .bash_profile .m2/settings.xml .tm_properties .ssh/
+#home: .bash_profile .m2/settings.xml .tm_properties .ssh/ .password_store/ .gnupg/
 #keyboard layout
 #install terminal layout
 #let user choose layout and restart terminal & install script
@@ -38,8 +38,9 @@ die() {
 #install dashboard apps
 #install brew
 #brew install dropbox
-#log in
+#log in dropbox
 #open app store for apple id
+#xcode-select --install ?
 #install adobe, user must give key
 #IntelliJ config folder
 #install intelliJ, user must gui install and key
@@ -51,8 +52,7 @@ die() {
 #Thunderbird folder
 #IdeaProjects
 #other files (documents, pictures, music)
-#place minecraft in /Appications
-#xcode-select --install ?
+#place minecraft in /Applications
 #copy power point draft uniwue
 
 ##########################
@@ -60,8 +60,9 @@ die() {
 ##########################
 
 # - notational velocity: ~/Dropbox/Org/Notational/
-# - spofity login
+# - spotify login
 # - one note login, ggf Excel, Word, PowerPoint
 # - import firefox bookmarks
 # - calender login google
 # - import newsflow opml
+# - os shortcuts

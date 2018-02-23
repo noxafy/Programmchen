@@ -58,18 +58,24 @@ ctt() {
 }
 
 # Copy
-# - .bash_profile .m2/settings.xml .tm_properties .ssh/
+# - .bash_profile .m2/settings.xml .tm_properties .ssh/ .password_store/ .gnupg/
 # - Thunderbird folder
 # - keyboard layout
 # - IdeaProjects
 # - IntelliJ config folder
 # - Documents, Pictures, Music
 # - minecraft launcher
+
+##########################
+### Manual
+##########################
+
 #export:
 # - Terminal layout Homebrew
-# - Newflow OPML
+# - Newsflow OPML
 # - keychain (microsoft, wlans)
 # - firefox bookmarks
 #ensure:
 # - adobe installer
 # - Dashboard apps
+
