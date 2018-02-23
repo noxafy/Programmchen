@@ -150,12 +150,12 @@ count() {
     while [ $secs -gt $1 ]; do
       printf "\r\e[KTime left: $2 %ss" $secs
       ((secs--))
-      sleep 1
+      sleep 0.994
     done
   else
     while [ $secs -gt $1 ]; do
       ((secs--))
-      sleep 1
+      sleep 0.994
     done
   fi
 }
