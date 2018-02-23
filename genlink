@@ -2,19 +2,21 @@
 regex='^(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 
 output=
-usage="Usage: \e[1mgenlink\e[0m -h | [-o \e[4moutfile\e[0m] \e[4mlinks\e[0m \e[4m...\e[0m"
+whatsapp=
+usage="Usage: \e[1mgenlink\e[0m -h | [-o \e[4moutfile\e[0m] [--wa] \e[4mlinks\e[0m \e[4m...\e[0m"
 help="Generates a html file which redirects to the given link. If multiple links given, the html provides them.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[4mlinks\e[0m	A link where the html should redirect or multiple links.
 	\e[1m-o\e[0m	Give an output file where to write the html content.
+	\e[1m--wa\e[0m	On smartphones, a link will open Whatapp for sharing it.
 "
 
 case $1 in
   -h)
-	printf "$help"
-	exit 0
-	;;
+    printf "$help"
+    exit 0
+    ;;
   -o)
     if [[ -z $2 ]]; then
       printf "Please give an output file for the html content with argument -o. See -h for more help."
@@ -22,12 +24,21 @@ case $1 in
     fi
     output=$2
     shift 2
-	;;
+    ;;
+  --wa)
+    ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
 esac
+
+#TODO: if [ ! -t 0 ]; then links="$(cat | grep -v '^$')" fi
+
+if [[ $1 == --wa ]]; then
+  whatsapp=true
+  shift
+fi
 
 if [[ -z $1 ]]; then
   echo "Please give a link to generate a redirecting html from. See -h for more help."
@@ -41,6 +52,9 @@ elif [[ -n $1 && -z $2 ]]; then
     echo "Invalid link: $link"
     echo "Please give a full specified, valid link."
     exit 1
+  fi
+  if [[ -n $whatsapp ]]; then
+    link="whatsapp://send?text=$link"
   fi
   echo "<!DOCTYPE html>
 <html>
@@ -71,6 +85,9 @@ else
       echo "Invalid link: $link"
       echo "Please give only full specified, valid links."
       exit 1
+    fi
+    if [[ -n $whatsapp ]]; then
+      link="whatsapp://send?text=$link"
     fi
     content+="      <li><a href=\"$link\">$link</a></li>
 "
