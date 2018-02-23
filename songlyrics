@@ -354,7 +354,6 @@ artistNoSpaces: $artistNoSpaces
 
 ################################################################################
 # Look up the title and artist in spotify
-# Sets the global ARTIST and TITLE varibles
 ################################################################################
 function lookupSpotifyInfo() {
   # Checks $OSTYPE to determine the proper command for artist/title query
@@ -387,25 +386,10 @@ function lookupSpotifyInfo() {
 
 ################################################################################
 # Look up the song info for the currently playing song in Rhythmbox
-# Sets the global ARTIST and TITLE varibles
 ################################################################################
 function lookupRhythmboxInfo() {
-  # This is a nasty one-liner that returns data like this:
-  # string "artist"
-  # variant             string "City and Colour"
-  # --
-  # string "title"
-  # variant             string "Like Knives"
-
-  ALL="$(dbus-send --print-reply --dest=org.gnome.Rhythmbox /org/gnome/Rhythmbox/Shell \
-           org.gnome.Rhythmbox.Shell.getSongProperties string:$(dbus-send --print-reply --dest=org.gnome.Rhythmbox \
-           /org/gnome/Rhythmbox/Player org.gnome.Rhythmbox.Player.getPlayingUri | grep string | sed 's/^\s*//g' \
-           | cut -d ' ' -f 2 | sed 's/"//g') | sed 's/^\s*//' | grep 'string "artist"\|string "title"' -A 1)";
-
-  # Get the Artist out of the dbus call
-  ARTIST="$(echo  "$ALL" | grep artist -A 1  | grep variant | cut -d ' ' -f 15- | sed 's/"//g')";
-  # Get the Title out of the dbus call
-  TITLE="$(echo "$ALL" | grep title -A 1  | grep variant | cut -d ' ' -f 15- | sed 's/"//g')";    
+  ARTIST="$(rhythmbox-client --print-playing-format %ta)";
+  TITLE="$(rhythmbox-client --print-playing-format %tt)";   
 }
 
 ################################################################################
