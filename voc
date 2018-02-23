@@ -263,7 +263,7 @@ askfor() {
     trd=${trd//=/ }
     printf "\n\t\e[2m$trd\e[0m"
   fi
-  if [[ training -eq 0 ]]; then
+  if [[ $training -eq 0 ]]; then
     echo ""
   fi
 }
@@ -275,13 +275,14 @@ testVok() {
     askfor "$2" "$1" "$3"
   fi
 }
-if [[ training -gt 0 ]]; then
+
+if [[ $training -gt 0 ]]; then
   printf "\e[8;4;60t"
 fi
 
 while true; do
-  if [[ training -gt 0 ]]; then
-    clear
+  if [[ $training -gt 0 ]]; then
+    printf "\e[2J\e[H"
   fi
   randnum="$(($RANDOM % $voclength))p"
   vok=$(echo "$vocCache" | sed -n $randnum)
