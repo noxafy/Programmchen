@@ -8,6 +8,15 @@ $usage
 	\e[1m-t\e[0m	Give a target folder where the data should be stored.
 "
 
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+####################################################
+### Args parsing
+####################################################
+
 case $1 in
   -h)
     printf "$help"
@@ -15,19 +24,18 @@ case $1 in
     ;;
   -t)
     if [[ -z $2 ]]; then
-      printf "Please give a target folder with argument -t. See -h for more help."
+      printf "Please give a target folder with argument -t. See -h for more help.\n"
       exit 1
     elif [[ ! -e $2 ]]; then
-      printf "Please give an existing target folder with argument -t. See -h for more help."
-      exit 1
+      mkdir -p "$2" || die "Failed to create dir $target. See -h for more help.\n"
     elif [[ ! -w $2 ]]; then
-      printf "Please give a writeale target folder with argument -t. See -h for more help."
+      printf "Please give a writeable target folder with argument -t. See -h for more help.\n"
       exit 1
     elif [[ ! -d $2 ]]; then
-      printf "Please give a target folder, not a file, with argument -t. See -h for more help."
+      printf "Please give a target folder, not a file, with argument -t. See -h for more help.\n"
       exit 1
     fi
-    target=$2
+    target=$(cd $(dirname "$2"); pwd)/$(basename "$2")
     ;;
   *)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -36,46 +44,57 @@ case $1 in
 esac
 
 if [[ -z $target ]]; then
-  printf "Please give a target folder. See -h for more help."
+  printf "Please give a target folder. See -h for more help.\n"
   exit 1
 fi
 
-##########################
+####################################################
 ### Preparation
-##########################
-
-die() {
-  echo "ERROR: $*" >&2
-  exit 1
-}
+####################################################
 
 #copy to target
 ctt() {
   while [[ -n $1 ]]; do
+    printf "Copying $PWD/$1 "
+    printf "($(du -sh "$1" | awk '{print $1}')) ...\n"
     cp -a "$1" "$target/" || die "Copying $1 to $target failed"
     shift
   done
 }
 
-# Copy
-# - .bash_profile .m2/settings.xml .tm_properties .ssh/ .password_store/ .gnupg/
-# - Thunderbird folder
-# - keyboard layout
-# - IdeaProjects
-# - IntelliJ config folder
-# - Documents, Pictures, Music
-# - minecraft launcher
+# Copy from ~
+cd "$HOME" || die "cd to $HOME failed"
+ctt .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+# - IdeaProjects Documents, Pictures, Music
+ctt IdeaProjects Documents Pictures Music
 
-##########################
+cd "Library"
+ctt Thunderbird # - Thunderbird folder
+ctt "Keyboard Layouts" # - keyboard layout
+ctt IntelliJIdea* # IntelliJ config folder
+
+# - minecraft launcher
+cd /Applications
+ctt Minecraft
+
+
+####################################################
 ### Manual
-##########################
+####################################################
+cd "$target"
+mkdir manual
 
 #export:
-# - Terminal layout Homebrew
-# - Newsflow OPML
-# - keychain (microsoft, wlans)
-# - firefox bookmarks
+echo "Export and save to $target/manual:"
+echo " - Terminal layout" # - Terminal layout Homebrew
+echo " - Newsflow OPML" # - Newsflow OPML
+echo " - Keychains (mircosoft, wlans)" # - keychain (microsoft, wlans)
+echo " - Firefox bookmarks" # - firefox bookmarks
 #ensure:
-# - adobe installer
-# - Dashboard apps
+mkdir dashboard
+echo "Copy to $target/dashboard" # - Dashboard apps
+echo " - eCalc_Scientific.wdgt"
+echo " - iStat Pro.wdgt"
+echo "Copy to $target/"
+echo " - [Adobe Pro Installer]" # - adobe installer
 
