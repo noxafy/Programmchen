@@ -3,14 +3,14 @@
 timeout=60
 sendNote=
 output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
-usage="Usage: \e[1mwaitnet\e[0m -h | [-q] [-n] [-s] [-t \e[4mtimeout\e[0m]"
+usage="Usage: \e[1mwaitnet\e[0m -h | [-q|-s] [-n] [-t \e[4mtimeout\e[0m]"
 help="Test for internet connection establishment.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
-	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
-	\e[1m-t\e[0m	Specify a timeout in seconds (default: 60).
 	\e[1m-s\e[0m	No output on success without waiting (best for scripts).
 	\e[1m-q\e[0m	No console output, except errors.
+	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
+	\e[1m-t\e[0m	Specify a timeout in seconds (default: 60).
 "
 
 while [[ -n $1 ]]; do
@@ -19,14 +19,14 @@ while [[ -n $1 ]]; do
       printf "$help"
       exit 0
       ;;
-    -n)
-      sendNote=1
-      ;;
     -q)
       output=
       ;;
     -s)
       output=1
+      ;;
+    -n)
+      sendNote=1
       ;;
     -t)
       case $2 in
@@ -54,19 +54,19 @@ done
 
 log() {
   if [[ $output ]]; then
-    echo "$@"
+    printf "%s\n" "$@"
   fi
 }
 
 sendNoteF() {
   if [[ $sendNote ]]; then
-    note "$1"
+    note -m "$*" || echo "This script has a dependency to \"note\" to send notification messages."
   fi
 }
 
 fail() {
-  sendNoteF '$* failed!'
-  log '$* failed!'
+  sendNoteF "$* failed!"
+  log "$* failed!"
   exit 1
 }
 
