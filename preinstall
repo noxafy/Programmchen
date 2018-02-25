@@ -68,7 +68,7 @@ ctt .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 # - IdeaProjects Documents, Pictures, Music
 ctt IdeaProjects Documents Pictures Music
 
-cd "Library"
+cd "Library" || die "cd to $HOME/Library failed"
 ctt Thunderbird # - Thunderbird folder
 ctt "Keyboard Layouts" # - keyboard layout
 ctt IntelliJIdea* # IntelliJ config folder
@@ -82,19 +82,23 @@ ctt Minecraft
 ### Manual
 ####################################################
 cd "$target"
-mkdir manual
 
 #export:
+mkdir manual
+
 echo "Export and save to $target/manual:"
-echo " - Terminal layout" # - Terminal layout Homebrew
+echo " - Terminal layouts" # - Terminal layout Homebrew
 echo " - Newsflow OPML" # - Newsflow OPML
 echo " - Keychains (mircosoft, wlans)" # - keychain (microsoft, wlans)
 echo " - Firefox bookmarks" # - firefox bookmarks
+
 #ensure:
 mkdir dashboard
+
 echo "Copy to $target/dashboard" # - Dashboard apps
 echo " - eCalc_Scientific.wdgt"
 echo " - iStat Pro.wdgt"
 echo "Copy to $target/"
 echo " - [Adobe Pro Installer]" # - adobe installer
+echo "Paste password in install:80, when placed in position"
 

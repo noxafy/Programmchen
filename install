@@ -1,11 +1,15 @@
 #!/bin/bash
 
+thisdir=$(dirname "$PWD/$BASH_SOURCE")
+if [[ ! -e $thisdir ]]; then
+  thisdir=$(dirname "$BASH_SOURCE")
+fi
 usage="\e[1minstall\e[0m [-h]"
 help="An install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
 	
-Warning: Do NOT put in \$PATH! Leave in place.
+Warning: Do NOT put in \$PATH (name collision)! Leave in place.
 "
 
 case $1 in
@@ -19,33 +23,113 @@ case $1 in
     ;;
 esac
 
-##########################
+####################################################
 ### Install
-##########################
+####################################################
 
 die() {
-  echo "ERROR: $*" >&2
+  echo "ERROR: $*!" >&2
   exit 1
 }
 
-#home: .bash_profile .m2/settings.xml .tm_properties .ssh/ .password_store/ .gnupg/
-#keyboard layout
-#install terminal layout
-#let user choose layout and restart terminal & install script
-#prepare installs:
-#install keychains
-#wlan login
-#install dashboard apps
-#install brew
-#brew install dropbox
-#log in dropbox
+c() {
+  while [[ -n $1 ]]; do
+    origin="$thisdir/$1"
+    target="$PWD/$1"
+    printf "Copying $origin to $target"
+    printf "($(du -sh "$origin" | awk '{print $1}')) ...\n"
+    cp -a "$origin" "$target/" || die "Copying $origin to $target failed!"
+    shift
+  done
+}
+
+installWifi() {
+  networksetup -addpreferredwirelessnetworkatindex Airport "$1" 0 WPA2 "$2"
+}
+
+waitUser() {
+  read -p "Press [Enter] to continue ..." trash
+}
+
+#go home first
+cd "$HOME" || die "cd to $HOME failed!"
+
+# check, if .bash_profile is installed
+# if not, running first time, installing it and other shit
+if [[ -z $D ]]; then
+  c .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+  #keyboard layout
+  cd "Library" || die "cd to $HOME/Library failed!"
+  c "Keyboard Layouts" # - keyboard layout
+  #install terminal layouts
+  open "$thisdir/*.terminal"
+  #let user choose layout and restart terminal & install script
+  echo "Please close this window now and start this script again with you favourite terminal layout."
+  printf "\e[4mHint\e[0m: Just set it to standard layout."
+  printf "\e[4mHint2\e[0m: Activate secure text entry."
+  waitUser
+  exit 0
+fi
+
+#prepare installs
+#install keychains ???
+
+ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+if [[ $? -ne 0 ]]; then #first time. no internet installed
+  #wlan login
+  installWifi AdMiNet #pass not installed yet, so paste password here before running
+  #AEG
+  networksetup -setairportpower en0 off
+  networksetup -setairportpower en0 on
+  sleep 3
+  ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+  while [[ $? -ne 0 ]]; do
+    echo "Auto connection failed. Please select the network from above."
+    echo "Script will continue if internet connection found."
+    sleep 1
+    ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+  done
+
+  #install dashboard apps
+  c dashboard
+  cd "dashboard"
+  for wgt in *; do
+    echo "Please install: $wgt"
+    sleep 1
+    open "$wgt"
+    waitUser
+  done
+  cd ".."
+  rm -rf dashboard
+
+  #install brew
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed.
+Please install brew yourself:
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+and
+  brew tap caskroom/cask"
+  brew tap caskroom/cask || die "Please try again: brew tap caskroom/cask"
+fi
+
+if [[ ! -e /Applications/Dropbox.app/ ]]; then
+  #brew install dropbox
+  brew cask install dropbox || die "brew cask install dropbox failed!"
+  #log in dropbox
+  echo "Please log in to dropbox!"
+  sleep 1
+  open /Applications/Dropbox.app/
+  waitUser #deps in Programmchen now available
+fi
+
+#install adobe, user must give key
+#install microsoft programs
+
 #open app store for apple id
 #xcode-select --install ?
-#install adobe, user must give key
+
 #IntelliJ config folder
 #install intelliJ, user must gui install and key
-#install microsoft programs
-#install brew
+
 #brew cask install
 #brew install
 #app store
@@ -55,9 +139,11 @@ die() {
 #place minecraft in /Applications
 #copy power point draft uniwue
 
-##########################
+# install other wifis
+
+####################################################
 ### Manual
-##########################
+####################################################
 
 # - notational velocity: ~/Dropbox/Org/Notational/
 # - spotify login
@@ -66,3 +152,4 @@ die() {
 # - calender login google
 # - import newsflow opml
 # - os shortcuts
+# - install "RZUWsec"
