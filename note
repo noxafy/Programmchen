@@ -1,7 +1,7 @@
 #!/bin/bash
 desttime=0
 verbose=1 #1=show remaining time, 0=don't
-usage="Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [\e[4mmes\e[0m \e[4m...\e[0m] | \e[4mmes\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [ [-m] \e[4mmes\e[0m \e[4m...\e[0m] | [-m] \e[4mmes\e[0m \e[4m...\e[0m"
 help="Sends a notification to the system at given \e[4mtime\e[0m with given or default \e[4mmessage\e[0m and shows
 the remaining time in the shell. If no \e[4mtime\e[0m given, it sends the notification instantly.
 $usage
@@ -17,13 +17,14 @@ $usage
 		   h    = 0\"h\"(m | s)
 		   m    = 0\"m\"(s)
 		   s    = 0\"s\"
-                   0    = [0-9]+
+		   0    = [0-9]+
 		   while
 		   - \"d\" stands for days
 		   - \"h\" stands for hours
 		   - \"m\" stands for minutes
 		   - \"s\" stands for seconds
 		   Examples: \"5d2h45m\", \"30m45s\", \"5h2s\", \"6m\", ...
+	\e[1m-m\e[0m	Specify a message as next args.
 	\e[4mmes\e[0m	The message that should be sent as time is up. (Default: \"Time is up!\")
 "
 
@@ -53,6 +54,11 @@ while [[ -n $* ]]; do
     ;;
   -s)
     verbose=0
+    ;;
+  -m)
+    shift
+    mes="$*"
+    break; #rest is message
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
