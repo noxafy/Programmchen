@@ -1,9 +1,16 @@
 #!/bin/bash
 
+verbose=
+
 waitnet -s
 
+if [[ $1 == -v ]]; then
+  verbose=-v
+  shift
+fi
+
 if [[ -z "$*" ]]; then
-  songlyrics spotify 
+  songlyrics $verbose spotify 
 else
-  songlyrics "$@"
+  songlyrics $verbose "$@"
 fi
