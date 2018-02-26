@@ -93,8 +93,8 @@ if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
 fi
 
 #test on ssid connected
-wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
 cnt=0
+wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
 while [[ ${#wifi} -lt 19 ]]; do
   waitflag=1
   if [[ $((cnt % 3)) -eq 0 ]]; then
@@ -114,8 +114,8 @@ fi
 timeout=$((timeout-cnt))
 
 #test on internet connection
-wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
 cnt=0
+wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
 while [[ $? -ne 0 ]]; do
   waitflag=1
   if [[ $((cnt % 3)) -eq 0 ]]; then
