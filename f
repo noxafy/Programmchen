@@ -79,8 +79,8 @@ startFireFox() {
   sleep 1
   printf "."
   sleep 1
-#  printf "."
-#  sleep 1
+  printf "."
+  sleep 0.1
   printf "\r\e[K"
 }
 
