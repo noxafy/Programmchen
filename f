@@ -36,7 +36,7 @@ idealo_def="https://www.idealo.de/"
 
 site=$e #default
 
-usage="Usage: \e[1mf\e[0m -h | [-y] [\e[4moption1\e[0m] | [-y] [\33[4moption2\e[0m|--] \e[4mkey\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1mf\e[0m -h | [[-y] \e[4moption1\e[0m] | [-y] [--] \e[4mkey\e[0m \e[4m...\e[0m | [-y] \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m]"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
@@ -117,9 +117,17 @@ case $1 in
     ;;
   -y)
     openLink=""
+    if [[ -z "$2" || ( "$2" == -- && -z "$3" ) ]]; then
+      printf "Cannot copy empty link request. See -h for more information.\n"
+      exit 1
+    fi
     shift
     ;;
   --)
+    if [[ -z "$2" ]]; then
+      printf "Argument -- must follow query key words. See -h for more information.\n"
+      exit 1
+    fi
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -264,6 +272,9 @@ fi
 
 #preparing key
 if [[ -n $key ]]; then
+  if [[ "$key" == -* ]]; then
+    key=" $key"
+  fi
   key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/%20/+/g')
   fire "${site}$key"
 else
