@@ -235,7 +235,8 @@ function noSpaces() {
 }
 
 function preformat() {
-  echo "$*" | sed 's/\./-/g' | sed -e 's/ä/a/g' | sed -e 's/ü/u/g' | sed -e 's/ö/o/g'
+  #TODO: more special character support (sed doesn't)
+  echo "$*" | sed 's/ (.*)$//g' | sed 's/\./-/g' | sed -e 's/ä/a/g' | sed -e 's/ü/u/g' | sed -e 's/ö/o/g'
 }
 
 function findLyrics() {
@@ -341,7 +342,13 @@ artistNoSpaces: $artistNoSpaces
     done
   fi
   
-  echo "Ooops, no site left. Givin' up now :(" >&2
+  printf "Ooops, no site left. " >&2
+  
+  if [ -e /usr/local/opt/bash-snippets/bin/lyrics ]; then
+    printf "Last chance: lyrics from bash-snippets"
+    /usr/local/opt/bash-snippets/bin/lyrics -a "$ARTIST" -s "$TITLE" && exit 0
+  fi
+  echo "Givin' up now :(" >&2
   
   #Get searching site for copy & paste
   #Replace &, " and space
@@ -413,7 +420,7 @@ Also, you can give an url for extracting directly:
   $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
   $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
 
-Dependency to \"recode\"."
+Dependency to \"recode\". Parameter -v produces debugging output."
 
   # Print the args if any were passed
   if [[ -n "$1" ]];then
@@ -459,7 +466,7 @@ case $1 in
       TITLE=$2
       findLyrics
     else
-      usage 
+      echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information." 
     fi
     ;;
 esac
