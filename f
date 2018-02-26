@@ -34,7 +34,7 @@ scholar_def="https://scholar.google.de/"
 idealo="https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q="
 idealo_def="https://www.idealo.de/"
 
-site=$e #default
+site=default
 
 usage="Usage: \e[1mf\e[0m -h | [[-y] \e[4moption1\e[0m] | [-y] [--] \e[4mkey\e[0m \e[4m...\e[0m | [-y] \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m]"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
@@ -67,7 +67,7 @@ $usage
 
 	  Any other first word will be interpreted as part of the query phrase and searched by 
 	  default search engine. Type -- for treating an option as query.
-	When piped it will read the first non-empty line and search it by default search engine.
+	When no key given, but something piped, it will read the first non-empty line and search it as specified.
 	No argument will just open Firefox. (Therefrom its name..)
 "
 
@@ -110,6 +110,11 @@ tryFirst() {
   fi
 }
 
+#read from piped
+if [ ! -t 0 ]; then
+  key="$(cat | grep -v '^$' | sed -n 1p)"
+fi
+
 case $1 in
   -h|--help)
     printf "$help"
@@ -117,14 +122,14 @@ case $1 in
     ;;
   -y)
     openLink=""
-    if [[ -z "$2" || ( "$2" == -- && -z "$3" ) ]]; then
+    if [[ ( -z "$2" || ( "$2" == -- && -z "$3" ) ) && -z "$key" ]]; then
       printf "Cannot copy empty link request. See -h for more information.\n"
       exit 1
     fi
     shift
     ;;
   --)
-    if [[ -z "$2" ]]; then
+    if [[ -z "$2" && -z "$key" ]]; then
       printf "Argument -- must follow query key words. See -h for more information.\n"
       exit 1
     fi
@@ -189,57 +194,56 @@ case $1 in
   e)
     site="$e"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$e_def"
     fi
     ;;
   g)
     site="$g"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$g_def"
     fi
     ;;
-
   yt)
     site="$yt"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$yt_def"
     fi
     ;;
   am)
     site="$am"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$am_def"
     fi
     ;;
   i)
     site="$idealo"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$idealo_def"
     fi
     ;;
   mvn)
     site="$mvn"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$mvn_def"
     fi
     ;;
   npm)
     site="$npm"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$npm_def"
     fi
     ;;
   s)
     site="$scholar"
     shift
-    if [[ ! $* ]]; then
+    if [[ -z "$*" && -z "$key" ]]; then
       fire "$scholar_def"
     fi
     ;;
@@ -247,37 +251,41 @@ case $1 in
     shift
     ;;
   *)
-    #url matching
-    key="$*"
-    #guess a bit around
-    if [[ $key =~ ^[a-zA-Z0-9-]*\.[a-zA-Z0-9-]*$ ]]; then
-      tryFirst "$key"
-    fi
-    if [[ $key =~ ^www\..* ]]; then
-      key="https://$key"
-    fi
-    if [[ $key =~ $regex ]]; then
-      fire "$key"
-    fi
     site="$e"
     ;;
 esac
 
-#read from arguments or stdin
+#read from arguments
 if [[ "$*" ]]; then 
   key="$*"
-elif [ ! -t 0 ]; then
-  key="$(cat | grep -v '^$' | sed -n 1p)"
+fi
+
+#url matching, if not 
+if [[ "$site" = "default" ]]; then
+  #guess a bit around
+  if [[ $key =~ ^[a-zA-Z0-9-]*\.[a-zA-Z0-9-]*$ ]]; then
+    tryFirst "$key"
+  fi
+  if [[ $key =~ ^www\..* ]]; then
+    key="https://$key"
+  fi
+  if [[ $key =~ $regex ]]; then
+    fire "$key"
+  fi
+  #set default to ecosia
+  site=$e
 fi
 
 #preparing key
 if [[ -n $key ]]; then
   if [[ "$key" == -* ]]; then
     key=" $key"
+    key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/^%20//' | sed 's/%20/+/g')
+  else
+    key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/%20/+/g')
   fi
-  key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/%20/+/g')
   fire "${site}$key"
 else
-  #for empty key just open firefox / bring it to front
+  #for empty key just open firefox resp. bring it to front
   open /Applications/FireFox.app/
 fi
