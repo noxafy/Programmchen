@@ -1,6 +1,6 @@
 #!/bin/bash
 
-regex='^(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+regex='^(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$'
 openLink=1
 
 
@@ -9,7 +9,6 @@ openLink=1
 wa="https://web.whatsapp.com/"
 
 psy="https://lexikon.stangl.eu/alphabetisches-inhaltsverzeichnis/"
-acc="https://www.overleaf.com/13407653ymrhxyttcrpc#/51720050/"
 
 #
 #
@@ -37,7 +36,7 @@ idealo_def="https://www.idealo.de/"
 
 site=$e #default
 
-usage="Usage: \e[1mf\e[0m -h | [-y] [\e[4moption1\e[0m] | [-y] [\33[4moption2\e[0m|--] [-y] \e[4mkey\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1mf\e[0m -h | [-y] [\e[4moption1\e[0m] | [-y] [\33[4moption2\e[0m|--] \e[4mkey\e[0m \e[4m...\e[0m"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
@@ -73,27 +72,21 @@ $usage
 "
 
 startFireFox() {
-  printf "Firefox not started yet!\nStarting Firefox"
-  open /Applications/Firefox.app  
-  printf "."
-  sleep 1
-  printf "."
-  sleep 1
-  printf "."
-  sleep 0.1
-  printf "\r\e[K"
+  if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
+    printf "Firefox not started yet!\nStarting Firefox"
+    open /Applications/Firefox.app  
+    printf "."
+    sleep 1
+    printf "."
+    sleep 1
+    printf "."
+    sleep 0.2
+    printf "\r\e[K"
+  fi
 }
 
 fire() {
   if [[ $openLink ]]; then
-    # test internet connection
-    waitnet -s
-
-    # test if firefox started
-    if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
-      startFireFox
-    fi
-    # open link
     open "$1" || echo "Failed to open $1" && exit 1
   else
     if [[ -t 1 ]]; then
@@ -105,6 +98,16 @@ fire() {
     printf "%s" "$1" | pbcopy
   fi
   exit 0
+}
+
+tryFirst() {
+  header='Accept-Language: de,en-US;q=0.7,en;q=0.3'
+  stream=$(curl -s -A 'Mozilla/5.0' -GLm 10 -H "$header" https://www.ecosia.org/search --data-urlencode "q=$1")
+  res=$(echo "$stream" | grep -o -m 1 "result-url\" href=\"[^\"]*" | sed 's/result-url" href="//')
+  if [[ $res =~ $regex ]]; then
+    fire $res
+    exit 0
+  fi
 }
 
 case $1 in
@@ -123,6 +126,14 @@ case $1 in
     exit 1
     ;;
 esac
+
+if [[ -n $openLink ]]; then
+  # test internet connection
+  waitnet -s
+
+  # test if firefox started
+  startFireFox
+fi
 
 case $1 in
   w)
@@ -147,8 +158,8 @@ case $1 in
     fire "$acc"
     ;;
   mail)
-	fire "$mail"
-	;;
+    fire "$mail"
+    ;;
 #  wg)
 #    fire "$wg"
 #    ;;
@@ -170,10 +181,6 @@ case $1 in
   e)
     site="$e"
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     if [[ ! $* ]]; then
       fire "$e_def"
     fi
@@ -181,10 +188,6 @@ case $1 in
   g)
     site="$g"
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     if [[ ! $* ]]; then
       fire "$g_def"
     fi
@@ -193,10 +196,6 @@ case $1 in
   yt)
     site="$yt"
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     if [[ ! $* ]]; then
       fire "$yt_def"
     fi
@@ -204,10 +203,6 @@ case $1 in
   am)
     site="$am"
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     if [[ ! $* ]]; then
       fire "$am_def"
     fi
@@ -215,10 +210,6 @@ case $1 in
   i)
     site="$idealo"
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     if [[ ! $* ]]; then
       fire "$idealo_def"
     fi
@@ -233,10 +224,6 @@ case $1 in
   npm)
     site="$npm"
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     if [[ ! $* ]]; then
       fire "$npm_def"
     fi
@@ -244,28 +231,25 @@ case $1 in
   s)
     site="$scholar"
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     if [[ ! $* ]]; then
       fire "$scholar_def"
     fi
     ;;
   --)
     shift
-    if [[ $1 == -y ]]; then
-      openLink=""
-      shift
-    fi
     ;;
   *)
-    key=$1
+    #url matching
+    key="$*"
+    #guess a bit around
+    if [[ $key =~ ^[a-zA-Z0-9-]*\.[a-zA-Z0-9-]*$ ]]; then
+      tryFirst "$key"
+    fi
     if [[ $key =~ ^www\..* ]]; then
-      key="https://$1"
+      key="https://$key"
     fi
     if [[ $key =~ $regex ]]; then
-      fire $key
+      fire "$key"
     fi
     site="$e"
     ;;
@@ -286,4 +270,3 @@ else
   #for empty key just open firefox / bring it to front
   open /Applications/FireFox.app/
 fi
-
