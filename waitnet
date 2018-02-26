@@ -94,13 +94,16 @@ fi
 
 #test on ssid connected
 wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
+cnt=0
 while [[ ${#wifi} -lt 19 ]]; do
   waitflag=1
-  log "Waiting for SSID ..."
-  sleep 3
-  timeout=$((timeout-3))
-  if [[ $timeout -le 0 ]]; then
-    fail "Auto-connecting to a SSID"
+  if [[ $((cnt % 3)) -eq 0 ]]; then
+    log "Waiting for SSID ..."
+  fi
+  sleep 1
+  ((cnt++))
+  if [[ $cnt -ge $timeout ]]; then
+    fail "Timeout: Auto-connecting to a SSID"
   fi
   wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
 done
@@ -108,19 +111,24 @@ if [[ $output -gt 1 || -n $waitflag ]]; then
   wifi=$(echo "${wifi}" | xargs)
   log "Connected to $wifi"
 fi
+timeout=$((timeout-cnt))
 
 #test on internet connection
 wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
+cnt=0
 while [[ $? -ne 0 ]]; do
   waitflag=1
-  log "Waiting for internet connection ..."
-  sleep 3
-  timeout=$((timeout-3))
-  if [[ $timeout -le 0 ]]; then
-    fail "Internet connection detection"
+  if [[ $((cnt % 3)) -eq 0 ]]; then
+    log "Waiting for internet connection ..."
+  fi
+  sleep 1
+  ((cnt++))
+  if [[ $cnt -ge $timeout ]]; then
+    fail "Timeout: Internet connection detection"
   fi
   wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
 done
+
 sendNoteF 'Internet connection avaliable!'
 if [[ $output -gt 1 || -n $waitflag ]]; then
   log 'Internet connection avaliable!'
