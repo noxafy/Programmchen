@@ -9,6 +9,25 @@ ARTIST=
 TITLE=
 VERBOSE=
 urlonly=
+help="$(basename $0) - Find out the songlyrics for a currently playing song.
+
+This script is capable of finding out the Artist and Title of the currently
+playing song. If, you are using Rhythmbox or Spotify. See usage message below.
+
+Do it like this:
+  $(basename $0) <title> <artist>       - To look up lyrics for a song (you can omit artist if unknown)
+  $(basename $0) spotify                - To look up info for the currently playing song in Spotify
+  $(basename $0) rhythmbox|rbox         - To look up info for the currently playing song in Rhythmbox
+Also, you can give an url for extracting directly: 
+  $(basename $0) <songtexte.com url>    - To display the lyrics from a given songtexte.com url
+  $(basename $0) <songlyrics.com url>   - To display the lyrics from a given songlyrics.com url
+  $(basename $0) <genius.com url>       - To display the lyrics from a given genius.com url
+  $(basename $0) <musixmatch.com url>   - To display the lyrics from a given musixmatch.com url
+  $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
+  $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
+
+Dependency to \"recode\". Parameter -v produces debugging output.
+"
 # prevent sed error on bad encoded characters by reading as ascii (test for failing (greek text): https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas)
 LC_CTYPE=C
 LANG=C
@@ -218,8 +237,12 @@ function tryURL() {
   done
 }
 
+function postformat() {
+  cat | iconv -c -f utf-8 -t ascii//translit | sed "s/[\"^'\`~]//g"
+}
+
 function withHyphen0() {
-  echo "$*" | sed 's/ /-/g' | sed 's/-\{2,\}/-/g'
+  echo "$*" | sed 's/ /-/g' | sed 's/-\{2,\}/-/g' | postformat
 }
 
 function withHyphen() {
@@ -231,12 +254,11 @@ function withHyphen2() {
 }
 
 function noSpaces() {
-  echo "$*" | sed "s/'//g" | sed 's/ //g' | sed 's/&//g'
+  echo "$*" | sed "s/'//g" | sed 's/ //g' | sed 's/&//g' | postformat
 }
 
 function preformat() {
-  #TODO: more special character support (sed doesn't)
-  echo "$*" | sed 's/ (.*)$//g' | sed 's/\./-/g' | sed -e 's/ä/a/g' | sed -e 's/ü/u/g' | sed -e 's/ö/o/g'
+  echo "$*" | sed 's/ (.*)$//g' | sed 's/\./-/g'
 }
 
 function findLyrics() {
@@ -268,6 +290,17 @@ artistNoSpaces: $artistNoSpaces
 ********************************************" >&2
   fi
   
+  # Tell if artist conversion failed
+  if [[ -n "$ARTIST" && -z "$artistWithHyphen" && -z "$artistWithHyphen2" && -z "$artistNoSpaces" ]]; then
+    echo "Couldn't convert artist name to ascii. Please give it in latin characters." >&2
+  fi
+  
+  # Title must not be empty
+  if [[ -z "$titleWithHyphen" && -z "$titleWithHyphen2" && -z "$titleNoSpaces" ]]; then
+    echo "Couldn't convert title to ascii. Please give it in latin characters. It must not be empty, so exiting now." >&2
+    exit 1
+  fi
+  
   OVERALL=()
   for site in $sites; do
     printf "Looking for lyrics at %s: " "$site" >&2
@@ -282,10 +315,11 @@ artistNoSpaces: $artistNoSpaces
     fi
 
     # try to validate self
+    # only title is required (grep would pass everything trough if both empty)
     for i in "${ALL[@]}"; do
-      if [[ -n $(echo "$i" | grep -i "$titleWithHyphen" | grep -i "$artistWithHyphen")
-        || -n $(echo "$i" | grep -i "$titleNoSpaces" | grep -i "$artistNoSpaces")
-        || -n $(echo "$i" | grep -i "$titleWithHyphen2" | grep -i "$artistWithHyphen2") ]]; then
+      if [[ ( -n "$titleWithHyphen" && -n $(echo "$i" | grep -i "$titleWithHyphen" | grep -i "$artistWithHyphen") )
+        || ( -n "$titleNoSpaces" && -n $(echo "$i" | grep -i "$titleNoSpaces" | grep -i "$artistNoSpaces") )
+        || ( -n "$titleWithHyphen2" && -n $(echo "$i" | grep -i "$titleWithHyphen2" | grep -i "$artistWithHyphen2") ) ]]; then
         echo "Lyrics found!" >&2
 
         ${site%.*} $i
@@ -342,17 +376,21 @@ artistNoSpaces: $artistNoSpaces
     done
   fi
   
-  printf "Ooops, no site left. " >&2
+  echo "Ooops, no site left. " >&2
   
-  if [ -e /usr/local/opt/bash-snippets/bin/lyrics ]; then
-    printf "Last chance: lyrics from bash-snippets"
+  if [ -e /usr/local/opt/bash-snippets/bin/lyrics && -n "$ARTIST" ]; then
+    echo "Last chance: lyrics from bash-snippets" >&2
     /usr/local/opt/bash-snippets/bin/lyrics -a "$ARTIST" -s "$TITLE" && exit 0
   fi
   echo "Givin' up now :(" >&2
   
   #Get searching site for copy & paste
   #Replace &, " and space
-  Q="$ARTIST $TITLE lyrics"
+  if [[ -n "$ARTIST" ]]; then
+    Q="$ARTIST $TITLE lyrics"
+  else
+    Q="$TITLE lyrics"
+  fi
   Q=${Q//&/%26}
   Q=${Q//\"/%22}
   Q=${Q//\ /+}
@@ -363,6 +401,7 @@ artistNoSpaces: $artistNoSpaces
 # Look up the title and artist in spotify
 ################################################################################
 function lookupSpotifyInfo() {
+  echo "Looking up lyrics by Spotify artist and title..." >&2
   # Checks $OSTYPE to determine the proper command for artist/title query
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
     ARTIST="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 \
@@ -395,38 +434,9 @@ function lookupSpotifyInfo() {
 # Look up the song info for the currently playing song in Rhythmbox
 ################################################################################
 function lookupRhythmboxInfo() {
+  echo "Looking up title by Rhythmbox artist and title..." >&2
   ARTIST="$(rhythmbox-client --print-playing-format %ta)";
   TITLE="$(rhythmbox-client --print-playing-format %tt)";   
-}
-
-################################################################################
-# Usage info
-################################################################################
-function usage() {
-  echo "$(basename $0) - Find out the songlyrics for a currently playing song.
-
-This script is capable of finding out the Artist and Title of the currently
-playing song. If, you are using Rhythmbox or Spotify. See usage message below.
-
-Do it like this:
-  $(basename $0) <artist> <title>       - To look up lyrics for a song (give \"-\" if artist unknown)
-  $(basename $0) spotify                - To look up info for the currently playing song in Spotify
-  $(basename $0) rhythmbox|rbox         - To look up info for the currently playing song in Rhythmbox
-Also, you can give an url for extracting directly: 
-  $(basename $0) <songtexte.com url>    - To display the lyrics from a given songtexte.com url
-  $(basename $0) <songlyrics.com url>   - To display the lyrics from a given songlyrics.com url
-  $(basename $0) <genius.com url>       - To display the lyrics from a given genius.com url
-  $(basename $0) <musixmatch.com url>   - To display the lyrics from a given musixmatch.com url
-  $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
-  $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
-
-Dependency to \"recode\". Parameter -v produces debugging output."
-
-  # Print the args if any were passed
-  if [[ -n "$1" ]];then
-    echo -e "\nERROR:\n$1"
-  fi
-  exit 0;
 }
 
 ################################################################################
@@ -446,27 +456,24 @@ tryURL "urlonly" "$1"
 case $1 in
   rhythmbox|rbox)
     lookupRhythmboxInfo
-    echo "Looking up title by Rhythmbox artist and title..." >&2
-    findLyrics
     ;;
   spotify)
     lookupSpotifyInfo
-    echo "Looking up title by Spotify artist and title..." >&2
-    findLyrics
     ;;
   -h|--help)
-    usage
+    printf "%s" "$help"
+    exit 0
     ;;
   *)
-    # 1=Artist 2=Title
     if [[ -n "$1" ]]; then
-      if [[ $1 != - ]]; then
-        ARTIST=$1
-      fi
-      TITLE=$2
-      findLyrics
+      TITLE=$1
+      ARTIST=$2
     else
-      echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information." 
+      lookupSpotifyInfo
+      #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information." 
+      #exit 1
     fi
     ;;
 esac
+
+findLyrics
