@@ -250,9 +250,6 @@ case $1 in
   --)
     shift
     ;;
-  *)
-    site="$e"
-    ;;
 esac
 
 #read from arguments
