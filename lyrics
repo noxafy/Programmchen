@@ -215,10 +215,12 @@ function finishIt() {
   if [[ ! "$res" =~ [[:space:]]$ ]]; then
     echo
   fi
+  exit 0
 }
 
 function tryURL() {
-  if [[ $1 == "urlonly" ]]; then
+  if [[ "$1" == "urlonly" ]]; then
+    waitnet -s
     urlonly=1
     shift
   fi
@@ -230,11 +232,16 @@ function tryURL() {
           finishIt
         else
           echo "Sorry, couldn't extract lyrics from that URL..." >&2
+          exit 1
         fi
-        exit 0;
       fi
     fi
   done
+  
+  if [[ -n $urlonly && "$1" =~ '^https?://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$' ]]; then
+    echo "Sorry, that site is not supported. Maybe you can add it. See in docs."
+    exit 1
+  fi
 }
 
 function postformat() {
@@ -301,6 +308,8 @@ artistNoSpaces: $artistNoSpaces
     exit 1
   fi
   
+  waitnet -s
+  
   OVERALL=()
   for site in $sites; do
     printf "Looking for lyrics at %s: " "$site" >&2
@@ -326,7 +335,6 @@ artistNoSpaces: $artistNoSpaces
 
         if [[ -n $res ]]; then
           finishIt
-          exit 0;
         else
           echo "Well, that URL sucked. Lets try another..." >&2
         fi
@@ -359,7 +367,6 @@ artistNoSpaces: $artistNoSpaces
 
           if [[ -n $res ]]; then
             finishIt
-            exit 0;
           else
             echo "Well, that URL sucked. Lets try another..." >&2
             echo "DEBUG: $res" >&2
