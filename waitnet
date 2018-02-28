@@ -1,6 +1,6 @@
 #/bin/bash
 
-timeout=60
+timeout=15
 sendNote=
 output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
 usage="Usage: \e[1mwaitnet\e[0m -h | [-q|-s] [-n] [-t \e[4mtimeout\e[0m]"
@@ -10,7 +10,7 @@ $usage
 	\e[1m-s\e[0m	No output on success without waiting (best for scripts).
 	\e[1m-q\e[0m	No console output, except errors.
 	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
-	\e[1m-t\e[0m	Specify a timeout in seconds (default: 60).
+	\e[1m-t\e[0m	Specify a timeout in seconds (default: $timeout).
 "
 
 while [[ -n $1 ]]; do
