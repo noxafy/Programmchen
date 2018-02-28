@@ -9,7 +9,7 @@ ARTIST=
 TITLE=
 VERBOSE=
 urlonly=
-help="$(basename $0) - Find out the songlyrics for a currently playing song.
+help="$(basename $0) - Find out the song lyrics for a currently playing song.
 
 This script is capable of finding out the Artist and Title of the currently
 playing song. If, you are using Rhythmbox or Spotify. See usage message below.
@@ -378,7 +378,7 @@ artistNoSpaces: $artistNoSpaces
   
   echo "Ooops, no site left. " >&2
   
-  if [ -e /usr/local/opt/bash-snippets/bin/lyrics && -n "$ARTIST" ]; then
+  if [[ -e /usr/local/opt/bash-snippets/bin/lyrics && -n "$ARTIST" ]]; then
     echo "Last chance: lyrics from bash-snippets" >&2
     /usr/local/opt/bash-snippets/bin/lyrics -a "$ARTIST" -s "$TITLE" && exit 0
   fi
@@ -415,7 +415,7 @@ function lookupSpotifyInfo() {
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     #precautionally open it
     if [[ $(ps -x | grep 'Spotify.app' | wc -l) -eq 1 ]]; then
-      echo "Opening Spotify at first ..." &>2
+      echo "Opening Spotify at first ..." >&2
       open -j /Applications/Spotify.app/ && sleep 3
     fi
     ARTIST="$(osascript -e 'tell application "Spotify" to artist of current track as string')";
