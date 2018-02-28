@@ -9,6 +9,7 @@ ARTIST=
 TITLE=
 VERBOSE=
 urlonly=
+AUTOSELECT=true
 help="$(basename $0) - Find out the song lyrics for a currently playing song.
 
 This script is capable of finding out the Artist and Title of the currently
@@ -32,6 +33,8 @@ Dependency to \"recode\". Parameter -v produces debugging output.
 LC_CTYPE=C
 LANG=C
 
+#TODO: html encode for musixmatch -> title and artist matching individually for each site
+
 #adding new lyrics sites:
 #  add new site hostname to $sites
 #  find xml-elements directly before and after the text
@@ -42,19 +45,28 @@ LANG=C
 
 # This is used to get the url for the lyrics
 function google {
-  stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
+  if [[ -n $VERBOSE ]]; then
+    #add v for more information about headers
+    stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
+    if [[ ${#stream} -lt 2000 ]]; then
+      echo "Answer may indicate failing:" >&2
+      printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
+    fi
+  else
+    stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
+  fi
   #echo "link: ${GOOG_URL}?q=$*" >&2
   res=$(echo "$stream" | grep -o "result-url\" href=\"[^\"]*" | sed 's/result-url" href="//')
   if [[ -n $(echo "$res" | grep "songtexte\.com") ]]; then
     res=$(echo "$res" | grep "/songtext/")
   elif [[ -n $(echo "$res" | grep "azlyrics\.com") ]]; then
-      res=$(echo "$res" | grep "/lyrics/")
+    res=$(echo "$res" | grep "/lyrics/")
   elif [[ -n $(echo "$res" | grep "songlyrics\.com") ]]; then
-      res=$(echo "$res" | grep -- "-lyrics/")
+    res=$(echo "$res" | grep -- "-lyrics/")
   elif [[ -n $(echo "$res" | grep "genius\.com") ]]; then
-      res=$(echo "$res" | grep -- "-lyrics")
+    res=$(echo "$res" | grep -- "-lyrics")
   elif [[ -n $(echo "$res" | grep "musixmatch\.com") ]]; then
-      res=$(echo "$res" | grep "/lyrics/")
+    res=$(echo "$res" | grep "/lyrics/")
   fi
   echo "$res"
 }
@@ -159,6 +171,7 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
       | grep -v "Noch keine Übersetzung vorhanden." \
       | grep -v "Jetzt Übersetzung hinzufügen" \
       | grep -v "Leider kein Songtext vorhanden." \
+      | grep -v "Jetzt Songtext hinzufügen" \
       | sed 's/^ *//g' \
       | sed '/^$/N;/^\n$/D');
 #      | sed 's/’//g' \
@@ -249,15 +262,20 @@ function postformat() {
 }
 
 function withHyphen0() {
-  echo "$*" | sed 's/ /-/g' | sed 's/-\{2,\}/-/g' | postformat
+  echo "$*" | sed 's/ /-/g' | sed 's/-\{2,\}/-/g' | sed 's/-*//'
 }
 
 function withHyphen() {
-  withHyphen0 $(echo "$*" | sed "s/'/-/g" | sed "s/&//g")
+  withHyphen0 $(echo "$*" | sed "s/'/-/g" | sed "s/&//g") | postformat
 }
 
 function withHyphen2() {
-  withHyphen0 $(echo "$*" | sed "s/'//g" | sed "s/&/and/g")
+  withH=$(withHyphen0 $(echo "$*" | sed "s/'/-/g" | sed "s/&//g"))
+  perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$withH"
+}
+
+function withHyphen3() {
+  withHyphen0 $(echo "$*" | sed "s/'//g" | sed "s/&/and/g") | postformat
 }
 
 function noSpaces() {
@@ -276,11 +294,13 @@ Title: $TITLE
   tileInUrl=$(preformat $TITLE | sed 's/ - [Ll]ive.*//g')
   titleWithHyphen=$(withHyphen $tileInUrl)
   titleWithHyphen2=$(withHyphen2 $tileInUrl)
+  titleWithHyphen3=$(withHyphen3 $tileInUrl)
   titleNoSpaces=$(noSpaces $tileInUrl)
 
   artistInUrl=$(preformat $ARTIST)
   artistWithHyphen=$(withHyphen $artistInUrl)
   artistWithHyphen2=$(withHyphen2 $artistInUrl)
+  artistWithHyphen3=$(withHyphen3 $artistInUrl)
   artistNoSpaces=$(noSpaces $artistInUrl)
   
   if [[ -n $VERBOSE ]]; then
@@ -288,11 +308,13 @@ Title: $TITLE
 titleInUrl: $tileInUrl
 titleWithHyphen: $titleWithHyphen
 titleWithHyphen2: $titleWithHyphen2
+titleWithHyphen3: $titleWithHyphen3
 titleNoSpaces: $titleNoSpaces
 
 artistInUrl: $artistInUrl
 artistWithHyphen: $artistWithHyphen
 artistWithHyphen2: $artistWithHyphen2
+artistWithHyphen3: $artistWithHyphen3
 artistNoSpaces: $artistNoSpaces
 ********************************************" >&2
   fi
@@ -303,7 +325,7 @@ artistNoSpaces: $artistNoSpaces
   fi
   
   # Title must not be empty
-  if [[ -z "$titleWithHyphen" && -z "$titleWithHyphen2" && -z "$titleNoSpaces" ]]; then
+  if [[ -z "$titleWithHyphen" && -z "$titleWithHyphen2" && -z "$titleWithHyphen3" && -z "$titleNoSpaces" ]]; then
     echo "Couldn't convert title to ascii. Please give it in latin characters. It must not be empty, so exiting now." >&2
     exit 1
   fi
@@ -322,34 +344,81 @@ artistNoSpaces: $artistNoSpaces
       echo "No results. Lets try another..." >&2
       continue;
     fi
-
-    # try to validate self
-    # only title is required (grep would pass everything trough if both empty)
-    for i in "${ALL[@]}"; do
-      if [[ ( -n "$titleWithHyphen" && -n $(echo "$i" | grep -i "$titleWithHyphen" | grep -i "$artistWithHyphen") )
-        || ( -n "$titleNoSpaces" && -n $(echo "$i" | grep -i "$titleNoSpaces" | grep -i "$artistNoSpaces") )
-        || ( -n "$titleWithHyphen2" && -n $(echo "$i" | grep -i "$titleWithHyphen2" | grep -i "$artistWithHyphen2") ) ]]; then
-        echo "Lyrics found!" >&2
-
-        ${site%.*} $i
-
-        if [[ -n $res ]]; then
-          finishIt
-        else
-          echo "Well, that URL sucked. Lets try another..." >&2
-        fi
-      elif [[ -n $VERBOSE ]]; then
-        echo "URL not matching: $i" >&2
-      fi
-    done
     
-    #add ALL to OVERALL and try to find in next site
-    OVERALL+=("${ALL[@]}")
-    echo "No matching site found. Lets try another site..." >&2
+    if [[ -n "$AUTOSELECT" ]]; then
+      # try to validate self
+      # only title is required (grep would pass everything trough if both empty)
+      for i in "${ALL[@]}"; do
+        if [[ ( -n "$titleWithHyphen" && -n $(echo "$i" | grep -i -e "$titleWithHyphen" | grep -i -e "$artistWithHyphen") )
+          || ( -n "$titleNoSpaces" && -n $(echo "$i" | grep -i -e "$titleNoSpaces" | grep -i -e "$artistNoSpaces") )
+          || ( -n "$titleWithHyphen2" && -n $(echo "$i" | grep -i -e "$titleWithHyphen2" | grep -i -e "$artistWithHyphen2") )
+          || ( -n "$titleWithHyphen3" && -n $(echo "$i" | grep -i -e "$titleWithHyphen3" | grep -i -e "$artistWithHyphen3") ) ]]; then
+          echo "Lyrics found!" >&2
+
+          ${site%.*} $i
+
+          if [[ -n $res ]]; then
+            finishIt
+          else
+            echo "Well, that URL sucked. Lets try another..." >&2
+          fi
+        elif [[ -n $VERBOSE ]]; then
+          echo "URL not matching: $i" >&2
+        fi
+      done
+      echo "No matching site found. Lets try another site..." >&2
+      
+      #add ALL to OVERALL and try to find in next site
+      OVERALL+=("${ALL[@]}")
+    else
+      echo "${#ALL[@]} results found."
+      while [[ -n "${ALL[@]}" ]]; do
+        j=1
+        for resURL in ${ALL[@]}; do
+          if [[ ( -n "$titleWithHyphen" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen" | grep -i -e "$artistWithHyphen") )
+            || ( -n "$titleNoSpaces" && -n $(echo "$resURL" | grep -i -e "$titleNoSpaces" | grep -i -e "$artistNoSpaces") )
+            || ( -n "$titleWithHyphen2" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen2" | grep -i -e "$artistWithHyphen2") )
+            || ( -n "$titleWithHyphen3" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen3" | grep -i -e "$artistWithHyphen3") ) ]]; then
+            echo "$j: $resURL (!)" >&2
+          else
+            echo "$j: $resURL" >&2
+          fi
+          ((j++))
+        done
+        printf "Is there anyone right? (1-${#ALL[@]} / c (continue) / q (= quit)) [c]: " >&2
+        read ans
+        if [[ $ans =~ ^[0-9]+$ ]]; then
+          if [[ $ans -le ${#ALL[@]} ]]; then
+            ((ans--))
+            tryURL "${ALL[$ans]}"
+
+            if [[ -n $res ]]; then
+              finishIt
+            else
+              echo "Well, that URL sucked. Lets try another..." >&2
+              echo "DEBUG: $res" >&2
+              #remove that URL from OVERALL
+              ALL=("${ALL[@]:0:$ans}" "${ALL[@]:((ans+1))}")
+            fi
+          else
+            echo "That number was too high..." >&2
+            exit 1;
+          fi
+        elif [[ -z "$ans" || "$ans" == c ]]; then
+          continue 2;
+        else
+          # q or any other not c and non-integer
+          exit 0;
+        fi
+      done
+    fi
   done
   
-  printf "No matching site found in all sites. " >&2
+  if [[ -n "$AUTOSELECT" ]]; then
+    printf "No matching site found in all sites. " >&2
+  fi
   
+  # implicit if autselect==true
   if [[ -n ${OVERALL[@]} ]]; then
     echo "Anyway, some sites where found:" >&2
     while [[ -n "${OVERALL[@]}" ]]; do
@@ -375,10 +444,11 @@ artistNoSpaces: $artistNoSpaces
           fi
         else
           echo "That number was too high..." >&2
-          break;
+          exit 1;
         fi
       else
-        break;
+        # q or any other non-integer
+        exit 0;
       fi
     done
   fi
@@ -456,8 +526,10 @@ if [[ $1 == -v ]]; then
   shift
 fi
 
-# If given an url, just browse it
-tryURL "urlonly" "$1"
+if [[ $1 == --ask ]]; then
+  AUTOSELECT=""
+  shift
+fi
 
 # else see which function is wanted
 case $1 in
@@ -471,7 +543,14 @@ case $1 in
     printf "%s" "$help"
     exit 0
     ;;
+  -*)
+    printf "Unknown Argument: %s\nSee -h for more help.\n" "$1"
+    exit 1
+    ;;
   *)
+    # If given an url, just browse it
+    tryURL "urlonly" "$1"
+    
     if [[ -n "$1" ]]; then
       TITLE=$1
       ARTIST=$2
