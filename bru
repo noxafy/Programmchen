@@ -1,7 +1,6 @@
 #!/bin/bash
 
 dest="$HOME/brewupdate.log"
-timeout=12
 delim="******************************************"
 cmds=(update upgrade cleanup doctor)
 usage="\e[1mbru\e[0m [-h]"
@@ -39,7 +38,7 @@ start() {
 }
 
 #test internet connection
-waitnet -s -t $timeout
+waitnet -s
 
 start
 #execute
