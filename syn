@@ -39,11 +39,8 @@ if [[ $* ]]
       open "https://www.openthesaurus.de/synonyme/$key"
     else
       # test on wifi con
-      wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
-      if [[ -z "$wifi" ]]; then
-        echo "Please turn on wifi first."
-        exit 1
-      fi
+      waitnet -s
+
       srcf=$(curl -s -m 2 "https://www.openthesaurus.de/synonyme/$key")
       [[ -z $srcf ]] && echo "No internet connection available." && exit 1
        ans=$(echo "$srcf" | grep -o -e "Gefundene Synonyme:.*\"/>" | sed -e 's/,\ "\/>/\ /' | recode utf-8..latin1 | perl -MHTML::Entities -pe 'decode_entities($_);' | recode latin1..utf-8)
