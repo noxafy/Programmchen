@@ -17,7 +17,7 @@ case $1 in
     printf "$help"
     exit 0
     ;;
-  *)
+  -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
@@ -47,8 +47,16 @@ installWifi() {
   ssid=$1
   passwd=$2
   while [[ -z "$ssid" ]]; do
-    read -p "Please enter a SSID to connect to: " ssid
+    read -p "Please enter a SSID to connect to (WPA2 only; s = show all available): " ssid
+    if [[ "$ssid" = s ]]; then
+      echo "Available networks (WPA2 only):"
+      /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s | grep 'WPA2'
+    fi
   done
+  if [[ -n $(networksetup -listpreferredwirelessnetworks en0 | grep "$ssid") ]]; then
+    printf "%s already installed!" "$ssid"
+    return;
+  fi
   while [[ -z "$password" ]]; do
     read -p "Please enter the password for $ssid: " passwd
   done
@@ -74,11 +82,13 @@ if [[ -z "$D" ]]; then
   open "$thisdir/*.terminal"
   #let user choose layout and restart terminal & install script
   echo "Please close this window now and start this script again with you favourite terminal layout."
-  printf "\e[4mHint\e[0m: Just set it to standard layout."
-  printf "\e[4mHint2\e[0m: Activate secure text entry."
-  printf "\e[4mHint3\e[0m: At this point, also switch keyboard layout as desired."
+  printf "\e[4mHint\e[0m: Just set it to standard layout.\n"
+  printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
+  printf "\e[4mHint3\e[0m: At this point, also switch keyboard layout as desired. "
   waitUser
   exit 0
+else
+  echo "Skipped preferences installation."
 fi
 
 #prepare installs
@@ -91,49 +101,64 @@ if [[ $? -ne 0 ]]; then #first time. no internet installed
   #wlan login
   installWifi AdMiNet #pass not installed yet, so paste password here before running
   #AEG
+  printf "Turning Wi-Fi off ..."
   networksetup -setairportpower en0 off
+  echo " and on ..."
   networksetup -setairportpower en0 on
   sleep 3
   ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
-  echo "Auto connection failed. Please select the network from above."
-  echo "Script will continue as soon as internet connection found."
-  while [[ $? -ne 0 ]]; do
-    sleep 1
+  if [[ $? -ne 0 ]]; then
+    echo "Auto connection failed. Please select the network from menu bar."
+    echo "This script will continue as soon as an internet connection is found."
     ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
-  done
+    while [[ $? -ne 0 ]]; do
+      sleep 1
+      ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+    done
+  fi
+else
+  echo "Skipped internet installation."
+fi
 
-  #install dashboard apps
+if [[ -d dashboard ]]; then
+  echo "Installing dashboard apps ..."
   c dashboard
   cd "dashboard"
   for wgt in *; do
-    echo "Please install: $wgt"
-    sleep 1
+    echo "Install: $wgt"
     open "$wgt"
     waitUser
   done
   cd ".."
   rm -rf dashboard
+else
+  echo "Skipped Dashboard apps (no \"dashboard\" directory available at $PWD)"
+fi
 
+if [[ -z $(which brew) ]]; then
   #install brew
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed.
-Please install brew yourself:
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-and
-  brew tap caskroom/cask"
-  brew tap caskroom/cask || die "Please try again: brew tap caskroom/cask"
+  echo "Installing Homebrew ..."
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed."
+  echo "Tapping caskroom ..."
+  brew tap caskroom/cask || die "brew tap caskroom/cask failed."
+else
+  echo "Skipped brew installation."
 fi
 
 if [[ ! -e /Applications/Dropbox.app/ ]]; then
   #brew install dropbox
+  echo "Installing Dropbox ..."
   brew cask install dropbox || die "brew cask install dropbox failed!"
   #log in dropbox
   echo "Please log in to dropbox!"
   sleep 1
   open /Applications/Dropbox.app/
   waitUser #deps in Programmchen now available
+else
+  echo "Skipped dropbox installation."
 fi
 
-#install adobe, user must give key
+#install adobe, contains key?
 #install microsoft programs
 
 #open app store for apple id
@@ -165,3 +190,5 @@ fi
 # - import newsflow opml
 # - os shortcuts
 # - install "RZUWsec"
+
+cd "$thisdir"
