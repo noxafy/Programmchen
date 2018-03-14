@@ -2,6 +2,7 @@
 
 regex='^(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$'
 openLink=1
+VERBOSE=
 
 
 
@@ -10,6 +11,7 @@ wa="https://web.whatsapp.com/"
 
 psy="https://lexikon.stangl.eu/alphabetisches-inhaltsverzeichnis/"
 
+trading212="https://www.trading212.com"
 #
 #
 #
@@ -36,11 +38,12 @@ idealo_def="https://www.idealo.de/"
 
 site=default
 
-usage="Usage: \e[1mf\e[0m -h | [[-y] \e[4moption1\e[0m] | [-y] [--] \e[4mkey\e[0m \e[4m...\e[0m | [-y] \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m]"
+usage="Usage: \e[1mf\e[0m -h | [-y] [-d] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-y\e[0m	Prints the resulting link, adds it to clipboard and exits.
+	\e[1m-d\e[0m	Debug logging and don't open anything at all.
 	\e[4mkey\e[0m	The query keywords to look for a translation.
 	\e[4moption\e[0m	Is one of:
 	  Option type 1 opens a specific web page. Any following arguments will be ignored.
@@ -52,6 +55,7 @@ $usage
 	    mensa	$mensa
 	    psy		$psy
 	    mail	$mail
+	    t212	$trading212
 
 	  Option type 2 processes directly a search with given keywords on a particular site.
 	  Without any other argument the related home page will be opened.
@@ -71,6 +75,13 @@ $usage
 	No argument will just open Firefox. (Therefrom its name..)
 "
 
+case $1 in
+  -h|--help)
+    printf "$help"
+    exit 0
+    ;;
+esac
+
 startFireFox() {
   if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
     printf "Firefox not started yet!\nStarting Firefox"
@@ -80,13 +91,19 @@ startFireFox() {
     printf "."
     sleep 1
     printf "."
-    sleep 0.2
+    sleep 0.3
     printf "\r\e[K"
+  elif [[ $VERBOSE ]]; then
+    echo "Firefox already started."
   fi
 }
 
 fire() {
   if [[ $openLink ]]; then
+    if [[ $VERBOSE ]]; then
+      echo "Open link: $1"
+      exit 0
+    fi
     open "$1" || echo "Failed to open $1" && exit 1
   else
     if [[ -t 1 ]]; then
@@ -102,11 +119,23 @@ fire() {
 
 tryFirst() {
   header='Accept-Language: de,en-US;q=0.7,en;q=0.3'
+  if [[ $VERBOSE ]]; then
+    echo "Searching for first website result."
+    echo "curl -s -A 'Mozilla/5.0' -GLm 10 -H \"$header\" https://www.ecosia.org/search --data-urlencode \"q=$1\""
+  fi
   stream=$(curl -s -A 'Mozilla/5.0' -GLm 10 -H "$header" https://www.ecosia.org/search --data-urlencode "q=$1")
-  res=$(echo "$stream" | grep -o -m 1 "result-url\" href=\"[^\"]*" | sed 's/result-url" href="//')
+  res=$(echo "$stream" | grep -o -m 1 "result-url js-result-url\" href=\"[^\"]*" | sed 's/result-url js-result-url" href="//')
+  if [[ $VERBOSE ]]; then
+    echo "Lengths: stream (${#stream}); res (${#res})"
+  fi
   if [[ $res =~ $regex ]]; then
+    if [[ $VERBOSE ]]; then
+      echo "Matched website regex: $res"
+    fi
     fire $res
     exit 0
+  else
+    echo "Invalid tryFirst result: $res"
   fi
 }
 
@@ -115,30 +144,32 @@ if [ ! -t 0 ]; then
   key="$(cat | grep -v '^$' | sed -n 1p)"
 fi
 
-case $1 in
-  -h|--help)
-    printf "$help"
-    exit 0
-    ;;
-  -y)
-    openLink=""
-    if [[ ( -z "$2" || ( "$2" == -- && -z "$3" ) ) && -z "$key" ]]; then
-      printf "Cannot copy empty link request. See -h for more information.\n"
+while [[ $1 == -* ]]; do
+  case $1 in
+    -y)
+      openLink=""
+      if [[ ( -z "$2" || ( "$2" == -- && -z "$3" ) ) && -z "$key" ]]; then
+        printf "Cannot copy empty link request. See -h for more information.\n"
+        exit 1
+      fi
+      ;;
+    -v)
+      VERBOSE=true
+      ;;
+    --)
+      if [[ -z "$2" && -z "$key" ]]; then
+        printf "Argument -- must follow query key words. See -h for more information.\n"
+        exit 1
+      fi
+      break;
+      ;;
+    -*)
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       exit 1
-    fi
-    shift
-    ;;
-  --)
-    if [[ -z "$2" && -z "$key" ]]; then
-      printf "Argument -- must follow query key words. See -h for more information.\n"
-      exit 1
-    fi
-    ;;
-  -*)
-    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-    exit 1
-    ;;
-esac
+      ;;
+  esac
+  shift
+done
 
 if [[ -n $openLink ]]; then
   # test internet connection
@@ -170,8 +201,11 @@ case $1 in
   acc)
     fire "$acc"
     ;;
-  mail)
+  mail|webmail)
     fire "$mail"
+    ;;
+  t212)
+    fire "$trading212"
     ;;
 #  wg)
 #    fire "$wg"
@@ -260,13 +294,19 @@ fi
 #url matching, if not 
 if [[ "$site" = "default" ]]; then
   #guess a bit around
-  if [[ $key =~ ^[a-zA-Z0-9-]*\.[a-zA-Z0-9-]*$ ]]; then
+  if [[ $key =~ ^[a-zA-Z0-9-]*\.[a-zA-Z0-9/-]*$ ]]; then
     tryFirst "$key"
   fi
   if [[ $key =~ ^www\..* ]]; then
+    if [[ $VERBOSE ]]; then
+      echo "Add \"https://\" to $key"
+    fi
     key="https://$key"
   fi
   if [[ $key =~ $regex ]]; then
+    if [[ $VERBOSE ]]; then
+      echo "Matched website regex: $key"
+    fi
     fire "$key"
   fi
   #set default to ecosia
@@ -275,14 +315,24 @@ fi
 
 #preparing key
 if [[ -n $key ]]; then
+  if [[ $VERBOSE ]]; then
+    echo "Key before uri escaping: $key"
+  fi
   if [[ "$key" == -* ]]; then
     key=" $key"
     key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/^%20//' | sed 's/%20/+/g')
   else
     key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/%20/+/g')
   fi
+  if [[ $VERBOSE ]]; then
+    echo "Key after uri escaping: $key"
+  fi
   fire "${site}$key"
 else
+  if [[ $VERBOSE ]]; then
+    echo "Just opening Firefox."
+    exit 0
+  fi
   #for empty key just open firefox resp. bring it to front
   open /Applications/FireFox.app/
 fi
