@@ -82,16 +82,21 @@ case $1 in
     ;;
 esac
 
-startFireFox() {
-  if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
+openWithFireFox() {
+  firefoxProcesses=$(ps -x | grep firefox | wc -l)
+  if [[ -n $1 ]]; then
+    open -a /Applications/FireFox.app/ "$1"
+  else
+    open /Applications/FireFox.app/
+  fi
+  if [[ $firefoxProcesses -eq 1 ]]; then
     printf "Firefox not started yet!\nStarting Firefox"
-    open /Applications/Firefox.app  
     printf "."
     sleep 1
     printf "."
     sleep 1
     printf "."
-    sleep 0.3
+    sleep 1
     printf "\r\e[K"
   elif [[ $VERBOSE ]]; then
     echo "Firefox already started."
@@ -104,7 +109,7 @@ fire() {
       echo "Open link: $1"
       exit 0
     fi
-    open "$1" || echo "Failed to open $1" && exit 1
+    openWithFireFox "$1" || echo "Failed to open $1" && exit 1
   else
     if [[ -t 1 ]]; then
       echo "$1 (copied to clipboard)"
@@ -174,9 +179,6 @@ done
 if [[ -n $openLink ]]; then
   # test internet connection
   waitnet -s
-
-  # test if firefox started
-  startFireFox
 fi
 
 case $1 in
@@ -334,5 +336,5 @@ else
     exit 0
   fi
   #for empty key just open firefox resp. bring it to front
-  open /Applications/FireFox.app/
+  openWithFireFox
 fi
