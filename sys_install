@@ -9,7 +9,7 @@ help="An install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
 	
-Warning: Do NOT put in \$PATH (name collision)! Leave in place.
+Warning: Leave in place!
 "
 
 case $1 in
@@ -68,7 +68,7 @@ waitUser() {
 }
 
 #go home first
-cd "$HOME" || die "cd to $HOME failed!"
+pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
 # check, if .bash_profile is installed
 # if not, running first time, installing it and other shit
@@ -120,7 +120,7 @@ else
   echo "Skipped internet installation."
 fi
 
-if [[ -d dashboard ]]; then
+if [[ -d "$thisdir/dashboard" ]]; then
   echo "Installing dashboard apps ..."
   c dashboard
   cd "dashboard"
@@ -132,7 +132,7 @@ if [[ -d dashboard ]]; then
   cd ".."
   rm -rf dashboard
 else
-  echo "Skipped Dashboard apps (no \"dashboard\" directory available at $PWD)"
+  echo "Skipped Dashboard apps (no \"dashboard\" directory available at $thisdir)"
 fi
 
 if [[ -z $(which brew) ]]; then
@@ -191,4 +191,4 @@ fi
 # - os shortcuts
 # - install "RZUWsec"
 
-cd "$thisdir"
+popd &> /dev/null

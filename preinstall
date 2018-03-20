@@ -37,7 +37,7 @@ case $1 in
     fi
     target=$(cd $(dirname "$2"); pwd)/$(basename "$2")
     ;;
-  *)
+  -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
