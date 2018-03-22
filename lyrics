@@ -172,6 +172,7 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
       | grep -v "Jetzt Übersetzung hinzufügen" \
       | grep -v "Leider kein Songtext vorhanden." \
       | grep -v "Jetzt Songtext hinzufügen" \
+      | grep -v "Laden des Songtextes wird vorbereitet ..." \
       | sed 's/^ *//g' \
       | sed '/^$/N;/^\n$/D');
 #      | sed 's/’//g' \
