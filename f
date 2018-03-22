@@ -38,10 +38,11 @@ idealo_def="https://www.idealo.de/"
 
 site=default
 
-usage="Usage: \e[1mf\e[0m -h | [-y] [-d] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
+usage="Usage: \e[1mf\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-i\e[0m	Treat every given or piped argument (separated by \$IFS) as valid website.
 	\e[1m-y\e[0m	Prints the resulting link, adds it to clipboard and exits.
 	\e[1m-d\e[0m	Debug logging and don't open anything at all.
 	\e[4mkey\e[0m	The query keywords to look for a translation.
@@ -74,13 +75,6 @@ $usage
 	When no key given, but something piped, it will read the first non-empty line and search it as specified.
 	No argument will just open Firefox. (Therefrom its name..)
 "
-
-case $1 in
-  -h|--help)
-    printf "$help"
-    exit 0
-    ;;
-esac
 
 startFireFox() {
   if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
@@ -138,6 +132,29 @@ tryFirst() {
     echo "Invalid tryFirst result: $res"
   fi
 }
+
+case $1 in
+  -h|--help)
+    printf "$help"
+    exit 0
+    ;;
+  -i)
+    if [ ! -t 0 ]; then
+      keys="$(cat | grep -v '^$')"
+    else
+      shift
+      keys="$*"
+    fi
+    [[ -z $keys ]] && exit 1
+    startFireFox
+    #guarantee an open window
+    open /Applications/Firefox.app/
+    sleep 1
+
+    open $keys
+    exit 0
+    ;;
+esac
 
 #read from piped
 if [ ! -t 0 ]; then
