@@ -2,7 +2,7 @@
 
 regex='^(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$'
 openLink=1
-VERBOSE=
+DEBUG=
 
 
 
@@ -37,6 +37,7 @@ idealo="https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q="
 idealo_def="https://www.idealo.de/"
 
 site=default
+default_site=$e
 
 usage="Usage: \e[1mf\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
@@ -85,16 +86,20 @@ startFireFox() {
     printf "."
     sleep 1
     printf "."
-    sleep 0.3
+    sleep 0.6
     printf "\r\e[K"
-  elif [[ $VERBOSE ]]; then
+  elif [[ $DEBUG ]]; then
     echo "Firefox already started."
   fi
 }
 
 fire() {
+  if [[ -z $1 ]]; then
+    echo "Error: No link given!"
+  fi
+  
   if [[ $openLink ]]; then
-    if [[ $VERBOSE ]]; then
+    if [[ $DEBUG ]]; then
       echo "Open link: $1"
       exit 0
     fi
@@ -113,17 +118,17 @@ fire() {
 
 tryFirst() {
   header='Accept-Language: de,en-US;q=0.7,en;q=0.3'
-  if [[ $VERBOSE ]]; then
+  if [[ $DEBUG ]]; then
     echo "Searching for first website result."
     echo "curl -s -A 'Mozilla/5.0' -GLm 10 -H \"$header\" https://www.ecosia.org/search --data-urlencode \"q=$1\""
   fi
   stream=$(curl -s -A 'Mozilla/5.0' -GLm 10 -H "$header" https://www.ecosia.org/search --data-urlencode "q=$1")
   res=$(echo "$stream" | grep -o -m 1 "result-url js-result-url\" href=\"[^\"]*" | sed 's/result-url js-result-url" href="//')
-  if [[ $VERBOSE ]]; then
+  if [[ $DEBUG ]]; then
     echo "Lengths: stream (${#stream}); res (${#res})"
   fi
   if [[ $res =~ $regex ]]; then
-    if [[ $VERBOSE ]]; then
+    if [[ $DEBUG ]]; then
       echo "Matched website regex: $res"
     fi
     fire $res
@@ -170,8 +175,8 @@ while [[ $1 == -* ]]; do
         exit 1
       fi
       ;;
-    -v)
-      VERBOSE=true
+    -d)
+      DEBUG=true
       ;;
     --)
       if [[ -z "$2" && -z "$key" ]]; then
@@ -214,9 +219,6 @@ case $1 in
     ;;
   psy)
     fire "$psy"
-    ;;
-  acc)
-    fire "$acc"
     ;;
   mail|webmail)
     fire "$mail"
@@ -311,28 +313,28 @@ fi
 #url matching, if not 
 if [[ "$site" = "default" ]]; then
   #guess a bit around
-  if [[ $key =~ ^[a-zA-Z0-9-]*\.[a-zA-Z0-9/-]*$ ]]; then
+  if [[ $key =~ ^[a-zA-Z0-9-]*\.?[a-zA-Z0-9-]*\.[a-zA-Z0-9/-]*$ ]]; then
     tryFirst "$key"
   fi
   if [[ $key =~ ^www\..* ]]; then
-    if [[ $VERBOSE ]]; then
+    if [[ $DEBUG ]]; then
       echo "Add \"https://\" to $key"
     fi
     key="https://$key"
   fi
   if [[ $key =~ $regex ]]; then
-    if [[ $VERBOSE ]]; then
+    if [[ $DEBUG ]]; then
       echo "Matched website regex: $key"
     fi
     fire "$key"
   fi
-  #set default to ecosia
-  site=$e
+  #set site to default
+  site=$default_site
 fi
 
 #preparing key
 if [[ -n $key ]]; then
-  if [[ $VERBOSE ]]; then
+  if [[ $DEBUG ]]; then
     echo "Key before uri escaping: $key"
   fi
   if [[ "$key" == -* ]]; then
@@ -341,12 +343,12 @@ if [[ -n $key ]]; then
   else
     key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/%20/+/g')
   fi
-  if [[ $VERBOSE ]]; then
+  if [[ $DEBUG ]]; then
     echo "Key after uri escaping: $key"
   fi
   fire "${site}$key"
 else
-  if [[ $VERBOSE ]]; then
+  if [[ $DEBUG ]]; then
     echo "Just opening Firefox."
     exit 0
   fi
