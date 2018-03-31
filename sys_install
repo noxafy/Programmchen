@@ -12,6 +12,88 @@ $usage
 Warning: Leave in place!
 "
 
+#needed data
+trading_icon="$IT/trading212.icns"
+
+brews='agedu
+aspell
+bash-completion
+bash-snippets
+brightness
+bro
+chromedriver
+cloc
+darksky-weather
+diff-pdf
+expect
+fd
+ffmpeg
+fortune
+geoipupdate
+git
+go
+googler
+hexedit
+howdoi
+libass
+lorem
+lua@5.1
+mas
+maven
+maven-completion
+mplayer
+mujs
+mysql
+nativefier
+pass
+pdfgrep
+pick
+pup
+recode
+shpotify
+testdisk
+wget
+wiki
+wine
+winetricks
+you-get
+youtube-dl'
+
+brewcasks='android-file-transfer
+android-sdk
+android-studio
+anki
+axure-rp
+betterzipql
+calibre
+disablemonitor
+dropbox
+firefox
+flux
+freefilesync
+freemind
+geogebra
+google-chrome
+google-earth-pro
+intellij-idea
+iterm2
+java
+jwzlyrics
+mactex
+mpv
+notational-velocity
+osxfuse
+qlimagesize
+qlstephen
+soundflower
+spotify
+telegram
+texstudio
+the-unarchiver
+thunderbird
+ukelele
+xquartz'
+
 case $1 in
   -h)
     printf "$help"
@@ -64,15 +146,23 @@ installWifi() {
 }
 
 waitUser() {
+  if [[ -n "$*" ]]; then
+    echo "$*"
+    sleep 2
+  fi
   read -p "Press [Enter] to continue ..." trash
 }
 
 #go home first
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
+####################################################
+### Partly automatic part
+####################################################
+
 # check, if .bash_profile is installed
-# if not, running first time, installing it and other shit
 if [[ -z "$D" ]]; then
+  # if not, install it and the other shit
   c .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
   #keyboard layout
   cd "Library" || die "cd to $HOME/Library failed!"
@@ -84,7 +174,7 @@ if [[ -z "$D" ]]; then
   echo "Please close this window now and start this script again with you favourite terminal layout."
   printf "\e[4mHint\e[0m: Just set it to standard layout.\n"
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
-  printf "\e[4mHint3\e[0m: At this point, also switch keyboard layout as desired. "
+  printf "\e[4mHint3\e[0m: At this point, you can also switch keyboard layout as desired. "
   waitUser
   exit 0
 else
@@ -94,6 +184,7 @@ fi
 #prepare installs
 #install keychains ???
 
+# install internet
 ping -t 1 -c 1 google.com 2> /dev/null 1> /dev/null
 if [[ $? -ne 0 ]]; then #first time. no internet installed
   echo "Creating internet connection ..."
@@ -120,14 +211,14 @@ else
   echo "Skipped internet installation."
 fi
 
+# install dashboard apps
 if [[ -d "$thisdir/dashboard" ]]; then
   echo "Installing dashboard apps ..."
   c dashboard
   cd "dashboard"
   for wgt in *; do
-    echo "Install: $wgt"
     open "$wgt"
-    waitUser
+    waitUser "Install: $wgt"
   done
   cd ".."
   rm -rf dashboard
@@ -135,6 +226,7 @@ else
   echo "Skipped Dashboard apps (no \"dashboard\" directory available at $thisdir)"
 fi
 
+# install homebrew
 if [[ -z $(which brew) ]]; then
   #install brew
   echo "Installing Homebrew ..."
@@ -145,15 +237,14 @@ else
   echo "Skipped brew installation."
 fi
 
+# install dropbox
 if [[ ! -e /Applications/Dropbox.app/ ]]; then
   #brew install dropbox
   echo "Installing Dropbox ..."
   brew cask install dropbox || die "brew cask install dropbox failed!"
   #log in dropbox
-  echo "Please log in to dropbox!"
-  sleep 1
   open /Applications/Dropbox.app/
-  waitUser #deps in Programmchen now available
+  waitUser "Please log in to dropbox!" #deps in Programmchen now available
 else
   echo "Skipped dropbox installation."
 fi
@@ -167,8 +258,39 @@ fi
 #IntelliJ config folder
 #install intelliJ, user must gui install and key
 
+if [[ -e "$trading_icon" ]]; then
+  echo "All Dropbox data available already."
+else
+  echo "$trading_icon"
+  while [[ ! -e "$trading_icon" ]]; do
+    waitUser "Please wait until all dropbox data is synchonized." #dropbox content synced
+  done
+fi
+
+####################################################
+### Full automatic part (place as much waiting time as possible here)
+####################################################
+
 #brew cask install
 #brew install
+
+#create WhatsApp and Trading212 app with nativefier
+if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
+  nativefier -n "WhatsApp Web" http://web.whatsapp.com/ || die "Creating Whatsapp Web.app failed."
+  mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
+  rm -rf WhatsApp Web-darwin-x64/
+else
+  echo "Skipped creation of Whatsapp Web.app with nativefier."
+fi
+
+if [[ ! -e "/Applications/Trading212.app" ]]; then
+  nativefier -i "$trading_icon" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
+  mv "Trading212-darwin-x64/Trading212.app" /Applications/
+  rm -rf Trading212-darwin-x64/
+else
+  echo "Skipped creation of Trading212.app with nativefier."
+fi
+
 #app store
 #Thunderbird folder
 #IdeaProjects
@@ -179,7 +301,7 @@ fi
 # install other wifis
 
 ####################################################
-### Manual
+### Manual part
 ####################################################
 
 # - notational velocity: ~/Dropbox/Org/Notational/
