@@ -12,8 +12,9 @@ $usage
 Warning: Leave in place!
 "
 
-#needed data
-trading_icon="$IT/trading212.icns"
+#resources
+trading_icon="$IT/trading212.icns" # icon for Trading212.app
+dashboard="$thisdir/dashboard" # Dashboard widgets
 
 brews='agedu
 aspell
@@ -21,6 +22,7 @@ bash-completion
 bash-snippets
 brightness
 bro
+chordii
 chromedriver
 cloc
 darksky-weather
@@ -59,6 +61,7 @@ winetricks
 you-get
 youtube-dl'
 
+# dropbox already installed, but doesn't matter
 brewcasks='android-file-transfer
 android-sdk
 android-studio
@@ -212,7 +215,7 @@ else
 fi
 
 # install dashboard apps
-if [[ -d "$thisdir/dashboard" ]]; then
+if [[ -d "$dashboard" ]]; then
   echo "Installing dashboard apps ..."
   c dashboard
   cd "dashboard"
@@ -271,12 +274,65 @@ fi
 ### Full automatic part (place as much waiting time as possible here)
 ####################################################
 
+echo "Updating homebrew ..."
+brew update || die "Brew update failed"
+
 #brew cask install
+failedcasks=
+echo "Looking up installed brew casks ..."
+brewcaskls=$(brew cask ls)
+for cask in $brewcasks; do
+  if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
+    echo "Installing cask $cask ..."
+    brew cask install $cask
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $cask"
+      failedcasks+="$cask
+      "
+    fi
+  else
+    echo "Skipped already installed cask: $cask"
+  fi
+done
+if [[ -n "$failedcasks" ]]; then
+  echo "Retry following cask installs:"
+  for cask in $failedcasks; do
+    echo "brew cask install $cask"
+  done
+else
+  echo "All casks installed with no obvious problems."
+fi
+
 #brew install
+failedformulas=
+echo "Looking up installed brew formulas ..."
+brewls=$(brew ls)
+for formula in $brews; do
+  if [[ -z $(echo "$brewls" | grep $formula) ]]; then
+    echo "Installing formula $formula ..."
+    brew install $formula
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $formula"
+      failedformulas+="$formula
+      "
+    fi
+  else
+    echo "Skipped already installed formula: $formula"
+  fi
+done
+if [[ -n "$failedformulas" ]]; then
+  echo "Retry following formula installs:"
+  for formula in $failedformulas; do
+    echo "brew install $formula"
+  done
+else
+  echo "All formulas installed with no obvious problems."
+fi
 
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
-  nativefier -n "WhatsApp Web" http://web.whatsapp.com/ || die "Creating Whatsapp Web.app failed."
+  echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
+  nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed."
   mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
   rm -rf WhatsApp Web-darwin-x64/
 else
@@ -284,7 +340,26 @@ else
 fi
 
 if [[ ! -e "/Applications/Trading212.app" ]]; then
+  echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
   nativefier -i "$trading_icon" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
+  
+  # Remove context menu
+  mainpath="Trading212-darwin-x64/Trading212.app/Contents/Resources/app/lib/main.js"
+  if [[ -e "$mainpath" ]]; then
+    mainjs=$(cat "$mainpath")
+    contextmenustart=$(echo "$mainjs" | grep -n "_electron.ipcMain.on('contextMenuOpened', function (event, targetHref) {" | awk '{ print $1 + 0; }') # 6893
+    contextmenuend=$(echo "$mainjs" | grep -n 'mainWindow.contextMenuOpen = true;' | awk '{ print $1 + 1; }') # 6928
+    if [[ -n $contextmenustart && -n $contextmenuend ]]; then
+      echo "mainjs" | sed "${contextmenustart},${contextmenuend}d" > "$mainpath"
+      echo "Successfully removed context menu (sed '${contextmenustart},${contextmenuend}d')"
+    else
+      echo "Failed to fetch context menu location. Please remove context menu initialization manually."
+      echo "mate -l '6893-6928' "$mainpath" # location with nativefier 7.6.1; leave surrounding 'function initContextMenu(mainWindow) {'"
+    fi
+  else
+    echo "Failed to remove context menu. File not found: $mainpath"
+  fi
+  
   mv "Trading212-darwin-x64/Trading212.app" /Applications/
   rm -rf Trading212-darwin-x64/
 else
@@ -292,6 +367,19 @@ else
 fi
 
 #app store
+if [[ -z $(mas account) ]]; then
+  waitUser "Please sign into App Store"
+  open /Applications/App\ Store.app/
+fi
+mas install 497799835 # XCode
+mas install 890805912 # Newsflow
+mas install 1061963639 # VirtualDJ 8
+mas install 408981434 # iMovie
+mas install 1247301872 # Logoist 3
+mas install 595191960 # CopyClip
+mas install 526298438 # Lightshot Screenshot
+mas install 404010395 # TextWrangler
+
 #Thunderbird folder
 #IdeaProjects
 #other files (documents, pictures, music)
@@ -312,5 +400,6 @@ fi
 # - import newsflow opml
 # - os shortcuts
 # - install "RZUWsec"
+# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, terminal, FileMerge
 
 popd &> /dev/null
