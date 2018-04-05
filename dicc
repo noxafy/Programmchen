@@ -4,7 +4,8 @@ all=0 #by default only exact results are shown
 verbose=0
 pagesconfirmfrom=4
 openDirect=
-timeout=2
+CURL="curl -m 10 -A 'Mozilla/5.0' -H \"Accept-Language: de,en-US;q=0.7,en;q=0.3\""
+
 usage="Usage: \e[1mdicc\e[0m -h | [-o|-a|-r|-x] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
 help="Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
 $usage
@@ -75,18 +76,26 @@ fi
 if [[ $all == 2 && $verbose != 0 ]]; then
   echo "open https://www.dict.cc/?s=$key"
 fi
-srcf=$(curl -s -m $timeout "https://www.dict.cc/?s=$key")
+if [[ $verbose != 0 ]]; then
+  echo "$CURL -s \"https://www.dict.cc/?s=$key\""
+fi
+srcf=$($CURL -s "https://www.dict.cc/?s=$key")
 
 if [[ -z "$srcf" ]]; then
-  echo "Failed to fetch from $site"
+  echo "Failed to fetch content from $site"
   printf "Want to see header communication? (y/n) [n]: "
   read ans
   case $ans in
     y)
-      curl -Iv -m $timeout "https://www.dict.cc/?s=$key"
+      if [[ $verbose != 0 ]]; then
+        echo "$CURL -Iv \"https://www.dict.cc/?s=$key\""
+      fi
+      $CURL -Iv "https://www.dict.cc/?s=$key"
       ;;
   esac
   exit 1
+elif [[ $verbose != 0 ]]; then
+  echo "Answer length: ${#srcf}"
 fi
 
 #fetch pagecount
@@ -96,7 +105,7 @@ if [[ -z "$pagemax" ]]; then
   pagemax=1
 fi
 if [[ $verbose != 0 ]]; then
-  printf "$pagemax pages found for keyword: $key\n"
+  printf "$pagemax pages found for \"%s\"\n" "$key"
 fi
 
 #unset -r if only one page available and 
@@ -144,7 +153,10 @@ if [[ $all -eq 2 ]]; then
     temp2=$(echo $vars | grep -o "c2Arr.*")
     var2+=${temp2:20:$(( ${#temp2} - 22))}
     ((cnt++))
-    srcf=$(curl -s -m 2 "https://www.dict.cc/?s=$key&pagenum=$cnt")
+    if [[ $verbose != 0 ]]; then
+      echo "$CURL -s \"https://www.dict.cc/?s=$key&pagenum=$cnt\""
+    fi
+    srcf=$($CURL -s "https://www.dict.cc/?s=$key&pagenum=$cnt")
     # test on internet connection
     if [[ -z "$srcf" ]]; then
       echo "Internet connection on page $cnt failed. Printing all downloaded translations..."
@@ -174,6 +186,11 @@ var c1Arr;
 var c2Arr;
 $var1
 $var2
+if ($verbose !== 0) {
+  console.log("c1Arr.length: " + c1Arr.length)
+  console.log("c2Arr.length: " + c2Arr.length)
+}
+
 if (!c1Arr || !c2Arr) console.log("No translation found.");
 else if ($all) {
 	var logged = 0;
@@ -199,11 +216,11 @@ else if ($all) {
 		}
 	}
 	if (logged === 0) {
-		if (skipped !== 0) {
-			console.log(skipped + " skipped translation(s) found. Nevertheless showing all results of the first page now.");
-		} else {
-			console.log("No exact translation found. Showing all results of the first page now.");
-		}
+		//if (skipped !== 0) {
+		//	console.log(skipped + " skipped translation(s) found. Nevertheless showing all results of the first page now.");
+		//} else {
+		console.log("No exact translation found. Showing all results of the first page now.");
+		//}
 		setTimeout(listAll, 1500);
 	}
 } else {
@@ -253,6 +270,7 @@ function contains(a, obj) {
 js=${js/\$var1/$var1}
 js=${js/\$var2/$var2}
 js=${js//\$key/$key}
+js=${js//\$verbose/$verbose}
 allCh=$([ $all == 0 ] && echo "true" || echo "false")
 js=${js//\$all/$allCh}
 node -e "$js"
