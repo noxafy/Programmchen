@@ -4,13 +4,16 @@ thisdir=$(dirname "$PWD/$BASH_SOURCE")
 if [[ ! -e $thisdir ]]; then
   thisdir=$(dirname "$BASH_SOURCE")
 fi
-usage="\e[1minstall\e[0m [-h]"
+usage="\e[1msys_install\e[0m -h | [-nb]"
 help="An install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
+	\e[1m-nb\e[0m	Skip brew installs.
 	
 Warning: Leave in place!
 "
+
+skipbrew=
 
 #resources
 keylayouts="Keyboard Layouts" # keyboard layouts
@@ -110,6 +113,9 @@ case $1 in
     printf "$help"
     exit 0
     ;;
+  -nb)
+    skipbrew=true
+    ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
@@ -161,7 +167,8 @@ waitUser() {
     echo "$*"
     sleep 2
   fi
-  read -p "Press [Enter] to continue ..." trash
+  read -p "Press [Enter] to continue: " trash
+  #printf "\e[A\r\e[K"
 }
 
 ####################################################
@@ -187,6 +194,7 @@ if [[ -z "$D" ]]; then
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
   printf "\e[4mHint3\e[0m: At this point, you can also switch keyboard layout as desired. "
   waitUser
+  echo "Now."
   exit 0
 else
   echo "Skipped preferences installation."
@@ -277,8 +285,9 @@ fi
 #IntelliJ config folder
 #install intelliJ
 
+# ensure required dropbox content synced
 if [[ -e "$trading_icon" ]]; then
-  echo "Required Dropbox data available."
+  echo "All required dropbox data available."
 else
   echo "$trading_icon"
   while [[ ! -e "$trading_icon" ]]; do
@@ -293,65 +302,77 @@ else
     printf "\r\e[K"
   done
 fi
-#dropbox content synced
 
 ####################################################
-### Full automatic part (place as much waiting time as possible here)
+### Full automatic part (place as much as possible here)
 ####################################################
 
-echo "Updating homebrew ..."
-brew update || die "brew update failed"
-
-#brew cask install
-failedcasks=
-echo "Looking up installed brew casks ..."
-brewcaskls=$(brew cask ls)
-for cask in $brewcasks; do
-  if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
-    echo "Installing cask $cask ..."
-    brew cask install $cask
-    if [[ $? -ne 0 ]]; then
-      echo "Failed installing $cask"
-      failedcasks+="$cask
-      "
-    fi
-  else
-    echo "Skipped already installed cask: $cask"
-  fi
-done
-if [[ -n "$failedcasks" ]]; then
-  echo "Retry following cask installs:"
-  for cask in $failedcasks; do
-    echo "brew cask install $cask"
-  done
-else
-  echo "All casks installed with no obvious problems."
+#app store
+if [[ -z $(mas account) ]]; then
+  open /Applications/App\ Store.app/
+  waitUser "Please sign in to App Store"
 fi
+mas install 497799835 # XCode
+mas install 890805912 # Newsflow
+mas install 1061963639 # VirtualDJ 8
+mas install 408981434 # iMovie
+mas install 1247301872 # Logoist 3
+mas install 595191960 # CopyClip
+mas install 526298438 # Lightshot Screenshot
+mas install 404010395 # TextWrangler
 
-#brew install
-failedformulas=
-echo "Looking up installed brew formulas ..."
-brewls=$(brew ls)
-for formula in $brews; do
-  if [[ -z $(echo "$brewls" | grep $formula) ]]; then
-    echo "Installing formula $formula ..."
-    brew install $formula
-    if [[ $? -ne 0 ]]; then
-      echo "Failed installing $formula"
-      failedformulas+="$formula
-      "
+if [[ -z $skipbrew ]]; then
+  #brew cask install
+  failedcasks=
+  echo "Looking up installed brew casks ..."
+  brewcaskls=$(brew cask ls)
+  for cask in $brewcasks; do
+    if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
+      echo "Installing cask $cask ..."
+      brew cask install $cask
+      if [[ $? -ne 0 ]]; then
+        echo "Failed installing $cask"
+        failedcasks+="$cask "
+      fi
+    else
+      echo "Skipped already installed cask: $cask"
     fi
-  else
-    echo "Skipped already installed formula: $formula"
-  fi
-done
-if [[ -n "$failedformulas" ]]; then
-  echo "Retry following formula installs:"
-  for formula in $failedformulas; do
-    echo "brew install $formula"
   done
+  if [[ -n "$failedcasks" ]]; then
+    echo "Retry following cask installs:"
+    for cask in $failedcasks; do
+      echo "brew cask install $cask"
+    done
+  else
+    echo "All casks installed with no obvious problems."
+  fi
+
+  #brew install
+  failedformulas=
+  echo "Looking up installed brew formulas ..."
+  brewls=$(brew ls)
+  for formula in $brews; do
+    if [[ -z $(echo "$brewls" | grep $formula) ]]; then
+      echo "Installing formula $formula ..."
+      brew install $formula
+      if [[ $? -ne 0 ]]; then
+        echo "Failed installing $formula"
+        failedformulas+="$formula "
+      fi
+    else
+      echo "Skipped already installed formula: $formula"
+    fi
+  done
+  if [[ -n "$failedformulas" ]]; then
+    echo "Retry following formula installs:"
+    for formula in $failedformulas; do
+      echo "brew install $formula"
+    done
+  else
+    echo "All formulas installed with no obvious problems."
+  fi
 else
-  echo "All formulas installed with no obvious problems."
+  echo "Skipped brew installs."
 fi
 
 #create WhatsApp and Trading212 app with nativefier
@@ -375,7 +396,7 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
     contextmenustart=$(echo "$mainjs" | grep -n "_electron.ipcMain.on('contextMenuOpened', function (event, targetHref) {" | awk '{ print $1 + 0; }') # 6893
     contextmenuend=$(echo "$mainjs" | grep -n 'mainWindow.contextMenuOpen = true;' | awk '{ print $1 + 1; }') # 6928
     if [[ -n $contextmenustart && -n $contextmenuend ]]; then
-      echo "mainjs" | sed "${contextmenustart},${contextmenuend}d" > "$mainpath"
+      echo "$mainjs" | sed "${contextmenustart},${contextmenuend}d" > "$mainpath"
       echo "Successfully removed context menu (sed '${contextmenustart},${contextmenuend}d')"
     else
       echo "Failed to fetch context menu location. Please remove context menu initialization manually."
@@ -390,20 +411,6 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
 else
   echo "Skipped creation of Trading212.app with nativefier."
 fi
-
-#app store
-if [[ -z $(mas account) ]]; then
-  open /Applications/App\ Store.app/
-  waitUser "Please sign in to App Store"
-fi
-mas install 497799835 # XCode
-mas install 890805912 # Newsflow
-mas install 1061963639 # VirtualDJ 8
-mas install 408981434 # iMovie
-mas install 1247301872 # Logoist 3
-mas install 595191960 # CopyClip
-mas install 526298438 # Lightshot Screenshot
-mas install 404010395 # TextWrangler
 
 #Thunderbird folder
 #IdeaProjects
