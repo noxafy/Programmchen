@@ -13,8 +13,16 @@ Warning: Leave in place!
 "
 
 #resources
+keylayouts="Keyboard Layouts" # keyboard layouts
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
 dashboard="$thisdir/dashboard" # Dashboard widgets
+# adobe installer
+# thunderbird folder
+# intellij folder
+# minecraft
+# IdeaProjects Documents Pictures Music
+# power point draft uniwue
+# wifi data (save in pass?)
 
 brews='agedu
 aspell
@@ -109,7 +117,7 @@ case $1 in
 esac
 
 ####################################################
-### Install
+### Function declarations
 ####################################################
 
 die() {
@@ -156,12 +164,12 @@ waitUser() {
   read -p "Press [Enter] to continue ..." trash
 }
 
-#go home first
-pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
-
 ####################################################
 ### Partly automatic part
 ####################################################
+
+#go home first
+pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
 # check, if .bash_profile is installed
 if [[ -z "$D" ]]; then
@@ -169,7 +177,7 @@ if [[ -z "$D" ]]; then
   c .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
   #keyboard layout
   cd "Library" || die "cd to $HOME/Library failed!"
-  c "Keyboard Layouts" # - keyboard layout
+  c "$keylayouts" # - keyboard layout
   
   #install terminal layouts
   open "$thisdir/*.terminal"
@@ -183,9 +191,6 @@ if [[ -z "$D" ]]; then
 else
   echo "Skipped preferences installation."
 fi
-
-#prepare installs
-#install keychains ???
 
 # install internet
 ping -t 1 -c 1 google.com 2> /dev/null 1> /dev/null
@@ -231,7 +236,6 @@ fi
 
 # install homebrew
 if [[ -z $(which brew) ]]; then
-  #install brew
   echo "Installing Homebrew ..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed."
   echo "Tapping caskroom ..."
@@ -252,30 +256,51 @@ else
   echo "Skipped dropbox installation."
 fi
 
-#install adobe, contains key?
-#install microsoft programs
+#install adobe, contains key
+#install microsoft programs, user gui login
+
+if [[ -z $(which mas) ]]; then
+  echo "Installing mas ..."
+  brew install mas || die "brew install mas failed."
+  if [[ -z $(mas account) ]]; then
+    mas signin --dialog 
+    waitUser "Please sign in to App Store"
+  fi
+  echo "mas account: $(mas account)"
+else
+  echo "Skipped mas installation."
+fi
 
 #open app store for apple id
 #xcode-select --install ?
 
 #IntelliJ config folder
-#install intelliJ, user must gui install and key
+#install intelliJ
 
 if [[ -e "$trading_icon" ]]; then
-  echo "All Dropbox data available already."
+  echo "Required Dropbox data available."
 else
   echo "$trading_icon"
   while [[ ! -e "$trading_icon" ]]; do
-    waitUser "Please wait until all dropbox data is synchonized." #dropbox content synced
+    printf "Please wait until required dropbox data is synced "
+    sleep 1
+    printf "."
+    sleep 1
+    printf "."
+    sleep 1
+    printf "."
+    sleep 1
+    printf "\r\e[K"
   done
 fi
+#dropbox content synced
 
 ####################################################
 ### Full automatic part (place as much waiting time as possible here)
 ####################################################
 
 echo "Updating homebrew ..."
-brew update || die "Brew update failed"
+brew update || die "brew update failed"
 
 #brew cask install
 failedcasks=
@@ -368,8 +393,8 @@ fi
 
 #app store
 if [[ -z $(mas account) ]]; then
-  waitUser "Please sign into App Store"
   open /Applications/App\ Store.app/
+  waitUser "Please sign in to App Store"
 fi
 mas install 497799835 # XCode
 mas install 890805912 # Newsflow
