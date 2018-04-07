@@ -114,25 +114,34 @@ if [[ $all == 2 ]]; then
   if [[ $pagemax == 1 ]]; then
     all=1
   elif [[ $pagemax -ge $pagesconfirmfrom ]]; then
-    printf "Do you really want to show $pagemax pages? (y/n) "
-    read inp
+    read -p "Do you really want to show all $pagemax pages? (y/n) [n]: " inp
     case $inp in
       y*|Y*)
         ;;
       *)
-        printf "How many pages do you want to read out? (0-$pagemax) "
+        printf "How many pages do you want to read out? (0-$pagemax) [1]: "
         read inp2
         case $inp2 in
+          0)
+            exit 0
+            ;;
+          1)
+            all=1
+            ;;
           [0-9]|[1-9][0-9]|[1-9][0-9][0-9])
             if [[ $inp2 -gt $pagemax ]]; then
               printf "There are only $pagemax pages..."
-              exit 1 
-            elif [[ $inp2 -eq 1 ]]; then
-              all=1
+              exit 1
             else
               pagemax=$inp2
             fi
             ;;
+          "")
+            all=1
+            ;;
+          *)
+            echo "Invalid pagenumber: $inp2"
+            exit 1;
         esac
         ;;
     esac
@@ -141,7 +150,7 @@ fi
 
 #go through all sites or else only the first and create translation list
 if [[ $all -eq 2 ]]; then
-  echo "generating site..."    
+  echo "Generating $pagemax sites ..."    
   var1="var c1Arr = new Array(\"\""
   var2="var c2Arr = new Array(\"\""
   cnt=1
