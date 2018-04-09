@@ -1,8 +1,9 @@
 #!/bin/bash
 
-regex='^(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$'
+regex='^(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9?\\+&@./#%=~_|-]*$'
 openLink=1
 DEBUG=
+openCommands=
 
 
 
@@ -39,12 +40,13 @@ idealo_def="https://www.idealo.de/"
 site=default
 default_site=$e
 
-usage="Usage: \e[1mf\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
+usage="Usage: \e[1mf\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [-g] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
 help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-i\e[0m	Treat every given or piped argument (separated by \$IFS) as valid website.
 	\e[1m-y\e[0m	Prints the resulting link, adds it to clipboard and exits.
+	\e[1m-g\e[0m	Open browser silently in background.
 	\e[1m-d\e[0m	Debug logging and don't open anything at all.
 	\e[4mkey\e[0m	The query keywords to look for a translation.
 	\e[4moption\e[0m	Is one of:
@@ -77,16 +79,21 @@ $usage
 	No argument will just open Firefox. (Therefrom its name..)
 "
 
+die() {
+  printf "%s" "$*"
+	exit 1
+}
+
 startFireFox() {
   if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
     printf "Firefox not started yet!\nStarting Firefox"
-    open /Applications/Firefox.app  
+    open $openCommands /Applications/Firefox.app  
     printf "."
     sleep 1
     printf "."
     sleep 1
     printf "."
-    sleep 0.6
+    sleep 0.7
     printf "\r\e[K"
   elif [[ $DEBUG ]]; then
     echo "Firefox already started."
@@ -103,7 +110,7 @@ fire() {
       echo "Open link: $1"
       exit 0
     fi
-    open "$1" || echo "Failed to open $1" && exit 1
+    open $openCommands "$1" || die "Failed to open $1"
   else
     if [[ -t 1 ]]; then
       echo "$1 (copied to clipboard)"
@@ -150,7 +157,7 @@ case $1 in
       shift
       keys="$*"
     fi
-    [[ -z $keys ]] && exit 1
+    [[ -z $keys ]] && die "Give some sites with argument -i."
     startFireFox
     #guarantee an open window
     open /Applications/Firefox.app/
@@ -171,23 +178,23 @@ while [[ $1 == -* ]]; do
     -y)
       openLink=""
       if [[ ( -z "$2" || ( "$2" == -- && -z "$3" ) ) && -z "$key" ]]; then
-        printf "Cannot copy empty link request. See -h for more information.\n"
-        exit 1
+        die "Cannot copy empty link request. See -h for more information.\n"
       fi
       ;;
     -d)
       DEBUG=true
       ;;
+    -g)
+      openCommands="-g"
+      ;;
     --)
       if [[ -z "$2" && -z "$key" ]]; then
-        printf "Argument -- must follow query key words. See -h for more information.\n"
-        exit 1
+        die "Argument -- must follow query key words. See -h for more information.\n"
       fi
       break;
       ;;
     -*)
-      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-      exit 1
+      die "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       ;;
   esac
   shift
@@ -327,6 +334,8 @@ if [[ "$site" = "default" ]]; then
       echo "Matched website regex: $key"
     fi
     fire "$key"
+  elif [[ $DEBUG ]]; then
+    echo "Didn't match website regex: $key"
   fi
   #set site to default
   site=$default_site
