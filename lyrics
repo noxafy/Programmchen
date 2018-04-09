@@ -8,7 +8,6 @@ GOOG_URL='https://www.ecosia.org/search'
 ARTIST=
 TITLE=
 VERBOSE=
-urlonly=
 AUTOSELECT=true
 help="$(basename $0) - Find out the song lyrics for a currently playing song.
 
@@ -235,7 +234,7 @@ function finishIt() {
 function tryURL() {
   if [[ "$1" == "urlonly" ]]; then
     waitnet -s
-    urlonly=1
+    local urlonly=1
     shift
   fi
   for site in $sites; do
@@ -439,7 +438,6 @@ artistNoSpaces: $artistNoSpaces
             finishIt
           else
             echo "Well, that URL sucked. Lets try another..." >&2
-            echo "DEBUG: $res" >&2
             #remove that URL from OVERALL
             OVERALL=("${OVERALL[@]:0:$ans}" "${OVERALL[@]:((ans+1))}")
           fi
@@ -447,6 +445,8 @@ artistNoSpaces: $artistNoSpaces
           echo "That number was too high..." >&2
           exit 1;
         fi
+      elif [[ -z $ans ]]; then
+        break;
       else
         # q or any other non-integer
         exit 0;
@@ -483,13 +483,13 @@ function lookupSpotifyInfo() {
   # Checks $OSTYPE to determine the proper command for artist/title query
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
     ARTIST="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 \
-		org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' \
-			| grep -A 3 artist | grep string | grep -v xesam | sed 's/^\s*//' | cut -d ' ' -f 2- \
-				| tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
+      org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' \
+        | grep -A 3 artist | grep string | grep -v xesam | sed 's/^\s*//' | cut -d ' ' -f 2- \
+          | tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
     TITLE="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 \
-		org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' \
-			| grep -A 3 title | grep string | grep -v xesam | sed 's/^\s*//' | sed 's/^variant\s*//' \
-				| cut -d ' ' -f 2- | tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
+      org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' \
+        | grep -A 3 title | grep string | grep -v xesam | sed 's/^\s*//' | sed 's/^variant\s*//' \
+          | cut -d ' ' -f 2- | tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     #precautionally open it
     if [[ $(ps -x | grep 'Spotify.app' | wc -l) -eq 1 ]]; then
