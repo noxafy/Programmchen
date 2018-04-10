@@ -1,11 +1,11 @@
 #!/bin/bash
 
 usage="Usage: \e[1mtdl\e[0m -h | [-S[h]] [\e[4mdepth\e[0m]"
-help="List directories with \"\e[1mtree\e[0m\" to a particular depth.
+help="List directories with \"\e[1mtree\e[0m\".
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-S\e[0m	Sort entries by size.
- 	\e[1m-Sh\e[0m	Sort entries by size, but let size \"human-readable\".
+ 	\e[1m-Sh\e[0m	Sort entries by size and make the size human-readable.
 	\e[4mdepth\e[0m	Depth of directories listed (1 to 5; default: 1).
 "
 
@@ -34,7 +34,7 @@ while [[ -n $1 ]]; do
     -S)
       sort=1
       ;;
-    -Sh)
+    -Sh|-hS)
       sort=2
       ;;
     -h)
