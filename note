@@ -159,10 +159,8 @@ count() {
       sleep 0.994
     done
   else
-    while [ $secs -gt $1 ]; do
-      ((secs--))
-      sleep 0.994
-    done
+    ((secs++))
+    sleep $secs
   fi
 }
 
@@ -178,18 +176,18 @@ esac
 if [[ $desttime -gt 0 ]]; then
   #see if it is on next day
   if [[ $desttime -lt $(date "+%s") ]]; then
-    echo "Reminder will be on the next day."
+    if [[ $verbose -eq 1 ]]; then
+      echo "Reminder will be on the next day."
+    fi
     desttime=$((desttime + 86400))
   fi
 
   #read out the optional message
   mes=${*-"Time is up!"}
 
+  timeout
   if [[ $verbose -eq 1 ]]; then
-    timeout
     printf "\r\e[KTime left: 0s"
-  else
-    sleep $((desttime - $(date "+%s")))
   fi
 fi
 
