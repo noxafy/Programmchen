@@ -8,12 +8,10 @@ usage="\e[1msys_install\e[0m -h | [-nb]"
 help="An install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
-	\e[1m-nb\e[0m	Skip brew installs.
+	\e[1m-s\e[0m	Skip brew installs, brew cask installs and mas installs.
 	
 Warning: Leave in place!
 "
-
-skipbrew=
 
 #resources
 keylayouts="Keyboard Layouts" # keyboard layouts
@@ -27,7 +25,7 @@ dashboard="$thisdir/dashboard" # Dashboard widgets
 # power point draft uniwue
 # wifi data (save in pass?)
 
-brews='agedu
+brews=(agedu
 aspell
 bash-completion
 bash-snippets
@@ -48,17 +46,15 @@ go
 googler
 hexedit
 howdoi
-libass
 lorem
-lua@5.1
-mas
+#mas #already installed
 maven
 maven-completion
 mplayer
 mujs
 mysql
 nativefier
-pass
+#pass
 pdfgrep
 pick
 pup
@@ -70,10 +66,9 @@ wiki
 wine
 winetricks
 you-get
-youtube-dl'
+youtube-dl)
 
-# dropbox already installed, but doesn't matter
-brewcasks='android-file-transfer
+brewcasks=(android-file-transfer
 android-sdk
 android-studio
 anki
@@ -81,7 +76,7 @@ axure-rp
 betterzipql
 calibre
 disablemonitor
-dropbox
+#dropbox #already installed
 firefox
 flux
 freefilesync
@@ -106,15 +101,25 @@ texstudio
 the-unarchiver
 thunderbird
 ukelele
-xquartz'
+xquartz)
 
+masinstalls=(890805912 # Newsflow
+#497799835 # XCode, requirement of mas
+1061963639 # VirtualDJ 8
+408981434 # iMovie
+1247301872 # Logoist 3
+595191960 # CopyClip
+526298438 # Lightshot Screenshot
+404010395) # TextWrangler
+
+skipauto=""
 case $1 in
   -h)
     printf "$help"
     exit 0
     ;;
-  -nb)
-    skipbrew=true
+  -s)
+    skipauto=true
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -134,10 +139,14 @@ die() {
 c() {
   while [[ -n $1 ]]; do
     origin="$thisdir/$1"
+    if [[ ! -e "$origin" ]]; then
+      echo "WARNING: Requested file or dir not available: $origin"
+      continue;
+    fi
     target="$PWD/$1"
     printf "Copying $origin to $target"
     printf "($(du -sh "$origin" | awk '{print $1}')) ...\n"
-    cp -a "$origin" "$target/" || die "Copying $origin to $target failed!"
+    cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
     shift
   done
 }
@@ -153,10 +162,10 @@ installWifi() {
     fi
   done
   if [[ -n $(networksetup -listpreferredwirelessnetworks en0 | grep "$ssid") ]]; then
-    printf "%s already installed!" "$ssid"
+    printf "%s already installed!\n" "$ssid"
     return;
   fi
-  while [[ -z "$password" ]]; do
+  while [[ -z "$passwd" ]]; do
     read -p "Please enter the password for $ssid: " passwd
   done
   networksetup -addpreferredwirelessnetworkatindex Airport "$ssid" 0 WPA2 "$passwd"
@@ -171,15 +180,24 @@ waitUser() {
   #printf "\e[A\r\e[K"
 }
 
+tell() {
+  echo "####################################################"
+  echo "### $*"
+  echo "####################################################"
+}
+
 ####################################################
 ### Partly automatic part
 ####################################################
+tell "Partly automatic part"
+echo
 
 #go home first
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
 # check, if .bash_profile is installed
-if [[ -z "$D" ]]; then
+if [[ -z "$IT" ]]; then
+  tell "Preferences installation"
   # if not, install it and the other shit
   c .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
   #keyboard layout
@@ -201,9 +219,10 @@ else
 fi
 
 # install internet
-ping -t 1 -c 1 google.com 2> /dev/null 1> /dev/null
+ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
 if [[ $? -ne 0 ]]; then #first time. no internet installed
-  echo "Creating internet connection ..."
+  tell "Internet connection installation"
+  ping -t 3 -c 1 google.com #TODO: deleteme
   networksetup -setairportpower en0 on
   #wlan login
   installWifi AdMiNet #pass not installed yet, so paste password here before running
@@ -229,7 +248,7 @@ fi
 
 # install dashboard apps
 if [[ -d "$dashboard" ]]; then
-  echo "Installing dashboard apps ..."
+  tell "Dashboard app installation"
   c dashboard
   cd "dashboard"
   for wgt in *; do
@@ -255,7 +274,7 @@ fi
 # install dropbox
 if [[ ! -e /Applications/Dropbox.app/ ]]; then
   #brew install dropbox
-  echo "Installing Dropbox ..."
+  tell "Dropbox installation"
   brew cask install dropbox || die "brew cask install dropbox failed!"
   #log in dropbox
   open /Applications/Dropbox.app/
@@ -266,9 +285,10 @@ fi
 
 #install adobe, contains key
 #install microsoft programs, user gui login
+#install xcode
 
 if [[ -z $(which mas) ]]; then
-  echo "Installing mas ..."
+  tell "mas installation"
   brew install mas || die "brew install mas failed."
   if [[ -z $(mas account) ]]; then
     mas signin --dialog 
@@ -279,17 +299,27 @@ else
   echo "Skipped mas installation."
 fi
 
+if [[ -z $(which pass) ]]; then
+  tell "pass installation"
+  brew install pass || die "brew install pass failed."
+else
+  echo "Skipped pass installation."
+fi
+
 #open app store for apple id
 #xcode-select --install ?
 
 #IntelliJ config folder
 #install intelliJ
 
+# install other wifis
+# pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
+
 # ensure required dropbox content synced
 if [[ -e "$trading_icon" ]]; then
+  echo
   echo "All required dropbox data available."
 else
-  echo "$trading_icon"
   while [[ ! -e "$trading_icon" ]]; do
     printf "Please wait until required dropbox data is synced "
     sleep 1
@@ -303,80 +333,102 @@ else
   done
 fi
 
+echo
 ####################################################
 ### Full automatic part (place as much as possible here)
 ####################################################
+tell "Full automatic part"
+echo
 
+if [[ ! $skipauto ]]; then
 #app store
 if [[ -z $(mas account) ]]; then
   open /Applications/App\ Store.app/
   waitUser "Please sign in to App Store"
 fi
-mas install 497799835 # XCode
-mas install 890805912 # Newsflow
-mas install 1061963639 # VirtualDJ 8
-mas install 408981434 # iMovie
-mas install 1247301872 # Logoist 3
-mas install 595191960 # CopyClip
-mas install 526298438 # Lightshot Screenshot
-mas install 404010395 # TextWrangler
-
-if [[ -z $skipbrew ]]; then
-  #brew cask install
-  failedcasks=
-  echo "Looking up installed brew casks ..."
-  brewcaskls=$(brew cask ls)
-  for cask in $brewcasks; do
-    if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
-      echo "Installing cask $cask ..."
-      brew cask install $cask
-      if [[ $? -ne 0 ]]; then
-        echo "Failed installing $cask"
-        failedcasks+="$cask "
-      fi
-    else
-      echo "Skipped already installed cask: $cask"
+tell "App Store apps installation"
+failedapps=""
+masls=$(mas list | awk '{print $1}')
+for app in ${masinstalls[@]}; do
+  if [[ -z $(echo "$masls" | grep $app) ]]; then
+    echo "Installing $cask ..."
+    mas install $app
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $app $(mas info $app | sed -n 1p)"
+      failedapps+="$app "
     fi
-  done
-  if [[ -n "$failedcasks" ]]; then
-    echo "Retry following cask installs:"
-    for cask in $failedcasks; do
-      echo "brew cask install $cask"
-    done
   else
-    echo "All casks installed with no obvious problems."
+    echo "Skipped already installed app: $app"
   fi
-
-  #brew install
-  failedformulas=
-  echo "Looking up installed brew formulas ..."
-  brewls=$(brew ls)
-  for formula in $brews; do
-    if [[ -z $(echo "$brewls" | grep $formula) ]]; then
-      echo "Installing formula $formula ..."
-      brew install $formula
-      if [[ $? -ne 0 ]]; then
-        echo "Failed installing $formula"
-        failedformulas+="$formula "
-      fi
-    else
-      echo "Skipped already installed formula: $formula"
-    fi
+done
+if [[ -n "$failedapps" ]]; then
+  echo "Retry following app installs:"
+  for app in $failedapps; do
+    echo "mas install $app"
   done
-  if [[ -n "$failedformulas" ]]; then
-    echo "Retry following formula installs:"
-    for formula in $failedformulas; do
-      echo "brew install $formula"
-    done
-  else
-    echo "All formulas installed with no obvious problems."
-  fi
 else
-  echo "Skipped brew installs."
+  echo "All apps installed with no obvious problems."
 fi
+echo
+
+
+tell "brew cask installs"
+#brew cask install
+failedcasks=
+echo "Looking up installed brew casks ..."
+brewcaskls=$(brew cask ls)
+for cask in ${brewcasks[@]}; do
+  if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
+    echo "Installing cask $cask ..."
+    brew cask install $cask
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $cask"
+      failedcasks+="$cask "
+    fi
+  else
+    echo "Skipped already installed cask: $cask"
+  fi
+done
+if [[ -n "$failedcasks" ]]; then
+  echo "Retry following cask installs:"
+  for cask in $failedcasks; do
+    echo "brew cask install $cask"
+  done
+else
+  echo "All casks installed with no obvious problems."
+fi
+echo
+
+#brew install
+tell "brew installs"
+failedformulas=
+echo "Looking up installed brew formulas ..."
+brewls=$(brew ls)
+for formula in ${brews[@]}; do
+  if [[ -z $(echo "$brewls" | grep $formula) ]]; then
+    echo "Installing formula $formula ..."
+    brew install $formula
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $formula"
+      failedformulas+="$formula "
+    fi
+  else
+    echo "Skipped already installed formula: $formula"
+  fi
+done
+if [[ -n "$failedformulas" ]]; then
+  echo "Retry following formula installs:"
+  for formula in $failedformulas; do
+    echo "brew install $formula"
+  done
+else
+  echo "All formulas installed with no obvious problems."
+fi
+echo
 
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
+  tell "Whatsapp Web.app installation"
   echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
   nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed."
   mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
@@ -386,6 +438,7 @@ else
 fi
 
 if [[ ! -e "/Applications/Trading212.app" ]]; then
+  tell "Trading212.app installation"
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
   nativefier -i "$trading_icon" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
   
@@ -411,6 +464,9 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
 else
   echo "Skipped creation of Trading212.app with nativefier."
 fi
+else
+  echo "Skipped brew installs, brew cask installs and mas installs."
+fi
 
 #Thunderbird folder
 #IdeaProjects
@@ -418,11 +474,12 @@ fi
 #place minecraft in /Applications
 #copy power point draft uniwue
 
-# install other wifis
-
+echo
 ####################################################
 ### Manual part
 ####################################################
+tell "Manual part"
+echo
 
 # - notational velocity: ~/Dropbox/Org/Notational/
 # - spotify login
