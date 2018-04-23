@@ -1,12 +1,12 @@
 #!/bin/bash
 
 dest="$HOME/brewupdate.log"
-delim="******************************************"
-cmds=(update upgrade cleanup doctor)
-usage="\e[1mbru\e[0m [-h]"
+extendedUpgrade=
+usage="\e[1mbru\e[0m [-h|-a]"
 help="An updater script for homebrew.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-a\e[0m	Extended processing (brew cleanups, mas upgrade).
 Executes the commands: ${cmds[*]} 
 Logs the results to $dest.
 "
@@ -17,6 +17,9 @@ case $1 in
   -h)
     printf "$help"
     exit 0
+    ;;
+  -a)
+    extendedUpgrade=true
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -30,24 +33,36 @@ case $1 in
 esac
 
 end() {
-  printf "END on $(date)\n$delim\n" >> $dest
+  printf "END on $(date)\n%s\n" >> $dest "******************************************"
 }
 
 start() { 
   printf "START on $(date)\n" >> $dest
 }
 
+runCmd() {
+  title=$(echo "$1 $2 $3" | awk '{print toupper($0)}')
+  echo "$title" | tee -a "$dest"
+  res=$(printf "%s" "$($1 $2 $3 2>&1)")
+  if [[ -n $res ]]; then
+    printf "%s\n" "$res" | tee -a "$dest"
+  else
+    echo "Nothing to do."
+  fi
+}
+
 #test internet connection
 waitnet -s
 
 start
-#execute
-for cmd in ${cmds[*]}; do
-  title=$(echo "$cmd" | awk '{print toupper($0)}')
-  echo "$title" | tee -a "$dest"
-  res=$(printf "%s" "$(brew $cmd 2>&1)")
-  if [[ -n $res ]]; then
-    printf "%s\n" "$res" | tee -a "$dest"
-  fi
-done
+runCmd brew update
+runCmd brew upgrade
+
+if [[ -n $extendedUpgrade ]]; then
+  runCmd brew cleanup
+  runCmd brew doctor
+  runCmd brew cask upgrade
+  runCmd brew cask cleanup
+  runCmd mas upgrade
+fi
 end
