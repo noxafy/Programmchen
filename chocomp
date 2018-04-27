@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="Usage: \e[1mchocomp\e[0m \e[4mfile\[0m"
+usage="Usage: \e[1mchocomp\e[0m \e[4mfile\e[0m"
 filename=
 
 die() {
@@ -11,7 +11,7 @@ die() {
 case $1 in
   -h)
     echo "Compiler from chordii files to pdf. Give a \".cho\"-file as argument."
-    printf "%s\n" $usage
+    printf "$usage\n"
     exit 0
     ;;
   -*)
