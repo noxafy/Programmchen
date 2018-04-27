@@ -10,7 +10,7 @@ die() {
 
 case $1 in
   -h)
-    echo "Compiler from chordii files to pdf. Give a \".cho\"-file as argument."
+    echo "Compiler from chordii files to pdf. Give an \".cho\"-file as argument."
     printf "$usage\n"
     exit 0
     ;;
