@@ -1,0 +1,42 @@
+#!/bin/bash
+
+usage="Usage: \e[1mchocomp\e[0m \e[4mfile\[0m"
+filename=
+
+die() {
+  echo "$*"
+  exit 1
+}
+
+case $1 in
+  -h)
+    echo "Compiler from chordii files to pdf. Give a \".cho\"-file as argument."
+    printf "%s\n" $usage
+    exit 0
+    ;;
+  -*)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" $1
+    exit 1
+    ;;
+  "")
+    echo "Please give a chordii file to compile."
+    exit 1
+    ;;
+  *)
+    if [[ "$1" != *.cho ]]; then
+      echo "Please give a chordii file to compile."
+      exit 1
+    fi
+    if [[ ! -f "$1" || ! -r "$1" ]]; then
+      echo "Please give an existing and readable chordii file to compile."
+      exit 1
+    fi
+    filename=${1%.*}
+    echo "filename: $filename"
+    ;;
+esac
+
+chordii -o "$filename".ps "$filename".cho || die "cho to ps conversion failed."
+ps2pdf "$filename".ps "$filename".pdf || die "ps to pdf conversion failed."
+rm "$filename".ps || die "Could not remove ${filename}.ps"
+open "$filename".pdf|| die "Could not open ${filename}.pdf"
