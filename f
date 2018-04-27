@@ -80,7 +80,9 @@ $usage
 "
 
 die() {
-  printf "%s" "$*"
+  mes=$1
+  shift
+  printf "$mes" "$*"
 	exit 1
 }
 
@@ -362,5 +364,5 @@ else
     exit 0
   fi
   #for empty key just open firefox resp. bring it to front
-  open /Applications/FireFox.app/
+  open $openCommands /Applications/FireFox.app/
 fi
