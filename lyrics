@@ -26,7 +26,7 @@ Also, you can give an url for extracting directly:
   $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
   $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
 
-Dependency to \"recode\". Parameter -v produces debugging output.
+Dependency to \"recode\". Parameter -v produces debugging output, --ask disables autoselection.
 "
 # prevent sed error on bad encoded characters by reading as ascii (test for failing (greek text): https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas)
 LC_CTYPE=C
@@ -217,6 +217,7 @@ function finishIt() {
       printf "\n\e[1;4m%s - %s\e[0m\n" "$ARTIST" "$TITLE"
     else
       printf "%s - %s\n" "$ARTIST" "$TITLE"
+      echo "Songtext piped (length: ${#res})." >&2
     fi
   fi
   #guarantee one newline before...
@@ -233,7 +234,6 @@ function finishIt() {
 
 function tryURL() {
   if [[ "$1" == "urlonly" ]]; then
-    waitnet -s
     local urlonly=1
     shift
   fi
@@ -283,7 +283,7 @@ function noSpaces() {
 }
 
 function preformat() {
-  echo "$*" | sed 's/(.*)//g' | sed 's/\./-/g' | sed 's/\$//g'
+  echo "$*" | sed 's/(.*)//g' | sed 's/\[.*\]//g' | sed 's/\.+/-/g' | sed 's/\$//g'
 }
 
 function findLyrics() {
@@ -329,8 +329,6 @@ artistNoSpaces: $artistNoSpaces
     echo "Couldn't convert title to ascii. Please give it in latin characters. It must not be empty, so exiting now." >&2
     exit 1
   fi
-  
-  waitnet -s
   
   OVERALL=()
   for site in $sites; do
@@ -521,16 +519,29 @@ function lookupRhythmboxInfo() {
 # Main (Arg parsing crap)
 ################################################################################
 
+
+case $1 in
+  -h|--help)
+    printf "%s" "$help"
+    exit 0
+    ;;
+  -v)
+    VERBOSE=true
+    shift
+    ;;
+  --ask)
+    AUTOSELECT=""
+    shift
+    ;;
+esac
+
 #If -v, turn verbose mode on
 if [[ $1 == -v ]]; then
   VERBOSE=true
   shift
 fi
 
-if [[ $1 == --ask ]]; then
-  AUTOSELECT=""
-  shift
-fi
+waitnet -s >&2
 
 # else see which function is wanted
 case $1 in
@@ -539,11 +550,7 @@ case $1 in
     ;;
   spotify)
     lookupSpotifyInfo
-    ;;
-  -h|--help)
-    printf "%s" "$help"
-    exit 0
-    ;;
+    ;;    
   -*)
     printf "Unknown Argument: %s\nSee -h for more help.\n" "$1"
     exit 1
