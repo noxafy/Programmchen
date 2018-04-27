@@ -481,6 +481,19 @@ echo
 tell "Manual part"
 echo
 
+#one time prefs
+if [[ -f /usr/local/bin/bash && -z $(help | sed -n 1p | grep '3\.[[:digit:]]\.')]]; then
+  echo "Changing to bash4"
+  sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
+  chsh -s /usr/local/bin/bash
+  echo "Please close this window now and start this script again."
+  waitUser
+  echo "Now."
+  exit 0
+else
+  echo "Skipped changing to bash4."
+fi
+
 # - notational velocity: ~/Dropbox/Org/Notational/
 # - spotify login
 # - one note login, ggf Excel, Word, PowerPoint
