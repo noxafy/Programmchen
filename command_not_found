@@ -1,0 +1,11 @@
+#!/bin/bash
+
+case $1 in
+  fw)
+    f w
+    ;;
+  *)
+    echo "Sorry, did not found: $*"
+    echo "Maybe you can add it to handle if it was a frequent misspelling."
+    ;;
+esac
