@@ -37,6 +37,6 @@ case $1 in
 esac
 
 chordii -o "$filename".ps "$filename".cho || die "cho to ps conversion failed."
-ps2pdf "$filename".ps "$filename".pdf || die "ps to pdf conversion failed."
+pstopdf "$filename".ps "$filename".pdf || die "ps to pdf conversion failed."
 rm "$filename".ps || die "Could not remove ${filename}.ps"
 open "$filename".pdf|| die "Could not open ${filename}.pdf"
