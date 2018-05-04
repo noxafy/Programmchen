@@ -5,11 +5,14 @@ title=
 artist=
 filename=
 forceOverwriting=
-usage="Usage: \e[1mchoinit\e[0m [-h]"
+useLyrics=
+usage="Usage: \e[1mchoinit\e[0m -h | [-f] [\e[4mtitle\e[0m] [\e[4martist\e[0m]"
 help="Script for initiating an chordii file in interplay with \"lyrics\".
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-f\e[0m	Forces overwriting an already existing file.
+	\e[4mtitle\e[0m	Song's title.
+	\e[4martist\e[0m	Song's artist.
 "
 
 die() {
@@ -17,23 +20,36 @@ die() {
   exit 1
 }
 
-case $1 in
-  -h|--help)
-    printf "$help"
-    exit 0
-    ;;
-  -f)
-    forceOverwriting=true
-    ;;
-  -*)
-    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-    exit 1
-    ;;
-  *)
-    title=$1
-    artist=$2
-    ;;
-esac
+while [[ -n $1 ]]; do
+  case $1 in
+    -h|--help)
+      printf "$help"
+      exit 0
+      ;;
+    -f)
+      forceOverwriting=true
+      ;;
+    -*)
+      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+      exit 1
+      ;;
+    *)
+      title=$1
+      artist=$2
+      break;
+      ;;
+  esac
+  shift
+done
+
+extractFromLyrics() {
+  artist=$(echo "$lyrics" | sed -n 1p | sed 's/ - .*//g')
+  #echo "artist: $artist"
+  title=$(echo "$lyrics" | sed -n 1p | sed 's/.* - //g')
+  #echo "title: $title"
+  lyrics=$(echo "$lyrics" | sed -n '3,$p')
+  #echo "lyrics length: ${#lyrics}"
+}
 
 toFilename() {
   echo "$*" | sed "s/'//g" | sed 's/"//g' | sed 's/ \{1,\}/_/g'
@@ -45,21 +61,48 @@ toAscii() {
 
 cd "$D/Noten/chordii"
 
-if [ ! -t 0 ]; then
-  lyrics=$(cat)
-  [[ -z $lyrics ]] && die "Please give some lyrics if piped."
-  
-  artist=$(echo "$lyrics" | sed -n 1p | sed 's/ - .*//g')
-#  echo "artist: $artist"
-  title=$(echo "$lyrics" | sed -n 1p | sed 's/.* - //g')
-#  echo "title: $title"
-  [[ -z $artist || -z $title ]]  && die "Please pipe from \"lyrics\" if piped."
-  
-  lyrics=$(echo "$lyrics" | sed -n '2,$p')
-#  echo "lyrics length: ${#lyrics}"
-else
-  while [[ -z $artist ]]; do read -p "Who's the artist? " artist; done
-  while [[ -z $title ]]; do read -p "What's the title? " title; done
+# if title is there
+if [[ -n "$title" ]]; then
+  echo "Grabbing lyrics..."
+  # use title/artist with lyrics
+  lyrics=$(lyrics -q "$title" "$artist" | sed -n '3,$p')
+fi
+
+# if no lyrics and piped, use as lyrics
+if [[ -z "$lyrics" ]]; then
+  if [[ ! -t 0 ]]; then
+    lyrics=$(cat)
+
+    # if no title, try to extract artist / title
+    if [[ -z "$title" ]]; then
+      [[ -z "$lyrics" ]] && die "Piped lyrics must not be empty if no title is given."
+      extractFromLyrics
+      # title is mandatory, but if piped, no interaction is possible
+      [[ -z "$title" ]] && die "Couldn't extract title from piped. Did you pipe from lyrics?"
+      #echo "lyrics length: ${#lyrics}"
+    fi
+    if [[ -z "$lyrics" ]]; then
+      echo "Grabbing lyrics..."
+      # grab from lyrics but skip first line with artist and title
+      lyrics=$(lyrics -q "$title" "$artist" | sed -n '3,$p')
+    fi
+  # no lyrics, no title, not piped
+  elif [[ -z "$title" ]]; then
+    #use lyrics spotify
+    echo "Grabbing lyrics..."
+    lyrics=$(lyrics -q)
+    if [[ -n "$lyrics" ]]; then
+      extractFromLyrics
+    fi
+    if [[ -z "$title" ]]; then
+      echo "Counldn't grab lyrics automatically. Please give some infomation."
+      # ask artist/title and use them with lyrics --ask
+      read -p "Who's the artist? " artist
+      read -p "What's the title? " title
+      while [[ -z $title ]]; do printf "Title cannot be empty. "; read -p "What's the title? " title; done
+      lyrics=$(lyrics -q "$title" "$artist")
+    fi
+  fi
 fi
 
 filename="$(toFilename $title)-$(toFilename $artist).cho"
@@ -81,14 +124,11 @@ fi
 
 content="{title:$(toAscii $title)}
 {st:$(toAscii $artist)}
-{ng}
-{chordsize: 9}
-{textsize: 11}
 
 $lyrics"
 
 echo "$content" > "$filename"
 
-mate -l 8 "$filename"
+mate -l 4 "$filename"
 
 
