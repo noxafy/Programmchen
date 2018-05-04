@@ -262,7 +262,7 @@ function postformat() {
 }
 
 function withHyphen0() {
-  echo "$*" | sed 's/ /-/g' | sed 's/-\{2,\}/-/g' | sed 's/-*//'
+  echo "$*" | sed 's/ /-/g' | sed 's/[+*,/\?\$]//g' | sed 's/-\{2,\}/-/g'
 }
 
 function withHyphen() {
@@ -279,11 +279,11 @@ function withHyphen3() {
 }
 
 function noSpaces() {
-  echo "$*" | sed "s/'//g" | sed 's/ //g' | sed 's/&//g' | postformat
+  echo "$*" | sed 's/[+*,/\?\$& ]//g' | sed "s/'//g" | postformat
 }
 
 function preformat() {
-  echo "$*" | sed 's/(.*)//g' | sed 's/\[.*\]//g' | sed 's/\.+/-/g' | sed 's/\$//g'
+  echo "$*" | sed 's/(.*)//g' | sed 's/\[.*\]//g' | sed 's/ - .*//g' | sed 's/\.\{1,\}/-/g' | sed 's/ \{1,\}/ /g' | sed 's/-*//'
 }
 
 function findLyrics() {
@@ -538,6 +538,11 @@ esac
 #If -v, turn verbose mode on
 if [[ $1 == -v ]]; then
   VERBOSE=true
+  shift
+fi
+
+if [[ $1 == --ask ]]; then
+  AUTOSELECT=""
   shift
 fi
 
