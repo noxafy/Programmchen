@@ -27,6 +27,7 @@ dashboard="$thisdir/dashboard" # Dashboard widgets
 
 brews=(agedu
 aspell
+bash
 bash-completion
 bash-snippets
 brightness
@@ -110,7 +111,9 @@ masinstalls=(890805912 # Newsflow
 1247301872 # Logoist 3
 595191960 # CopyClip
 526298438 # Lightshot Screenshot
-404010395) # TextWrangler
+404010395 # TextWrangler
+1278508951 # Trello
+)
 
 skipauto=""
 case $1 in
@@ -155,13 +158,20 @@ installWifi() {
   ssid=$1
   passwd=$2
   while [[ -z "$ssid" ]]; do
-    read -p "Please enter a SSID to connect to (WPA2 only; s = show all available): " ssid
+    echo "Available networks (WPA2 only):"
+    networks=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s)
+    echo "$networks" | sed -n 1p
+    echo "$networks" | grep "WPA2"
+    read -p "Please enter a SSID to connect to (WPA2 only; s = search again all available): " ssid
     if [[ "$ssid" = s ]]; then
-      echo "Available networks (WPA2 only):"
-      /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s | grep 'WPA2'
+      ssid=
+    fi
+    if [[ -z $(echo "$networks"  | awk '{print $1}' | grep -- "^${ssid}\$") ]]; then
+      echo "Network \"$ssid\" is not available."
+      ssid=
     fi
   done
-  if [[ -n $(networksetup -listpreferredwirelessnetworks en0 | grep "$ssid") ]]; then
+  if [[ -n $(networksetup -listpreferredwirelessnetworks en0 | grep -- "^[[:space:]]*${ssid}\$") ]]; then
     printf "%s already installed!\n" "$ssid"
     return;
   fi
@@ -225,7 +235,7 @@ if [[ $? -ne 0 ]]; then #first time. no internet installed
   ping -t 3 -c 1 google.com #TODO: deleteme
   networksetup -setairportpower en0 on
   #wlan login
-  installWifi AdMiNet #pass not installed yet, so paste password here before running
+  installWifi adnet #pass not installed yet, so paste password here before running
   #AEG
   printf "Turning Wi-Fi off ..."
   networksetup -setairportpower en0 off
@@ -459,7 +469,7 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
     echo "Failed to remove context menu. File not found: $mainpath"
   fi
   
-  mv "Trading212-darwin-x64/Trading212.app" /Applications/
+  mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed."
   rm -rf Trading212-darwin-x64/
 else
   echo "Skipped creation of Trading212.app with nativefier."
@@ -482,18 +492,20 @@ tell "Manual part"
 echo
 
 #one time prefs
-if [[ -f /usr/local/bin/bash && -z $(help | sed -n 1p | grep '3\.[[:digit:]]\.')]]; then
-  echo "Changing to bash4"
-  sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
-  chsh -s /usr/local/bin/bash
+bash4=/usr/local/bin/bash
+if [[ -f $bash4 && -z $(cat /etc/shells | grep $bash4) ]]; then
+  echo "Changing to login shell to $bash4"
+  sudo bash -c 'echo $bash4 >> /etc/shells' || die "Adding $bash4 to /etc/shells failed."
+  chsh -s $bash4 || die "Changing users default shell failed."
   echo "Please close this window now and start this script again."
   waitUser
   echo "Now."
   exit 0
 else
-  echo "Skipped changing to bash4."
+  echo "Skipped login shell change."
 fi
 
+# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, terminal, FileMerge
 # - notational velocity: ~/Dropbox/Org/Notational/
 # - spotify login
 # - one note login, ggf Excel, Word, PowerPoint
@@ -502,6 +514,6 @@ fi
 # - import newsflow opml
 # - os shortcuts
 # - install "RZUWsec"
-# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, terminal, FileMerge
+# - wine installs (jardinains, siedler5, finale)
 
 popd &> /dev/null
