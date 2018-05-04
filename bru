@@ -41,20 +41,19 @@ start() {
 }
 
 runCmd() {
-  title=$(echo "$1 $2 $3" | awk '{print toupper($0)}')
+  title=$(echo "$@" | awk '{print toupper($0)}')
   echo "$title" | tee -a "$dest"
-  res=$(printf "%s" "$($1 $2 $3 2>&1)")
-  if [[ -n $res ]]; then
-    printf "%s\n" "$res" | tee -a "$dest"
-  else
-    echo "Nothing to do."
-  fi
+
+  "$@" 2>&1 | tee -a "$dest"
 }
 
 #test internet connection
 waitnet -s
 
 start
+if [[ -n $extendedupgrade ]]; then
+  echo "*** EXTENDED UPGRADE ***" >> $dest
+fi
 runCmd brew update
 runCmd brew upgrade
 
