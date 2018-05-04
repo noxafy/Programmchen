@@ -10,7 +10,7 @@ die() {
 
 case $1 in
   -h)
-    echo "Compiler from chordii files to pdf. Give an \".cho\"-file as argument."
+    echo "Compiler from chordpro/chordii files to pdf. Give an \".cho\"-file as argument."
     printf "$usage\n"
     exit 0
     ;;
@@ -24,7 +24,7 @@ case $1 in
     ;;
   *)
     if [[ "$1" != *.cho ]]; then
-      echo "Please give a chordii file to compile."
+      echo "Please give a chordpro/chordii file to compile."
       exit 1
     fi
     if [[ ! -f "$1" || ! -r "$1" ]]; then
@@ -32,11 +32,21 @@ case $1 in
       exit 1
     fi
     filename=${1%.*}
-    echo "filename: $filename"
     ;;
 esac
 
-chordii -o "$filename".ps "$filename".cho || die "cho to ps conversion failed."
-pstopdf "$filename".ps "$filename".pdf || die "ps to pdf conversion failed."
-rm "$filename".ps || die "Could not remove ${filename}.ps"
-open "$filename".pdf|| die "Could not open ${filename}.pdf"
+
+if [[ ! -d pdf ]]; then
+  mkdir pdf || die "Failed to create pdf/ dir."
+fi
+
+if [[ -n $(which chordpro) ]]; then
+  chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+else
+  echo "chordpro not found. Trying with chordii..."
+  chordii -o "$filename".ps "$filename".cho || die "cho to ps conversion failed."
+  pstopdf "$filename".ps pdf/"$filename".pdf || die "ps to pdf conversion failed."
+  rm "$filename".ps || die "Could not remove ${filename}.ps"
+fi
+
+open pdf/"$filename".pdf|| die "Could not open pdf/${filename}.pdf"
