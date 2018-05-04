@@ -8,6 +8,7 @@ GOOG_URL='https://www.ecosia.org/search'
 ARTIST=
 TITLE=
 VERBOSE=
+QUIET=
 AUTOSELECT=true
 help="$(basename $0) - Find out the song lyrics for a currently playing song.
 
@@ -72,7 +73,7 @@ function google {
 
 # get resulting text from website
 function fetchResult() {
-  echo "open $1" >&2
+  [[ -z "$QUIET" ]] && echo "open $1" >&2
   
   #test if url exists, print http state
   if [[ -n $VERBOSE ]]; then
@@ -83,7 +84,7 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
   state=$(echo "$testUrl" | sed -n 1p)
   if [[ $state != *200* ]]; then
     echo "Error in fetching site: $state" >&2
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 0 ]]; then
       exit 1
     fi
     res=$($CURL -H "$header" "$1");
@@ -109,7 +110,7 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
     echo "******Answer-Header (END)*********
 " >&2
   else
-    echo "$state" >&2
+    [[ -z "$QUIET" ]] && echo "$state" >&2
   fi
 
   #awk lyrics from site
@@ -217,7 +218,7 @@ function finishIt() {
       printf "\n\e[1;4m%s - %s\e[0m\n" "$ARTIST" "$TITLE"
     else
       printf "%s - %s\n" "$ARTIST" "$TITLE"
-      echo "Songtext piped (length: ${#res})." >&2
+      [[ -z "$QUIET" ]] && echo "Songtext piped (length: ${#res})." >&2
     fi
   fi
   #guarantee one newline before...
@@ -287,7 +288,7 @@ function preformat() {
 }
 
 function findLyrics() {
-  echo "Artist: $ARTIST
+  [[ -z "$QUIET" ]] && echo "Artist: $ARTIST
 Title: $TITLE
 " >&2
   
@@ -334,7 +335,7 @@ artistNoSpaces: $artistNoSpaces
   for site in $sites; do
     printf "Looking for lyrics at %s: " "$site" >&2
     if [[ -n $VERBOSE ]]; then
-      echo >&2
+      [[ -z "$QUIET" ]] && echo >&2
     fi
     ALL=($(google "$ARTIST $TITLE lyrics site:$site"));
     #skip if no results found
@@ -343,7 +344,7 @@ artistNoSpaces: $artistNoSpaces
       continue;
     fi
     
-    if [[ -n "$AUTOSELECT" ]]; then
+    if [[ -n "$AUTOSELECT" || ! -t 0 ]]; then
       # try to validate self
       # only title is required (grep would pass everything trough if both empty)
       for i in "${ALL[@]}"; do
@@ -416,8 +417,8 @@ artistNoSpaces: $artistNoSpaces
     printf "No matching site found in all sites. " >&2
   fi
   
-  # implicit if autselect==true
-  if [[ -n ${OVERALL[@]} ]]; then
+  # implicit if autoselect==true
+  if [[ -t 0 && -n ${OVERALL[@]} ]]; then
     echo "Anyway, some sites where found:" >&2
     while [[ -n "${OVERALL[@]}" ]]; do
       j=1
@@ -452,12 +453,12 @@ artistNoSpaces: $artistNoSpaces
     done
   fi
   
-  echo "Ooops, no site left. " >&2
+  [[ -z "$QUIET" ]] && echo "Ooops, no site left. " >&2
   
-  if [[ -e /usr/local/opt/bash-snippets/bin/lyrics && -n "$ARTIST" ]]; then
-    echo "Last chance: lyrics from bash-snippets" >&2
-    /usr/local/opt/bash-snippets/bin/lyrics -a "$ARTIST" -s "$TITLE" && exit 0
-  fi
+  #if [[ -e /usr/local/opt/bash-snippets/bin/lyrics && -n "$ARTIST" ]]; then
+  #  echo "Last chance: lyrics from bash-snippets" >&2
+  #  /usr/local/opt/bash-snippets/bin/lyrics -a "$ARTIST" -s "$TITLE" && exit 0
+  #fi
   echo "Givin' up now :(" >&2
   
   #Get searching site for copy & paste
@@ -477,7 +478,7 @@ artistNoSpaces: $artistNoSpaces
 # Look up the title and artist in spotify
 ################################################################################
 function lookupSpotifyInfo() {
-  echo "Looking up lyrics by Spotify artist and title..." >&2
+  [[ -z "$QUIET" ]] && echo "Looking up lyrics by Spotify artist and title..." >&2
   # Checks $OSTYPE to determine the proper command for artist/title query
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
     ARTIST="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 \
@@ -510,7 +511,7 @@ function lookupSpotifyInfo() {
 # Look up the song info for the currently playing song in Rhythmbox
 ################################################################################
 function lookupRhythmboxInfo() {
-  echo "Looking up title by Rhythmbox artist and title..." >&2
+  [[ -z "$QUIET" ]] && echo "Looking up title by Rhythmbox artist and title..." >&2
   ARTIST="$(rhythmbox-client --print-playing-format %ta)";
   TITLE="$(rhythmbox-client --print-playing-format %tt)";   
 }
@@ -527,6 +528,10 @@ case $1 in
     ;;
   -v)
     VERBOSE=true
+    shift
+    ;;
+  -q)
+    QUIET=true;
     shift
     ;;
   --ask)
