@@ -1,0 +1,94 @@
+#!/bin/bash
+
+lyrics=
+title=
+artist=
+filename=
+forceOverwriting=
+usage="Usage: \e[1mchoinit\e[0m [-h]"
+help="Script for initiating an chordii file in interplay with \"lyrics\".
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-f\e[0m	Forces overwriting an already existing file.
+"
+
+die() {
+  echo "$*"
+  exit 1
+}
+
+case $1 in
+  -h|--help)
+    printf "$help"
+    exit 0
+    ;;
+  -f)
+    forceOverwriting=true
+    ;;
+  -*)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
+  *)
+    title=$1
+    artist=$2
+    ;;
+esac
+
+toFilename() {
+  echo "$*" | sed "s/'//g" | sed 's/"//g' | sed 's/ \{1,\}/_/g'
+}
+
+toAscii() {
+  echo "$*" | sed "s/ü/ue/g" | sed "s/Ü/Ue/g" | sed "s/ä/ae/g" | sed "s/Ä/Ae/g" | sed "s/Ö/oe/g" | sed "s/ö/oe/g" | sed "s/ß/ss/g"
+}
+
+cd "$D/Noten/chordii"
+
+if [ ! -t 0 ]; then
+  lyrics=$(cat)
+  [[ -z $lyrics ]] && die "Please give some lyrics if piped."
+  
+  artist=$(echo "$lyrics" | sed -n 1p | sed 's/ - .*//g')
+#  echo "artist: $artist"
+  title=$(echo "$lyrics" | sed -n 1p | sed 's/.* - //g')
+#  echo "title: $title"
+  [[ -z $artist || -z $title ]]  && die "Please pipe from \"lyrics\" if piped."
+  
+  lyrics=$(echo "$lyrics" | sed -n '2,$p')
+#  echo "lyrics length: ${#lyrics}"
+else
+  while [[ -z $artist ]]; do read -p "Who's the artist? " artist; done
+  while [[ -z $title ]]; do read -p "What's the title? " title; done
+fi
+
+filename="$(toFilename $title)-$(toFilename $artist).cho"
+#echo "filename: $filename"
+
+if [[ -e "$filename" && ! -n $forceOverwriting ]]; then
+  [[ ! -t 0 ]] && die "Leadsheet \"$filename\" already exists."
+
+  read -p "Overwrite existing \"$filename\" ? [y/n] [y]: " ans
+  case $ans in
+  n)
+    read -p "Please specify another filename: " filename
+    [[ -z "$filename" ]] && die "The filename cannot be empty."
+    if [[ "$filename" != *.cho ]]; then filename="$filename.cho"; fi
+    [[ -e "$filename " ]] && die "This file (\"$filename\") also exists."
+    ;;
+  esac
+fi
+
+content="{title:$(toAscii $title)}
+{st:$(toAscii $artist)}
+{ng}
+{chordsize: 9}
+{textsize: 11}
+
+$lyrics"
+
+echo "$content" > "$filename"
+
+mate -l 8 "$filename"
+
+
