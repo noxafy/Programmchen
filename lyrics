@@ -27,7 +27,7 @@ Also, you can give an url for extracting directly:
   $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
   $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
 
-Dependency to \"recode\". Parameter -v produces debugging output, --ask disables autoselection.
+Dependency to \"recode\". Parameter -v produces debugging output, --ask disables autoselection, -q suppresses most messages.
 "
 # prevent sed error on bad encoded characters by reading as ascii (test for failing (greek text): https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas)
 LC_CTYPE=C
@@ -520,64 +520,54 @@ function lookupRhythmboxInfo() {
 # Main (Arg parsing crap)
 ################################################################################
 
+while [[ -n $1 ]]; do
+  case $1 in
+    rhythmbox|rbox)
+      lookupRhythmboxInfo
+      break;
+      ;;
+    spotify)
+      lookupSpotifyInfo
+      break;
+      ;;
+    -h|--help)
+      printf "%s" "$help"
+      exit 0
+      ;;
+    -v)
+      VERBOSE=true
+      shift
+      ;;
+    -q)
+      QUIET=true;
+      shift
+      ;;
+    --ask)
+      AUTOSELECT=""
+      shift
+      ;;
+    -*)
+      printf "Unknown Argument: %s\nSee -h for more help.\n" "$1"
+      exit 1
+     ;;
+    *)
+      waitnet -s >&2
+      # If given an url, just browse it
+      tryURL "urlonly" "$1"
 
-case $1 in
-  -h|--help)
-    printf "%s" "$help"
-    exit 0
-    ;;
-  -v)
-    VERBOSE=true
-    shift
-    ;;
-  -q)
-    QUIET=true;
-    shift
-    ;;
-  --ask)
-    AUTOSELECT=""
-    shift
-    ;;
-esac
-
-#If -v, turn verbose mode on
-if [[ $1 == -v ]]; then
-  VERBOSE=true
-  shift
-fi
-
-if [[ $1 == --ask ]]; then
-  AUTOSELECT=""
-  shift
-fi
+      if [[ -n "$1" ]]; then
+        TITLE=$1
+        ARTIST=$2
+      else
+        lookupSpotifyInfo
+        #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information." 
+        #exit 1
+      fi
+      findLyrics
+      exit 0
+      ;;
+  esac
+done
 
 waitnet -s >&2
-
-# else see which function is wanted
-case $1 in
-  rhythmbox|rbox)
-    lookupRhythmboxInfo
-    ;;
-  spotify)
-    lookupSpotifyInfo
-    ;;    
-  -*)
-    printf "Unknown Argument: %s\nSee -h for more help.\n" "$1"
-    exit 1
-    ;;
-  *)
-    # If given an url, just browse it
-    tryURL "urlonly" "$1"
-    
-    if [[ -n "$1" ]]; then
-      TITLE=$1
-      ARTIST=$2
-    else
-      lookupSpotifyInfo
-      #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information." 
-      #exit 1
-    fi
-    ;;
-esac
-
 findLyrics
