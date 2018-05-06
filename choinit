@@ -43,11 +43,16 @@ while [[ -n $1 ]]; do
 done
 
 extractFromLyrics() {
-  artist=$(echo "$lyrics" | sed -n 1p | sed 's/ - .*//g')
-  #echo "artist: $artist"
-  title=$(echo "$lyrics" | sed -n 1p | sed 's/.* - //g')
-  #echo "title: $title"
-  lyrics=$(echo "$lyrics" | sed -n '3,$p')
+  res=$(echo "$lyrics" | sed -n 1p)
+  if [[ -n "$res" ]]; then
+    artist=$(echo "$res" | sed 's/ - .*//g')
+    #echo "artist: $artist"
+    title=${$(echo "$res" | sed 's/.* - //g')-title}
+    #echo "title: $title"
+    lyrics=$(echo "$lyrics" | sed -n '3,$p')
+  else
+    lyrics=$(echo "$lyrics" | sed -n '2,$p')
+  fi
   #echo "lyrics length: ${#lyrics}"
 }
 
@@ -69,9 +74,19 @@ cd "$D/Noten/chordii"
 
 # if title is there
 if [[ -n "$title" ]]; then
-  echo "Grabbing lyrics for \"$title\"..."
-  # use title/artist with lyrics
-  lyrics=$(lyrics -q "$title" "$artist" | sed -n '3,$p')
+  if [[ -t 0 ]]; then
+    read -p "Do you want to search for lyrics? (y/n) [y]: " ans
+    case $ans in
+    n)
+      ;;
+    *)
+      echo "Grabbing lyrics for \"$title\"..."
+      # use title/artist with lyrics
+      lyrics=$(lyrics -q "$title" "$artist")
+      extractFromLyrics
+      ;;
+    esac
+  fi
 fi
 
 # if no lyrics and piped, use as lyrics
@@ -104,8 +119,17 @@ if [[ -z "$lyrics" ]]; then
       echo "Counldn't grab lyrics automatically. Please give some infomation."
       # ask artist/title and use them with lyrics --ask
       read -p "Who's the artist? " artist
-      read -p "What's the title? " title
       while [[ -z $title ]]; do printf "Title cannot be empty. "; read -p "What's the title? " title; done
+      read -p "Do you want to search for lyrics? (y/n) [y]: " ans
+      case $ans in
+      n)
+        ;;
+      *)
+        echo "Grabbing lyrics for \"$title\"..."
+        # use title/artist with lyrics
+        lyrics=$(lyrics -q "$title" "$artist" | sed -n '3,$p')
+        ;;
+      esac
       lyrics=$(lyrics -q "$title" "$artist")
     fi
   fi
