@@ -1,0 +1,63 @@
+#!/bin/bash
+
+killflag="-15"
+
+processname=
+processes=
+
+usage="\e[1mpk\e[0m -h | [-2|-9] \e[4mname\e[0m"
+help="Programm for kill by process name interactively.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-2\e[0m	Kill process with interrupt (2) flag.
+	\e[1m-9\e[0m	Kill process with kill (9) flag.
+	\e[4mname\e[0m	Name of a process to grep for.
+Default flag is the software termination signal (15).
+"
+
+die() {
+  echo "$*"
+  exit 1
+}
+
+case $1 in
+-h|--help)
+  printf "$help"
+  exit 0
+  ;;
+-2|-9)
+  killflag="$1"
+  ;;
+-*)
+  printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+  exit 1
+  ;;
+esac
+
+processname="$*"
+[[ -z "$processname" ]] && die "Please give a process name to search for. See -h for more information."
+
+processes=$(ps -ax | grep -i -- "$processname") || die "Failed to fetch processes from ps -ax."
+[[ -z "$processes" ]] && die "No process found matching \"$processname\"."
+
+i=0
+IFS=$'\n'
+for p in $processes; do
+  ((i++))
+  printf "[$i]: %s\n" "$p"
+done
+
+read -p "Which process do you want to kill? (1-$i/q) [q]: " ans
+
+if [[ $ans =~ ^[0-9]+$ ]]; then
+  if [[ $ans -le $i ]]; then
+    pidToKill=$(echo "$processes" | sed -n "${ans}p" | awk '{print $1}')
+    echo "Killing $pidToKill ..."
+    kill $killflag $pidToKill || die "Killing $pidToKill failed."
+    echo "Done."
+  fi
+elif [[ -z $ans || $ans == q ]]; then
+  echo "Nothing killed."
+else
+  die "That was not a number."
+fi
