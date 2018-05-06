@@ -83,7 +83,7 @@ die() {
   mes=$1
   shift
   printf "$mes" "$*"
-	exit 1
+  exit 1
 }
 
 startFireFox() {
