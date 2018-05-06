@@ -27,6 +27,7 @@ case $1 in
   ;;
 -2|-9)
   killflag="$1"
+  shift
   ;;
 -*)
   printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -42,7 +43,7 @@ if [[ ! -e $thisdir ]]; then
   thisdir=$(dirname "$BASH_SOURCE")
 fi
 
-processes=$(ps -ax | grep -i -- "$processname" | grep -v "$thisdir/pk" | grep -v "grep -i -- $processname") || die "Failed to fetch processes from ps -ax."
+processes=$(ps -ax | grep -i -- "$processname" | grep -v "$thisdir/pk" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps -ax."
 [[ -z "$processes" ]] && die "No process found matching \"$processname\"."
 
 if [[ $(echo "$processes" | wc -l) -eq 1 ]]; then
