@@ -15,42 +15,51 @@ $usage
 
 while [[ -n $1 ]]; do
   case $1 in
-    -h)
-      printf "$help"
-      exit 0
-      ;;
-    -q)
-      output=
-      ;;
-    -s)
-      output=1
-      ;;
-    -n)
-      sendNote=1
-      ;;
-    -t)
-      case $2 in
-        [0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|[0-9])
-          #if [[ $timeout -lt 3 ]]; then
-          #   echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767)."
-          #   exit 1
-          #fi
-          timeout=$2
-          shift
-          ;;
-        *)
-          echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767). See -h for more help."
-          exit 1
-          ;;
-      esac
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -q)
+    output=
+    ;;
+  -s)
+    output=1
+    ;;
+  -n)
+    sendNote=1
+    ;;
+  -t)
+    case $2 in
+    [0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|[0-9])
+      #if [[ $timeout -lt 3 ]]; then
+      #   echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767)."
+      #   exit 1
+      #fi
+      timeout=$2
+      shift
       ;;
     *)
-      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+      echo "Wrong argument: $2 - Please give a timeout in seconds (3-32767). See -h for more help."
       exit 1
       ;;
+    esac
+    ;;
+  *)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
   esac
   shift
 done
+
+case $(ps -o stat= -p $$) in
+*+*)
+  #foreground
+  ;;
+*)
+  output=
+  ;;
+esac
 
 log() {
   if [[ $output ]]; then
