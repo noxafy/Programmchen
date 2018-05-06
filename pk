@@ -15,11 +15,6 @@ $usage
 Default flag is the software termination signal (15).
 "
 
-die() {
-  echo "$*"
-  exit 1
-}
-
 case $1 in
 -h|--help)
   printf "$help"
@@ -35,6 +30,12 @@ case $1 in
   ;;
 esac
 
+die() {
+  echo "$*"
+  exit 1
+}
+
+
 processname="$*"
 [[ -z "$processname" ]] && die "Please give a process name to search for. See -h for more information."
 
@@ -43,20 +44,22 @@ if [[ ! -e $thisdir ]]; then
   thisdir=$(dirname "$BASH_SOURCE")
 fi
 
-processes=$(ps -ax | grep -i -- "$processname" | grep -v "$thisdir/pk" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps -ax."
+processes=$(ps aux | grep -i -- "$processname" | grep -v "$thisdir/pk" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps aux."
 [[ -z "$processes" ]] && die "No process found matching \"$processname\"."
 
 if [[ $(echo "$processes" | wc -l) -eq 1 ]]; then
   i=1
-  echo "Found process: $processes"
-  read -p "Do you really want to kill that process? (y/n) [n]: " ans
+  printf "USER               PID  %%CPU %%MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND\n"
+  echo "$processes"
+  read -p "Only one process found. Do you really want to kill that process? (y/n) [n]: " ans
   [[ "$ans" == y ]] && ans=1 || ans=
 else
   i=0
+  printf "\tUSER               PID  %%CPU %%MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND\n"
   IFS=$'\n'
   for p in $processes; do
     ((i++))
-    printf "[$i]: %s\n" "$p"
+    printf "[$i]:\t%s\n" "$p"
   done
 
   read -p "Which process do you want to kill? (1-$i/q) [q]: " ans
@@ -64,7 +67,7 @@ fi
 
 if [[ $ans =~ ^[0-9]+$ ]]; then
   if [[ $ans -le $i ]]; then
-    pidToKill=$(echo "$processes" | sed -n "${ans}p" | awk '{print $1}')
+    pidToKill=$(echo "$processes" | sed -n "${ans}p" | awk '{print $2}')
     printf "Killing %d ... " "$pidToKill"
     kill $killflag $pidToKill || die "Killing $pidToKill failed."
     echo "Done."
