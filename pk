@@ -6,7 +6,7 @@ processname=
 processes=
 
 usage="\e[1mpk\e[0m -h | [-2|-9] \e[4mname\e[0m"
-help="Programm for kill by process name interactively.
+help="Script for killing a process by name interactively.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-2\e[0m	Kill process with interrupt (2) flag.
@@ -37,22 +37,34 @@ esac
 processname="$*"
 [[ -z "$processname" ]] && die "Please give a process name to search for. See -h for more information."
 
-processes=$(ps -ax | grep -i -- "$processname") || die "Failed to fetch processes from ps -ax."
+thisdir=$(dirname "$PWD/$BASH_SOURCE")
+if [[ ! -e $thisdir ]]; then
+  thisdir=$(dirname "$BASH_SOURCE")
+fi
+
+processes=$(ps -ax | grep -i -- "$processname" | grep -v "$thisdir/pk" | grep -v "grep -i -- $processname") || die "Failed to fetch processes from ps -ax."
 [[ -z "$processes" ]] && die "No process found matching \"$processname\"."
 
-i=0
-IFS=$'\n'
-for p in $processes; do
-  ((i++))
-  printf "[$i]: %s\n" "$p"
-done
+if [[ $(echo "$processes" | wc -l) -eq 1 ]]; then
+  i=1
+  echo "Found process: $processes"
+  read -p "Do you really want to kill that process? (y/n) [n]: " ans
+  [[ "$ans" == y ]] && ans=1 || ans=
+else
+  i=0
+  IFS=$'\n'
+  for p in $processes; do
+    ((i++))
+    printf "[$i]: %s\n" "$p"
+  done
 
-read -p "Which process do you want to kill? (1-$i/q) [q]: " ans
+  read -p "Which process do you want to kill? (1-$i/q) [q]: " ans
+fi
 
 if [[ $ans =~ ^[0-9]+$ ]]; then
   if [[ $ans -le $i ]]; then
     pidToKill=$(echo "$processes" | sed -n "${ans}p" | awk '{print $1}')
-    echo "Killing $pidToKill ..."
+    printf "Killing %d ... " "$pidToKill"
     kill $killflag $pidToKill || die "Killing $pidToKill failed."
     echo "Done."
   fi
