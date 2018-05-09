@@ -45,10 +45,8 @@ done
 extractFromLyrics() {
   res=$(echo "$lyrics" | sed -n 1p)
   if [[ -n "$res" ]]; then
-    artist=$(echo "$res" | sed 's/ - .*//g')
-    #echo "artist: $artist"
-    title=${$(echo "$res" | sed 's/.* - //g')-title}
-    #echo "title: $title"
+    [[ -z "$artist" ]] && artist=$(echo "$res" | sed 's/ - .*//g')
+    [[ -z "$title" ]] && title=$(echo "$res" | sed 's/.* - //g')
     lyrics=$(echo "$lyrics" | sed -n '3,$p')
   else
     lyrics=$(echo "$lyrics" | sed -n '2,$p')
@@ -160,6 +158,6 @@ $lyrics"
 echo "$content" > "$filename"
 echo "Wrote ${#content} bytes to $PWD/$filename"
 
-mate -l 4 "$filename"
+mate -l 4 -- "$filename"
 
 
