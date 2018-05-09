@@ -519,55 +519,59 @@ function lookupRhythmboxInfo() {
 ################################################################################
 # Main (Arg parsing crap)
 ################################################################################
-
 while [[ -n $1 ]]; do
   case $1 in
-    rhythmbox|rbox)
-      lookupRhythmboxInfo
-      break;
-      ;;
-    spotify)
-      lookupSpotifyInfo
-      break;
-      ;;
-    -h|--help)
-      printf "%s" "$help"
-      exit 0
-      ;;
-    -v)
-      VERBOSE=true
-      shift
-      ;;
-    -q)
-      QUIET=true;
-      shift
-      ;;
-    --ask)
-      AUTOSELECT=""
-      shift
-      ;;
-    -*)
-      printf "Unknown Argument: %s\nSee -h for more help.\n" "$1"
-      exit 1
-     ;;
-    *)
-      waitnet -s >&2
-      # If given an url, just browse it
-      tryURL "urlonly" "$1"
-
-      if [[ -n "$1" ]]; then
-        TITLE=$1
-        ARTIST=$2
-      else
-        lookupSpotifyInfo
-        #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information." 
-        #exit 1
-      fi
-      findLyrics
-      exit 0
-      ;;
+  -h|--help)
+    printf "%s" "$help"
+    exit 0
+    ;;
+  -v)
+    VERBOSE=true
+    shift
+    ;;
+  -q)
+    QUIET=true;
+    shift
+    ;;
+  --ask)
+    AUTOSELECT=""
+    shift
+    ;;
+  -*)
+    printf "Unknown Argument: %s\nSee -h for more help.\n" "$1"
+    exit 1
+   ;;
+  *)
+    break
+    ;;
   esac
 done
+
+case $1 in
+rhythmbox|rbox)
+  lookupRhythmboxInfo
+  break;
+  ;;
+spotify)
+  lookupSpotifyInfo
+  break;
+  ;;
+*)
+  waitnet -s >&2
+  # If given an url, just browse it
+  tryURL "urlonly" "$1"
+  if [[ -n "$1" ]]; then
+    TITLE=$1
+    ARTIST=$2
+  else
+    lookupSpotifyInfo
+    #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information."
+    #exit 0
+  fi
+  findLyrics
+  exit 0
+  ;;
+esac
 
 waitnet -s >&2
 findLyrics
