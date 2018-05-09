@@ -28,8 +28,9 @@ $usage
 Create the .csv in the following form:
  \"word\",\"meaning\",\"helping comment for memorizing or pronouncing\"
 "
-#TODO after search, provide open when found
+#TODO when found multiple search results and opening intended, ask which one to open
 #TODO provide sorting (sort ignoring "to"'s)
+#TODO forbid "," in word, translation or additional
 
 searchFor() {
   res=$(cat -n "$1" | grep -- "$2")
