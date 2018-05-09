@@ -568,8 +568,6 @@ spotify)
     #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information."
     #exit 0
   fi
-  findLyrics
-  exit 0
   ;;
 esac
 
