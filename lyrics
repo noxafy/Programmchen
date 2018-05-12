@@ -43,6 +43,11 @@ LANG=C
 #  add filter for site-specific non-lyrics line-contents (awk grep only whole lines, so every outside of diamons is shown)
 #  add site to usage message
 
+die() {
+  echo "$*" >&2
+  exit 1
+}
+
 # This is used to get the url for the lyrics
 function google {
   if [[ -n $VERBOSE ]]; then
@@ -83,16 +88,15 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
   testUrl=$($CURL -H "$header" -SI "$1" 2>&1)
   state=$(echo "$testUrl" | sed -n 1p)
   if [[ $state != *200* ]]; then
-    echo "Error in fetching site: $state" >&2
-    if [[ ! -t 0 ]]; then
-      exit 1
-    fi
+    printf "Error in fetching site: $state" >&2
+    [[ ! -t 0 ]] && die
+
     res=$($CURL -H "$header" "$1");
-    printf "Do you want to see details? (${#testUrl}/${#res}) (y/n) [n]: "
+    printf "\nDo you want to see details? (${#testUrl}/${#res}) (y/n) [n]: " >&2
     read ans
     case $ans in
     y)
-      echo "Command: $CURL -H \"$header\" \"$1\""
+      echo "Command: $CURL -H \"$header\" \"$1\"" >&2
       echo "Command: $CURL -H \"$header\" \"$1\"
       
       Answer-Header (${#testUrl}):
@@ -245,16 +249,14 @@ function tryURL() {
         if [[ -n $res ]]; then
           finishIt
         else
-          echo "Sorry, couldn't extract lyrics from that URL..." >&2
-          exit 1
+          die "Sorry, couldn't extract lyrics from that URL..."
         fi
       fi
     fi
   done
   
   if [[ -n $urlonly && "$1" =~ '^https?://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$' ]]; then
-    echo "Sorry, that site is not supported. Maybe you can add it. See in docs."
-    exit 1
+    die "Sorry, that site is not supported. Maybe you can add it. See in docs."
   fi
 }
 
@@ -288,6 +290,7 @@ function preformat() {
 }
 
 function findLyrics() {
+  [[ -z "$TITLE" ]] && die "No title given (artist: \"$ARTIST\")!"
   [[ -z "$QUIET" ]] && echo "Artist: $ARTIST
 Title: $TITLE
 " >&2
@@ -327,8 +330,7 @@ artistNoSpaces: $artistNoSpaces
   
   # Title must not be empty
   if [[ -z "$titleWithHyphen" && -z "$titleWithHyphen2" && -z "$titleWithHyphen3" && -z "$titleNoSpaces" ]]; then
-    echo "Couldn't convert title to ascii. Please give it in latin characters. It must not be empty, so exiting now." >&2
-    exit 1
+    die "Couldn't convert title to ascii. Please give it in latin characters. It must not be empty, so exiting now." >&2
   fi
   
   OVERALL=()
@@ -400,8 +402,7 @@ artistNoSpaces: $artistNoSpaces
               ALL=("${ALL[@]:0:$ans}" "${ALL[@]:((ans+1))}")
             fi
           else
-            echo "That number was too high..." >&2
-            exit 1;
+            die "That number was too high..."
           fi
         elif [[ -z "$ans" || "$ans" == c ]]; then
           continue 2;
@@ -441,8 +442,7 @@ artistNoSpaces: $artistNoSpaces
             OVERALL=("${OVERALL[@]:0:$ans}" "${OVERALL[@]:((ans+1))}")
           fi
         else
-          echo "That number was too high..." >&2
-          exit 1;
+          die "That number was too high..."
         fi
       elif [[ -z $ans ]]; then
         break;
@@ -502,8 +502,7 @@ function lookupSpotifyInfo() {
   fi
 
   if [[ -z "$ARTIST" || -z "$TITLE" ]]; then
-    echo "There was a problem getting the currently playing info from spotify" >&2
-    exit 1;
+    die "There was a problem getting the currently playing info from spotify"
   fi
 }
 
@@ -538,8 +537,8 @@ while [[ -n $1 ]]; do
     shift
     ;;
   -*)
-    printf "Unknown Argument: %s\nSee -h for more help.\n" "$1"
-    exit 1
+    printf "Unknown Argument: %s\n$usage -- " "$1"
+    die "See -h for more help."
    ;;
   *)
     break
