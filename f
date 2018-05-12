@@ -74,7 +74,7 @@ $usage
 	    s		$scholar\$key
 
 	  Any other first word will be interpreted as part of the query phrase and searched by 
-	  default search engine. Type -- for treating an option as query.
+	  default search engine. Use -- for separating options from query.
 	When no key given, but something piped, it will read the first non-empty line and search it as specified.
 	No argument will just open Firefox. (Therefrom its name..)
 "
@@ -104,7 +104,7 @@ startFireFox() {
 
 fire() {
   if [[ -z $1 ]]; then
-    echo "Error: No link given!"
+    die "Error: No link given!"
   fi
   
   if [[ $openLink ]]; then
