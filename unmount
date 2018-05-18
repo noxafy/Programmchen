@@ -1,0 +1,40 @@
+#!/bin/bash
+
+[ ! -t 0 ] && echo "Please start this script interactively." && exit 1
+disks=$(diskutil list external)
+
+[[ -z "$disks" ]] && echo "No external device found." && exit 0
+
+if [[ $(echo "$disks" | wc -l) -le 4 ]]; then
+  volumeline=$(echo "$disks" | sed -n '$p' | awk '{ $1=""; print $0 }')
+  echo "Only one external device detected: $volumeline"
+  read -p "Do you want to unmount that? (y/n) [y]: " ans
+  case $ans in
+  n)
+    ;;
+  *)
+    ans=$(echo "$volumeline" | awk '{print $NF}')
+    [[ -z "$ans" ]] && echo "Failed to extract volume id from line." && exit 1
+    ;;
+  esac
+else
+  echo "$disks"
+  read -p "Which volume do you want to unmount (col: IDENTIFIER)? " ans
+fi
+
+case $ans in
+"")
+  echo "Nothing unmounted."
+  ;;
+*)
+  if [[ "$ans" =~ disk* && -n $(echo "$disks" | grep -- "$ans") ]]; then
+    if [[ "$ans" =~ disk.*s.* ]]; then
+      diskutil unmount "$ans"
+    else
+      diskutil unmountDisk "$ans"
+    fi
+  else
+    echo "Invalid answer."
+    exit 1
+  fi
+esac
