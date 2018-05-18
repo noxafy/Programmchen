@@ -5,7 +5,7 @@ killflag="-15"
 processname=
 processes=
 
-usage="\e[1mpk\e[0m -h | [-2|-9] \e[4mname\e[0m"
+usage="\e[1mkp\e[0m -h | [-2|-9] \e[4mname\e[0m"
 help="Script for killing a process by name interactively.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
