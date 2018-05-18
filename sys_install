@@ -9,7 +9,8 @@ help="An install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
 	\e[1m-s\e[0m	Skip brew installs, brew cask installs and mas installs.
-	
+
+Fast internet connection recommended.
 Warning: Leave in place!
 "
 
@@ -279,6 +280,11 @@ else
   echo "Skipped internet installation."
 fi
 
+# install other wifis
+# pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
+
+# sudo cpan chordpro
+
 # install dashboard apps
 if [[ -d "$dashboard" ]]; then
   tell "Dashboard app installation"
@@ -320,6 +326,9 @@ fi
 # install adobe, contains key
 # install microsoft programs, user gui login
 # install xcode
+# - install from app store (required by mas, sign in by the way)
+# - sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+# - sudo xcodebuild -license
 
 if [[ -z $(which mas) ]]; then
   tell "mas installation"
@@ -341,16 +350,8 @@ else
 fi
 
 # TODO
-#open app store for apple id
-#xcode-select --install ?
-
 #IntelliJ config folder
 #install intelliJ
-
-# sudo cpan chordpro
-
-# install other wifis
-# pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
 
 echo
 ########################################################################################################
