@@ -4,7 +4,7 @@ thisdir=$(dirname "$PWD/$BASH_SOURCE")
 if [[ ! -e $thisdir ]]; then
   thisdir=$(dirname "$BASH_SOURCE")
 fi
-usage="\e[1msys_install\e[0m -h | [-nb]"
+usage="\e[1msys_install\e[0m -h | [-s]"
 help="An install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
@@ -13,10 +13,16 @@ $usage
 Warning: Leave in place!
 "
 
+#prefs
+skipauto=
+def_ssid=
+def_password=
+
 #resources
 keylayouts="Keyboard Layouts" # keyboard layouts
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
 dashboard="$thisdir/dashboard" # Dashboard widgets
+# TODO
 # adobe installer
 # thunderbird folder
 # intellij folder
@@ -104,18 +110,35 @@ thunderbird
 ukelele
 xquartz)
 
-masinstalls=(890805912 # Newsflow
-#497799835 # XCode, requirement of mas
-1061963639 # VirtualDJ 8
-408981434 # iMovie
-1247301872 # Logoist 3
+masinstalls=(
+### Free
+890805912 # Newsflow
 595191960 # CopyClip
 526298438 # Lightshot Screenshot
 404010395 # TextWrangler
 1278508951 # Trello
+1061963639 # VirtualDJ 8
+
+### Apple
+#497799835 # XCode, requirement of mas
+408981434 # iMovie
+409183694 # Keynote
+409201541 # Pages
+409203825 # Numbers
+
+### paid
+1247301872 # Logoist 3
+634148309 # Logic Pro X
+424389933 # Final Cut Pro
+634159523 # MainStage 3
+434290957 # Motion
+424390742 # Compressor
 )
 
-skipauto=""
+########################################################################################################
+##### Args parsing
+########################################################################################################
+
 case $1 in
   -h)
     printf "$help"
@@ -130,9 +153,9 @@ case $1 in
     ;;
 esac
 
-####################################################
-### Function declarations
-####################################################
+########################################################################################################
+##### Function declarations
+########################################################################################################
 
 die() {
   echo "ERROR: $*!" >&2
@@ -196,9 +219,10 @@ tell() {
   echo "####################################################"
 }
 
-####################################################
-### Partly automatic part
-####################################################
+########################################################################################################
+##### Partly automatic part
+########################################################################################################
+# In this part, the script can do mostly on its own, but needs hands-on from time to time
 tell "Partly automatic part"
 echo
 
@@ -229,27 +253,26 @@ else
 fi
 
 # install internet
-ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+ping -t 3 -c 1 8.8.8.8 >& /dev/null
 if [[ $? -ne 0 ]]; then #first time. no internet installed
   tell "Internet connection installation"
-  ping -t 3 -c 1 google.com #TODO: deleteme
   networksetup -setairportpower en0 on
   #wlan login
-  installWifi adnet #pass not installed yet, so paste password here before running
+  installWifi "$def_ssid" "def_password" #pass not installed yet, so paste password in prefs section (at top) before running
   #AEG
   printf "Turning Wi-Fi off ..."
   networksetup -setairportpower en0 off
   echo " and on ..."
   networksetup -setairportpower en0 on
   sleep 3
-  ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+  ping -t 3 -c 1 8.8.8.8 >& /dev/null
   if [[ $? -ne 0 ]]; then
     echo "Auto connection failed. Please select the network from menu bar."
     echo "This script will continue as soon as an internet connection is found."
-    ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+    ping -t 3 -c 1 8.8.8.8 >& /dev/null
     while [[ $? -ne 0 ]]; do
       sleep 1
-      ping -t 3 -c 1 google.com 2> /dev/null 1> /dev/null
+      ping -t 3 -c 1 8.8.8.8 >& /dev/null
     done
   fi
 else
@@ -293,9 +316,10 @@ else
   echo "Skipped dropbox installation."
 fi
 
-#install adobe, contains key
-#install microsoft programs, user gui login
-#install xcode
+# TODO
+# install adobe, contains key
+# install microsoft programs, user gui login
+# install xcode
 
 if [[ -z $(which mas) ]]; then
   tell "mas installation"
@@ -316,41 +340,42 @@ else
   echo "Skipped pass installation."
 fi
 
+# TODO
 #open app store for apple id
 #xcode-select --install ?
 
 #IntelliJ config folder
 #install intelliJ
 
+# sudo cpan chordpro
+
 # install other wifis
 # pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
 
-# ensure required dropbox content synced
-if [[ -e "$trading_icon" ]]; then
-  echo
-  echo "All required dropbox data available."
-else
-  while [[ ! -e "$trading_icon" ]]; do
-    printf "Please wait until required dropbox data is synced "
-    sleep 1
-    printf "."
-    sleep 1
-    printf "."
-    sleep 1
-    printf "."
-    sleep 1
-    printf "\r\e[K"
-  done
-fi
-
 echo
-####################################################
-### Full automatic part (place as much as possible here)
-####################################################
+########################################################################################################
+##### Full automatic part (place as much as possible here)
+########################################################################################################
+# In this part, there is *no* need for user intervention at all
 tell "Full automatic part"
 echo
 
-if [[ ! $skipauto ]]; then
+if [[ -z $skipauto ]]; then
+# ensure required dropbox content synced
+while [[ ! -e "$trading_icon" ]]; do
+  printf "Please wait until required dropbox data is synced "
+  sleep 1
+  printf "."
+  sleep 1
+  printf "."
+  sleep 1
+  printf "."
+  sleep 1
+  printf "\r\e[K"
+done
+echo "All required dropbox data available."
+echo
+
 #app store
 if [[ -z $(mas account) ]]; then
   open /Applications/App\ Store.app/
@@ -463,7 +488,7 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
       echo "Successfully removed context menu (sed '${contextmenustart},${contextmenuend}d')"
     else
       echo "Failed to fetch context menu location. Please remove context menu initialization manually."
-      echo "mate -l '6893-6928' "$mainpath" # location with nativefier 7.6.1; leave surrounding 'function initContextMenu(mainWindow) {'"
+      echo "mate -l '6893-6928' \"$mainpath\" # location with nativefier 7.6.1; leave surrounding 'function initContextMenu(mainWindow) {'"
     fi
   else
     echo "Failed to remove context menu. File not found: $mainpath"
@@ -475,36 +500,38 @@ else
   echo "Skipped creation of Trading212.app with nativefier."
 fi
 else
-  echo "Skipped brew installs, brew cask installs and mas installs."
+  echo "Skipped brew, brew cask, mas and nativefier installs."
 fi
 
-#Thunderbird folder
-#IdeaProjects
-#other files (documents, pictures, music)
-#place minecraft in /Applications
-#copy power point draft uniwue
+# TODO
+# Thunderbird folder
+# IdeaProjects
+# other files (documents, pictures, music)
+# place minecraft in /Applications
+# copy power point draft uniwue
 
 echo
 ####################################################
 ### Manual part
 ####################################################
+# In this part, the script is just instructing and maybe helps out a bit
 tell "Manual part"
 echo
 
 #one time prefs
 bash4=/usr/local/bin/bash
 if [[ -f $bash4 && -z $(cat /etc/shells | grep $bash4) ]]; then
-  echo "Changing to login shell to $bash4"
+  tell "Changing the login shell to $bash4 (bash4)"
   sudo bash -c 'echo $bash4 >> /etc/shells' || die "Adding $bash4 to /etc/shells failed."
   chsh -s $bash4 || die "Changing users default shell failed."
-  echo "Please close this window now and start this script again."
-  waitUser
+  waitUser "Please close this window now and start this script again."
   echo "Now."
   exit 0
 else
   echo "Skipped login shell change."
 fi
 
+# TODO
 # - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, terminal, FileMerge
 # - notational velocity: ~/Dropbox/Org/Notational/
 # - spotify login
