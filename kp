@@ -39,12 +39,7 @@ die() {
 processname="$*"
 [[ -z "$processname" ]] && die "Please give a process name to search for. See -h for more information."
 
-thisdir=$(dirname "$PWD/$BASH_SOURCE")
-if [[ ! -e $thisdir ]]; then
-  thisdir=$(dirname "$BASH_SOURCE")
-fi
-
-processes=$(ps aux | grep -i -- "$processname" | grep -v "$thisdir/pk" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps aux."
+processes=$(ps aux | grep -i -- "$processname" | grep -v "$0" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps aux."
 [[ -z "$processes" ]] && die "No process found matching \"$processname\"."
 
 if [[ $(echo "$processes" | wc -l) -eq 1 ]]; then
