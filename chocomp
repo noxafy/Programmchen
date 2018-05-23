@@ -42,6 +42,20 @@ fi
 
 if [[ -n $(which chordpro) ]]; then
   chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+  if [[ -f chordpro_long.json && -n $(which mdls) ]]; then
+    open -g pdf/"$filename".pdf && sleep 1
+    pagenumber=$(mdls -name kMDItemNumberOfPages pdf/"$filename".pdf  | cut -d " " -f 3)
+    if [[ -n $pagenumber && $pagenumber == 2 ]]; then
+      echo "Well, that lyrics seems to be a little longer. Let try the json for long lyrics."
+      chordpro --config=chordpro_long.json -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+      open -g pdf/"$filename".pdf && sleep 1
+      pagenumber=$(mdls -name kMDItemNumberOfPages pdf/"$filename".pdf  | cut -d " " -f 3)
+      if [[ -n $pagenumber && $pagenumber == 2 ]]; then
+        echo "That didn't work. Lyrics seems too long for one page. Reverting to default settings."
+        chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+      fi
+    fi
+  fi
 else
   echo "chordpro not found. Trying with chordii..."
   chordii -o "$filename".ps "$filename".cho || die "cho to ps conversion failed."
