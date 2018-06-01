@@ -2,6 +2,8 @@
 
 timeout=15
 sendNote=
+waitflag=
+wifiDevice=en0
 output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
 usage="Usage: \e[1mwaitnet\e[0m -h | [-q|-s] [-n] [-t \e[4mtimeout\e[0m]"
 help="Test for internet connection establishment.
@@ -81,7 +83,7 @@ fail() {
 
 #for preformance, first test if internet connection is established
 # time is 40ms more when not working, but 100ms less when working (and the letter is most of the times)
-wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
+netTest=$(ping -t 3 -c 1 google.com 2>/dev/null)
 if [[ $? -eq 0 ]]; then
   if [[ $output -gt 1 ]]; then
     echo 'Internet connection avaliable!'
@@ -90,7 +92,6 @@ if [[ $? -eq 0 ]]; then
 fi
 
 #toggle wifi on
-wifiDevice=en0
 wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice")
 if [[ $? -ne 0 ]]; then
   wifiDevice=$(networksetup -listallhardwareports | grep -A 2 "Wi-Fi" | grep "Device" | awk '{print $2}')
@@ -101,44 +102,47 @@ if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
   networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
 fi
 
-#test on ssid connected
 cnt=0
-wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
-while [[ ${#wifi} -lt 19 ]]; do
-  waitflag=1
-  if [[ $((cnt % 3)) -eq 0 ]]; then
-    log "Waiting for SSID ..."
+ssid_estabilshed=
+while true; do
+  #test on ssid connected
+  ssid=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
+  if [[ ${#ssid} -lt 19 ]]; then
+    if [[ -n "$ssid_estabilshed" ]]; then
+      log "Connection to $ssid_estabilshed lost."
+      ssid_estabilshed=
+    fi
+    waitflag=1
+    if [[ $((cnt % 3)) -eq 0 ]]; then
+      log "Waiting for SSID ..."
+    fi
+    sleep 1
+    if [[ $cnt -ge $timeout ]]; then
+      fail "Timeout: Auto-connecting to a SSID"
+    fi
+  else
+    if [[ $output == 2 || $waitflag == 1 ]]; then
+      ssid_estabilshed=$(echo "${ssid}" | xargs)
+      log "Connected to $ssid_estabilshed"
+    fi
+    #test on internet connection
+    netTest=$(ping -t 3 -c 1 google.com 2>/dev/null)
+    if [[ $? -ne 0 ]]; then
+      waitflag=2
+      if [[ $((cnt % 3)) -eq 0 ]]; then
+        log "Waiting for internet connection ..."
+      fi
+      sleep 1
+      if [[ $cnt -ge $timeout ]]; then
+        fail "Timeout: Internet connection detection"
+      fi
+    else
+      sendNoteF 'Internet connection avaliable!'
+      if [[ $output -gt 1 || -n $waitflag ]]; then
+        log 'Internet connection avaliable!'
+      fi
+      exit 0
+    fi
   fi
-  sleep 1
   ((cnt++))
-  if [[ $cnt -ge $timeout ]]; then
-    fail "Timeout: Auto-connecting to a SSID"
-  fi
-  wifi=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
 done
-if [[ $output -gt 1 || -n $waitflag ]]; then
-  wifi=$(echo "${wifi}" | xargs)
-  log "Connected to $wifi"
-fi
-timeout=$((timeout-cnt))
-
-#test on internet connection
-cnt=0
-wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
-while [[ $? -ne 0 ]]; do
-  waitflag=1
-  if [[ $((cnt % 3)) -eq 0 ]]; then
-    log "Waiting for internet connection ..."
-  fi
-  sleep 1
-  ((cnt++))
-  if [[ $cnt -ge $timeout ]]; then
-    fail "Timeout: Internet connection detection"
-  fi
-  wifi=$(ping -t 3 -c 1 google.com 2>/dev/null)
-done
-
-sendNoteF 'Internet connection avaliable!'
-if [[ $output -gt 1 || -n $waitflag ]]; then
-  log 'Internet connection avaliable!'
-fi
