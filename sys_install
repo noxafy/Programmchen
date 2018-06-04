@@ -69,6 +69,7 @@ pup
 recode
 shpotify
 testdisk
+textmate
 wget
 wiki
 wine
@@ -90,6 +91,7 @@ flux
 freefilesync
 freemind
 geogebra
+go2shell
 google-chrome
 google-earth-pro
 intellij-idea
@@ -121,7 +123,7 @@ masinstalls=(
 1061963639 # VirtualDJ 8
 
 ### Apple
-#497799835 # XCode, requirement of mas
+#497799835 # XCode, required by mas
 408981434 # iMovie
 409183694 # Keynote
 409201541 # Pages
@@ -164,6 +166,11 @@ die() {
 }
 
 c() {
+  if [[ $1 == "-s" ]]; then
+    sudo=true
+    shift
+  else sudo=
+  fi
   while [[ -n $1 ]]; do
     origin="$thisdir/$1"
     if [[ ! -e "$origin" ]]; then
@@ -173,6 +180,7 @@ c() {
     target="$PWD/$1"
     printf "Copying $origin to $target"
     printf "($(du -sh "$origin" | awk '{print $1}')) ...\n"
+    [[ -n $sudo ]] && { sudo cp -a "$origin" "$target" || die "Copying $origin to $target failed!" }
     cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
     shift
   done
@@ -233,8 +241,10 @@ pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 # check, if .bash_profile is installed
 if [[ -z "$IT" ]]; then
   tell "Preferences installation"
+  # install .bash_profile as root
+  c -s .bash_profile
   # if not, install it and the other shit
-  c .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+  c .m2/settings.xml .tm_properties .ssh .password-store .gnupg
   #keyboard layout
   cd "Library" || die "cd to $HOME/Library failed!"
   c "$keylayouts" # - keyboard layout
@@ -280,9 +290,6 @@ else
   echo "Skipped internet installation."
 fi
 
-# install other wifis
-# pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
-
 # sudo cpan chordpro
 
 # install dashboard apps
@@ -321,6 +328,12 @@ if [[ ! -e /Applications/Dropbox.app/ ]]; then
 else
   echo "Skipped dropbox installation."
 fi
+
+# install other wifis
+# pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
+# - install "RZUWsec"
+# provide optional network change (and connection test afterwards)
+
 
 # TODO
 # install adobe, contains key
@@ -510,12 +523,13 @@ fi
 # other files (documents, pictures, music)
 # place minecraft in /Applications
 # copy power point draft uniwue
+# install fonts (from Word as well?)
 
 echo
 ####################################################
 ### Manual part
 ####################################################
-# In this part, the script is just instructing and maybe helps out a bit
+# In this part, the script is just instructing, but also might help out a bit
 tell "Manual part"
 echo
 
@@ -532,7 +546,7 @@ else
   echo "Skipped login shell change."
 fi
 
-# TODO
+# TODO Settings
 # - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, terminal, FileMerge
 # - notational velocity: ~/Dropbox/Org/Notational/
 # - spotify login
@@ -541,7 +555,82 @@ fi
 # - calender login google
 # - import newsflow opml
 # - os shortcuts
-# - install "RZUWsec"
 # - wine installs (jardinains, siedler5, finale)
+# - Go2Shell: cd %PATH%; printf "\e[F\e[K"
+# - set up dictionaries
+  # German - English.dictionary
+  # Wikipedia.wikipediadictionary
+  # Apple Dictionary.dictionary
+  # New Oxford American Dictionary.dictionary
+  # Deutsch-Englisch.dictionary
+  # OpenThesaurus Deutsch.dictionary
+  # Duden Dictionary Data Set I.dictionary
+  # Oxford American Writer's Thesaurus.dictionary
+  # Oxford Thesaurus of English.dictionary
+  # French - English.dictionary
+  # Spanish - English.dictionary
+  # Italian - English.dictionary
+  # Russian - English.dictionary
+  
+# "com.apple.Siri" StatusMenuVisible 0
+
+# install textmate bundles
+
+# "Apple Global Domain" = {
+#   "com.apple.mouse.tapBehavior" = 1;
+#   "com.apple.trackpad.enableSecondaryClick" = 1;
+#   "com.apple.trackpad.fiveFingerPinchSwipeGesture" = 2;
+#   "com.apple.trackpad.fourFingerHorizSwipeGesture" = 2;
+#   "com.apple.trackpad.fourFingerPinchSwipeGesture" = 2;
+#   "com.apple.trackpad.fourFingerVertSwipeGesture" = 2;
+#   "com.apple.trackpad.momentumScroll" = 1;
+#   "com.apple.trackpad.pinchGesture" = 1;
+#   "com.apple.trackpad.rotateGesture" = 1;
+#   "com.apple.trackpad.scrollBehavior" = 2;
+#   "com.apple.trackpad.threeFingerDragGesture" = 0;
+#   "com.apple.trackpad.threeFingerHorizSwipeGesture" = 2;
+#   "com.apple.trackpad.threeFingerTapGesture" = 2;
+#   "com.apple.trackpad.threeFingerVertSwipeGesture" = 2;
+#   "com.apple.trackpad.twoFingerDoubleTapGesture" = 1;
+#   "com.apple.trackpad.twoFingerFromRightEdgeSwipeGesture" = 3;
+#   "com.apple.trackpad.version" = 5;
+# };
+
+# "com.apple.CharacterPaletteIM" = {
+#   CVActiveCategories = (
+#     "Category-Emoji",
+#     "Category-Bullets",
+#     "Category-Pictographs",
+#     "Category-Latin",
+#     "Category-MathematicalSymbols",
+#     "Category-Arrows",
+#     "Category-CurrencySymbols",
+#     "Category-ParenthesesAll",
+#     "Category-PhoneticAlphabet",
+#     "Category-PunctuationAll",
+#     "Category-MusicalSymbols",
+#     "Category-DigitsAll",
+#     "Category-SignStandardSymbols",
+#     "Category-Greek",
+#     "Category-LetterlikeSymbolsAll",
+#     "Category-Unicode",
+#     "Category-ISO8859_1"
+#   );
+# }
+
+# "com.apple.dock" = {
+#   autohide = 1;
+#   largesize = 55;
+#   "last-messagetrace-stamp" = "549188008.001096";
+#   loc = "de_DE";
+#   magnification = 1;
+#   "minimize-to-application" = 1;
+#   "mod-count" = 278;
+#   orientation = left;
+#   tilesize = 43;
+# }
+
+
+
 
 popd &> /dev/null
