@@ -6,6 +6,7 @@ artist=
 filename=
 forceOverwriting=
 useLyrics=
+destination=$CHO
 usage="Usage: \e[1mchoinit\e[0m -h | [-f] [\e[4mtitle\e[0m] [\e[4martist\e[0m]"
 help="Script for initiating an chordii file in interplay with \"lyrics\".
 $usage
@@ -68,7 +69,7 @@ toAscii() {
   echo "$*" | sed "s/ü/ue/g" | sed "s/Ü/Ue/g" | sed "s/ä/ae/g" | sed "s/Ä/Ae/g" | sed "s/Ö/oe/g" | sed "s/ö/oe/g" | sed "s/ß/ss/g"
 }
 
-cd "$D/Noten/chordii"
+cd "$destination"
 
 # if title is there
 if [[ -n "$title" ]]; then
@@ -160,4 +161,13 @@ echo "Wrote ${#content} bytes to $PWD/$filename"
 
 mate -l 4 -- "$filename"
 
-
+[[ ! -t 0 ]] && exit 0
+[[ -z $(which chocomp) ]] && die "Chodrii compiler (chocomp) not found!"
+read -p "Compile now? (y/n) [y]: " ans
+case $ans in
+n)
+  printf "chocomp \"%s\"" "$filename" | pbcopy >& > /dev/null && echo "Copied to cilpboard."
+  ;;
+*)
+  chocomp "$filename"
+esac
