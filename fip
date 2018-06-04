@@ -1,12 +1,13 @@
 #!/bin/bash
 
-xact=false
+key=
+verge=0 # 0=both open; 1=left open; 2=right open; 3=both closed
 usage="Usage: \e[1mfip\e[0m -h | [-x] [\e[4mkey\e[0m]"
-help="Searches in all directories defined by \$PATH for \e[4mkey\e[0m.
+help="Looks in all directories defined by \$PATH for a file called like \e[4mkey\e[0m.
 $usage
         \e[1m-h\e[0m	Displays this message and exits.
-        \e[1m-x\e[0m	Finds only exact matches.
-        \e[4mkey\e[0m	The query keyword. Empty keyword prints all files in PATH.
+        \e[1m-x\e[0m	Finds exact matches only.
+        \e[4mkey\e[0m	The query keyword. Empty keyword prints all files in \$PATH.
 "
 
 case $1 in
@@ -15,18 +16,19 @@ case $1 in
     exit 0
     ;;
   -x)
-    xact=true
     shift
+    key="^${1}$"
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   *)
+    key=$1
     ;;
 esac
 
-if [[ -t 1 && -z $1 ]]; then
+if [[ -t 0 && -z $1 ]]; then
   printf "Do you really want to see \e[4mall\e[0m available executables in \$PATH? (y/n) [n]: "
   read ans
   case $ans in
@@ -36,15 +38,42 @@ if [[ -t 1 && -z $1 ]]; then
       exit 0
       ;;
   esac
-fi 
+fi
+
+if [[ $key == ^*$ ]]; then
+  key=${key:1:${#key}-2}
+  verge=3
+elif [[ $key == ^* ]]; then
+  key=${key#"^"}
+  verge=2
+elif [[ $key == *$ ]]; then
+  key=${key%"$"}
+  verge=1
+else
+  verge=0
+fi
 
 for path in `echo $PATH | sed s/:/\ /g`; do
   cd "$path" || continue
-  if $xact; then
-    res=$(ls -l | grep " $1 \| ${1}$")
-  else
-    res=$(ls -l | grep "$1")
-  fi
+  case $verge in
+  0)
+    if [[ -n $(echo "$key" | grep "\w\w\w") ]]; then # match also origin paths of links
+      res=$(ls -l | grep "$key")
+    else
+      res=$(ls -l *"$key"* 2> /dev/null)
+    fi
+    ;;
+  1)
+    res=$(ls -l *"$key" 2> /dev/null)
+    ;;
+  2)
+    res=$(ls -l "$key"* 2> /dev/null)
+    ;;
+  3)
+    res=$(ls -l "$key" 2> /dev/null)
+    ;;
+  esac
+
   if [[ -n "$res" ]]; then
     printf "$path\n$res\n"
   fi
