@@ -69,7 +69,7 @@ toAscii() {
   echo "$*" | sed "s/ü/ue/g" | sed "s/Ü/Ue/g" | sed "s/ä/ae/g" | sed "s/Ä/Ae/g" | sed "s/Ö/oe/g" | sed "s/ö/oe/g" | sed "s/ß/ss/g"
 }
 
-cd "$destination"
+cd "$destination" || die "cd failed"
 
 # if title is there
 if [[ -n "$title" ]]; then
@@ -166,7 +166,7 @@ mate -l 4 -- "$filename"
 read -p "Compile now? (y/n) [y]: " ans
 case $ans in
 n)
-  printf "chocomp \"%s\"" "$filename" | pbcopy >& > /dev/null && echo "Copied to cilpboard."
+  printf "chocomp \"%s\"" "$filename" | pbcopy 2>&1 > /dev/null && echo "Copied to cilpboard."
   ;;
 *)
   chocomp "$filename"
