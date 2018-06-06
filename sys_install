@@ -20,9 +20,11 @@ def_ssid=
 def_password=
 
 #resources
-keylayouts="Keyboard Layouts" # keyboard layouts
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
 dashboard="$thisdir/dashboard" # Dashboard widgets
+# ~/Library
+keylayouts="Keyboard Layouts" # keyboard layouts
+dictionaries="Dictionaries"
 # TODO
 # adobe installer
 # thunderbird folder
@@ -38,17 +40,17 @@ bash
 bash-completion
 bash-snippets
 brightness
-bro
-chordii
-chromedriver
+#bro
+#chordii
+#chromedriver
 cloc
 darksky-weather
 diff-pdf
-expect
+#expect
 fd
-ffmpeg
+#ffmpeg # required by audacity?
 fortune
-geoipupdate
+#geoipupdate
 git
 go
 googler
@@ -59,7 +61,7 @@ lorem
 maven
 maven-completion
 mplayer
-mujs
+#mujs
 mysql
 nativefier
 #pass
@@ -95,13 +97,13 @@ go2shell
 google-chrome
 google-earth-pro
 intellij-idea
-iterm2
+#iterm2
 java
-jwzlyrics
+#jwzlyrics
 mactex
 mpv
 notational-velocity
-osxfuse
+#osxfuse
 qlimagesize
 qlstephen
 soundflower
@@ -169,7 +171,8 @@ c() {
   if [[ $1 == "-s" ]]; then
     sudo=true
     shift
-  else sudo=
+  else
+    sudo=
   fi
   while [[ -n $1 ]]; do
     origin="$thisdir/$1"
@@ -178,10 +181,18 @@ c() {
       continue;
     fi
     target="$PWD/$1"
-    printf "Copying $origin to $target"
-    printf "($(du -sh "$origin" | awk '{print $1}')) ...\n"
-    [[ -n $sudo ]] && { sudo cp -a "$origin" "$target" || die "Copying $origin to $target failed!" }
-    cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
+    if [[ -d "$target" && "$origin" == */ ]]; then
+      printf "Copying contents of $origin to $target"
+    else
+      rm -f "$target" &> /dev/null
+      printf "Copying whole folder $origin to $target"
+    fi
+    printf " ($(du -sh "$origin" | awk '{print $1}')) ...\n"
+    if [[ -n $sudo ]]; then
+      sudo cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
+    else
+      cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
+    fi
     shift
   done
 }
@@ -239,25 +250,168 @@ echo
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
 # check, if .bash_profile is installed
-if [[ -z "$IT" ]]; then
+if [[ -z "$IT" ]]; then # $IT is required by script
   tell "Preferences installation"
+
   # install .bash_profile as root
   c -s .bash_profile
-  # if not, install it and the other shit
+  # install the other shit
   c .m2/settings.xml .tm_properties .ssh .password-store .gnupg
-  #keyboard layout
-  cd "Library" || die "cd to $HOME/Library failed!"
-  c "$keylayouts" # - keyboard layout
   
   #install terminal layouts
   open "$thisdir/*.terminal"
+
+  #keyboard layout
+  pushd "$HOME/Library" &> /dev/null || die "cd to $HOME/Library failed!"
+  c "$keylayouts/" # - keyboard layout
+
+  # copy dictionaries
+  c "$dictionaries/"
+  popd &> /dev/null
+
+  #defaults write com.apple.Siri StatusMenuVisible 0 #user siri in status bar as reminder of deactivating it
+
+  #print all defaults, major unreadable values filtered out
+  #defaults read | grep -v "AppleIDAgentMetaInfo" | grep -v "AppleIDAccount" | grep -v 'FZPersonPictureData' | grep -v 'pref:200:Machine Preferences' | grep -v 'FZPersonSmallPictureData' | grep -v 'FZPersonPictureData' | grep -v "iTunes Location" | grep -v 'ProcessViewerColumns' | grep -v '\\Ud83c' | grep -v 'FFNamingPresets' | grep -v 'FFMediaImportOrganizerFilmListView' | grep -v 'timeFormatLK' | grep -v 'FFShareDestinationsKey' | grep -v 'folderActions' | grep -v 'LibraryBookmark' | grep -v 'IPXDefaultLibraryURLBookmark' | grep -v 'IPXDefaultWorkspace' | grep -v 'Data =' | grep -v 'WebKitUserStyleSheetLocationPreferenceKey' | grep -v 'TTInspectorProcesses' | grep -v 'TextBoldColor' | grep -v 'BackgroundColor' | grep -v 'CursorColor' | grep -v 'SelectionColor' | grep -v 'TextColor' | grep -v 'book =' | grep -v 'DVTRecentColors' | grep -v CacheBag | grep -v 'file-bookmark' | grep -v 'TSWPInvisiblesColor' | grep -v 'FFMediaImportOrganizerFilmListView' | grep -v 'pref:130:Preferences' | grep -v 'eqps:129:EQPreset' | grep -v 'services =' | grep -v 'GarageBand' | grep -v 'weather =' | grep -v 'UserCrossfade' | grep -v 'BookmarkData' | grep -v 'kBookmarkDataKey' | grep -v 'FFShareDestinationsKey' | grep -v 'KeyBingingTable' | grep -v 'MacAppStoreReceiptData_11.0' | grep -v 'LoginItemsColumn2' | grep -v ' req = ' | grep -v 'LogicBinaryPreferences' | grep -v 'CachedBag'
+  # parse output to command
+  # sed 's/= //g;s/;//g;s/"/defaults -currentHost write -g /;s/"//'
+  # sed 's/= //g;s/;//g;s/ *"*/defaults write /;s/"//'
+
+  # trackpad prefs
+  # "Apple Global Domain" = {
+  echo "Mouse and Trackpad settings."
+  defaults -currentHost write -g com.apple.mouse.tapBehavior 1
+  defaults -currentHost write -g com.apple.trackpad.enableSecondaryClick 1
+  defaults -currentHost write -g com.apple.trackpad.fiveFingerPinchSwipeGesture 2
+  defaults -currentHost write -g com.apple.trackpad.fourFingerHorizSwipeGesture 2
+  defaults -currentHost write -g com.apple.trackpad.fourFingerPinchSwipeGesture 2
+  defaults -currentHost write -g com.apple.trackpad.fourFingerVertSwipeGesture 2
+  defaults -currentHost write -g com.apple.trackpad.momentumScroll 1
+  defaults -currentHost write -g com.apple.trackpad.pinchGesture 1
+  defaults -currentHost write -g com.apple.trackpad.rotateGesture 1
+  defaults -currentHost write -g com.apple.trackpad.scrollBehavior 2
+  defaults -currentHost write -g com.apple.trackpad.threeFingerDragGesture 0
+  defaults -currentHost write -g com.apple.trackpad.threeFingerHorizSwipeGesture 2
+  defaults -currentHost write -g com.apple.trackpad.threeFingerTapGesture 2
+  defaults -currentHost write -g com.apple.trackpad.threeFingerVertSwipeGesture 2
+  defaults -currentHost write -g com.apple.trackpad.twoFingerDoubleTapGesture 1
+  defaults -currentHost write -g com.apple.trackpad.twoFingerFromRightEdgeSwipeGesture 3
+  defaults -currentHost write -g com.apple.trackpad.version 5
+  # };
+
+  echo "Dock settings."
+  # "com.apple.dock" = {
+  defaults write autohide 1
+  defaults write largesize 55
+  defaults write magnification 1
+  defaults write minimize-to-application 1
+  defaults write orientation left
+  defaults write tilesize 42
+  # }
+
+  # Dictionary
+  echo "Dictionary settings."
+  defaults write com.apple.Dictionary "last available dictionaries" "(
+    \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
+    \"~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
+    \"~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
+    \"asset:/Oxford Dictionary of English.dictionary\",
+    \"asset:/Traditional Chinese.dictionary\",
+    \"asset:/The Standard Dictionary of Contemporary Chinese.dictionary\",
+    \"asset:/Simplified Chinese - English.dictionary\",
+    \"asset:/Danish.dictionary\",
+    \"asset:/French.dictionary\",
+    \"asset:/Hindi.dictionary\",
+    \"asset:/Italian.dictionary\",
+    \"asset:/Sanseido Super Daijirin.dictionary\",
+    \"asset:/Sanseido The WISDOM English-Japanese Japanese-English Dictionary.dictionary\",
+    \"asset:/Korean.dictionary\",
+    \"asset:/Korean - English.dictionary\",
+    \"asset:/Dutch.dictionary\",
+    \"asset:/Dutch - English.dictionary\",
+    \"asset:/Norwegian.dictionary\",
+    \"asset:/Portuguese.dictionary\",
+    \"asset:/Portuguese - English.dictionary\",
+    \"asset:/Russian.dictionary\",
+    \"asset:/Swedish.dictionary\",
+    \"asset:/Spanish.dictionary\",
+    \"asset:/Thai.dictionary\",
+    \"asset:/Turkish.dictionary\",
+    \"asset:/TTY Abbreviations Dictionary.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/cd4d7cc1cd227a13d2b9c029f86c940f94b7543a.asset/AssetData/Apple Dictionary.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/685cdc3ef70cf91c881f4c7c2e98c3f00ace218b.asset/AssetData/Oxford American Writer\'s Thesaurus.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/975b56580ea4bbbe1d29ca14a3b5e1a81411c787.asset/AssetData/New Oxford American Dictionary.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/2fcc349eb53d7c336b8372758b70508eb8e2ac0b.asset/AssetData/Oxford Thesaurus of English.dictionary\",
+    \"asset:/Traditional Chinese - English.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/59c252b96e44a6dbdc931e5b75a169f22eb6fa43.asset/AssetData/Duden Dictionary Data Set I.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/2a679af89e5bb8b417ff02b0fef81ca39ffad9a5.asset/AssetData/German - English.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/e5ccfe0082277d86bcac7e63268a21272f704c34.asset/AssetData/French - English.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/d574b5371fbd293fe74c473f37a18fa300ecdc31.asset/AssetData/Italian - English.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/60f594992693ff3f88af3f505da1451dc5af9c8c.asset/AssetData/Russian - English.dictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/0c32ebe1de94a069aca537b10f718806c5ad50c1.asset/AssetData/Spanish - English.dictionary\"
+  )"
+  defaults write com.apple.DictionaryServices DCSActiveDictionaries '(
+    "/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary",
+    "~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary",
+    "~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary",
+    "com.apple.dictionary.AppleDictionary",
+    "com.apple.dictionary.OAWT",
+    "com.apple.dictionary.NOAD",
+    "com.apple.dictionary.OTE",
+    "com.apple.dictionary.de.DDDSI",
+    "com.apple.dictionary.OxfordGerman",
+    "com.apple.dictionary.OxfordFrench",
+    "com.apple.dictionary.OxfordItalian",
+    "com.apple.dictionary.OxfordRussian",
+    "com.apple.dictionary.OxfordSpanish"
+  )'
+
+  echo "Shortcuts settings."
+  defaults write com.apple.Terminal NSUserKeyEquivalents '{ "Standardgr\\U00f6\\U00dfe wiederherstellen" = "@$r"; }'
+  defaults write com.apple.Preview NSUserKeyEquivalents '{ "Text hervorheben" = "@h"; }'
+  defaults write com.microsoft.onenote.mac NSUserKeyEquivalents '{ "Einf\\U00fcgen" = "@$v";
+        "Einf\\U00fcgen und Formatierung angleichen" = "@v";
+        "Sprache f\\U00fcr Korrekturhilfen festlegen..." = "@l"; }'
+  defaults write org.audacityteam.audacity NSUserKeyEquivalents '{ "Audio exportieren ..." = "@$s"; }'
+
+  echo "Various other settings."
+  # Emoji & Symbole Palette
+  defaults write com.apple.CharacterPaletteIM CVActiveCategories '(
+    "Category-Emoji",
+    "Category-Bullets",
+    "Category-Pictographs",
+    "Category-Latin",
+    "Category-MathematicalSymbols",
+    "Category-Arrows",
+    "Category-CurrencySymbols",
+    "Category-ParenthesesAll",
+    "Category-PhoneticAlphabet",
+    "Category-PunctuationAll",
+    "Category-MusicalSymbols",
+    "Category-DigitsAll",
+    "Category-SignStandardSymbols",
+    "Category-Greek",
+    "Category-LetterlikeSymbolsAll",
+    "Category-Unicode",
+    "Category-ISO8859_1"
+  )'
+
+  # Disable creation of Metadata Files on Network and USB Volumes
+  defaults write com.apple.desktopservices DSDontWriteNetworkStores 1
+  defaults write com.apple.desktopservices DSDontWriteUSBStores 1
+
+  defaults write -g AppleShowAllExtensions 1
+  defaults write -g KeyRepeat 6
+  defaults write -g InitialKeyRepeat 15
+
   #let user choose layout and restart terminal & install script
-  echo "Please close this window now and start this script again with you favourite terminal layout."
-  printf "\e[4mHint\e[0m: Just set it to standard layout.\n"
+  echo "The computer will reboot now to apply the settings. After that, please start this script again."
+  printf "\e[4mHint\e[0m: Just set your favourite terminal layout to default.\n"
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
-  printf "\e[4mHint3\e[0m: At this point, you can also switch keyboard layout as desired. "
+  printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. "
   waitUser
-  echo "Now."
+  echo "Restarting now ..."
+  sudo shutdown -r now
   exit 0
 else
   echo "Skipped preferences installation."
@@ -329,6 +483,7 @@ else
   echo "Skipped dropbox installation."
 fi
 
+#TODO
 # install other wifis
 # pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
 # - install "RZUWsec"
@@ -529,11 +684,11 @@ echo
 ####################################################
 ### Manual part
 ####################################################
-# In this part, the script is just instructing, but also might help out a bit
+# In this part, the script is just instructing, at most helping out a bit
 tell "Manual part"
 echo
 
-#one time prefs
+#one time prefs, that need sudo
 bash4=/usr/local/bin/bash
 if [[ -f $bash4 && -z $(cat /etc/shells | grep $bash4) ]]; then
   tell "Changing the login shell to $bash4 (bash4)"
@@ -554,10 +709,11 @@ fi
 # - import firefox bookmarks
 # - calender login google
 # - import newsflow opml
-# - os shortcuts
 # - wine installs (jardinains, siedler5, finale)
 # - Go2Shell: cd %PATH%; printf "\e[F\e[K"
-# - set up dictionaries
+# - install textmate bundles
+# - check os shortcuts
+# - check dictionaries
   # German - English.dictionary
   # Wikipedia.wikipediadictionary
   # Apple Dictionary.dictionary
@@ -571,66 +727,5 @@ fi
   # Spanish - English.dictionary
   # Italian - English.dictionary
   # Russian - English.dictionary
-  
-# "com.apple.Siri" StatusMenuVisible 0
-
-# install textmate bundles
-
-# "Apple Global Domain" = {
-#   "com.apple.mouse.tapBehavior" = 1;
-#   "com.apple.trackpad.enableSecondaryClick" = 1;
-#   "com.apple.trackpad.fiveFingerPinchSwipeGesture" = 2;
-#   "com.apple.trackpad.fourFingerHorizSwipeGesture" = 2;
-#   "com.apple.trackpad.fourFingerPinchSwipeGesture" = 2;
-#   "com.apple.trackpad.fourFingerVertSwipeGesture" = 2;
-#   "com.apple.trackpad.momentumScroll" = 1;
-#   "com.apple.trackpad.pinchGesture" = 1;
-#   "com.apple.trackpad.rotateGesture" = 1;
-#   "com.apple.trackpad.scrollBehavior" = 2;
-#   "com.apple.trackpad.threeFingerDragGesture" = 0;
-#   "com.apple.trackpad.threeFingerHorizSwipeGesture" = 2;
-#   "com.apple.trackpad.threeFingerTapGesture" = 2;
-#   "com.apple.trackpad.threeFingerVertSwipeGesture" = 2;
-#   "com.apple.trackpad.twoFingerDoubleTapGesture" = 1;
-#   "com.apple.trackpad.twoFingerFromRightEdgeSwipeGesture" = 3;
-#   "com.apple.trackpad.version" = 5;
-# };
-
-# "com.apple.CharacterPaletteIM" = {
-#   CVActiveCategories = (
-#     "Category-Emoji",
-#     "Category-Bullets",
-#     "Category-Pictographs",
-#     "Category-Latin",
-#     "Category-MathematicalSymbols",
-#     "Category-Arrows",
-#     "Category-CurrencySymbols",
-#     "Category-ParenthesesAll",
-#     "Category-PhoneticAlphabet",
-#     "Category-PunctuationAll",
-#     "Category-MusicalSymbols",
-#     "Category-DigitsAll",
-#     "Category-SignStandardSymbols",
-#     "Category-Greek",
-#     "Category-LetterlikeSymbolsAll",
-#     "Category-Unicode",
-#     "Category-ISO8859_1"
-#   );
-# }
-
-# "com.apple.dock" = {
-#   autohide = 1;
-#   largesize = 55;
-#   "last-messagetrace-stamp" = "549188008.001096";
-#   loc = "de_DE";
-#   magnification = 1;
-#   "minimize-to-application" = 1;
-#   "mod-count" = 278;
-#   orientation = left;
-#   tilesize = 43;
-# }
-
-
-
 
 popd &> /dev/null
