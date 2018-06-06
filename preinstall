@@ -72,6 +72,7 @@ cd "Library" || die "cd to $HOME/Library failed"
 ctt Thunderbird # - Thunderbird folder
 ctt "Keyboard Layouts" # - keyboard layout
 ctt IntelliJIdea* # IntelliJ config folder
+ctt "Dictionaries"
 
 # - minecraft launcher
 cd /Applications
@@ -93,12 +94,11 @@ echo " - Keychains (mircosoft, wlans)" # - keychain (microsoft, wlans)
 echo " - Firefox bookmarks" # - firefox bookmarks
 
 #ensure:
-mkdir dashboard
-
-echo "Copy to $target/dashboard" # - Dashboard apps
-echo " - eCalc_Scientific.wdgt"
-echo " - iStat Pro.wdgt"
-echo "Copy to $target/"
-echo " - [Adobe Pro Installer]" # - adobe installer
-echo "Paste password in install:80, when placed in position"
+#mkdir dashboard
+#echo "Copy to $target/dashboard" # - Dashboard apps
+#echo " - eCalc_Scientific.wdgt"
+#echo " - iStat Pro.wdgt"
+#echo "Copy to $target/"
+#echo " - [Adobe Pro Installer]" # - adobe installer
+echo "Paste password in sys_install:20, when placed in position"
 
