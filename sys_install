@@ -21,6 +21,7 @@ def_password=
 
 #resources
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
+trading_script="$IT/Programmchen/212listener.js" # listener for Trading212.app
 dashboard="$thisdir/dashboard" # Dashboard widgets
 # ~/Library
 keylayouts="Keyboard Layouts" # keyboard layouts
@@ -296,17 +297,16 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   defaults -currentHost write -g com.apple.trackpad.threeFingerVertSwipeGesture 2
   defaults -currentHost write -g com.apple.trackpad.twoFingerDoubleTapGesture 1
   defaults -currentHost write -g com.apple.trackpad.twoFingerFromRightEdgeSwipeGesture 3
-  defaults -currentHost write -g com.apple.trackpad.version 5
   # };
 
   echo "Dock settings."
   # "com.apple.dock" = {
-  defaults write autohide 1
-  defaults write largesize 55
-  defaults write magnification 1
-  defaults write minimize-to-application 1
-  defaults write orientation left
-  defaults write tilesize 42
+  defaults write com.apple.dock autohide 1
+  defaults write com.apple.dock largesize 55
+  defaults write com.apple.dock magnification 1
+  defaults write com.apple.dock minimize-to-application 1
+  defaults write com.apple.dock orientation left
+  defaults write com.apple.dock tilesize 42
   # }
 
   # Dictionary
@@ -410,7 +410,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
   printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. "
   waitUser
-  echo "Restarting now ..."
+  echo "sudo shutdown -r now ..."
   sudo shutdown -r now
   exit 0
 else
@@ -532,7 +532,7 @@ echo
 if [[ -z $skipauto ]]; then
 # ensure required dropbox content synced
 while [[ ! -e "$trading_icon" ]]; do
-  printf "Please wait until required dropbox data is synced "
+  printf "Please wait until required dropbox data is syncing "
   sleep 1
   printf "."
   sleep 1
@@ -544,37 +544,6 @@ while [[ ! -e "$trading_icon" ]]; do
 done
 echo "All required dropbox data available."
 echo
-
-#app store
-if [[ -z $(mas account) ]]; then
-  open /Applications/App\ Store.app/
-  waitUser "Please sign in to App Store"
-fi
-tell "App Store apps installation"
-failedapps=""
-masls=$(mas list | awk '{print $1}')
-for app in ${masinstalls[@]}; do
-  if [[ -z $(echo "$masls" | grep $app) ]]; then
-    echo "Installing $cask ..."
-    mas install $app
-    if [[ $? -ne 0 ]]; then
-      echo "Failed installing $app $(mas info $app | sed -n 1p)"
-      failedapps+="$app "
-    fi
-  else
-    echo "Skipped already installed app: $app"
-  fi
-done
-if [[ -n "$failedapps" ]]; then
-  echo "Retry following app installs:"
-  for app in $failedapps; do
-    echo "mas install $app"
-  done
-else
-  echo "All apps installed with no obvious problems."
-fi
-echo
-
 
 tell "brew cask installs"
 #brew cask install
@@ -630,6 +599,44 @@ else
 fi
 echo
 
+#app store
+if [[ -z $(mas account) ]]; then
+  open /Applications/App\ Store.app/
+  waitUser "Please sign in to App Store"
+fi
+tell "App Store apps installation"
+failedapps=""
+masls=$(mas list | awk '{print $1}')
+for app in ${masinstalls[@]}; do
+  if [[ -z $(echo "$masls" | grep $app) ]]; then
+    echo "Installing $cask ..."
+    mas install $app
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $app $(mas info $app | sed -n 1p)"
+      failedapps+="$app "
+    fi
+  else
+    echo "Skipped already installed app: $app"
+  fi
+done
+if [[ -n "$failedapps" ]]; then
+  echo "Retry following app installs:"
+  for app in $failedapps; do
+    echo "mas install $app"
+  done
+else
+  echo "All apps installed with no obvious problems."
+fi
+echo
+
+# TODO
+# Thunderbird folder
+# IdeaProjects
+# other files (documents, pictures, music)
+# place minecraft in /Applications
+# copy power point draft uniwue
+# install fonts (from Word as well?)
+
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
   tell "Whatsapp Web.app installation"
@@ -644,41 +651,57 @@ fi
 if [[ ! -e "/Applications/Trading212.app" ]]; then
   tell "Trading212.app installation"
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
-  nativefier -i "$trading_icon" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
-  
-  # Remove context menu
-  mainpath="Trading212-darwin-x64/Trading212.app/Contents/Resources/app/lib/main.js"
-  if [[ -e "$mainpath" ]]; then
-    mainjs=$(cat "$mainpath")
-    contextmenustart=$(echo "$mainjs" | grep -n "_electron.ipcMain.on('contextMenuOpened', function (event, targetHref) {" | awk '{ print $1 + 0; }') # 6893
-    contextmenuend=$(echo "$mainjs" | grep -n 'mainWindow.contextMenuOpen = true;' | awk '{ print $1 + 1; }') # 6928
-    if [[ -n $contextmenustart && -n $contextmenuend ]]; then
-      echo "$mainjs" | sed "${contextmenustart},${contextmenuend}d" > "$mainpath"
-      echo "Successfully removed context menu (sed '${contextmenustart},${contextmenuend}d')"
-    else
-      echo "Failed to fetch context menu location. Please remove context menu initialization manually."
-      echo "mate -l '6893-6928' \"$mainpath\" # location with nativefier 7.6.1; leave surrounding 'function initContextMenu(mainWindow) {'"
-    fi
-  else
-    echo "Failed to remove context menu. File not found: $mainpath"
-  fi
+  nativefier -i "$trading_icon" --inject "$trading_script" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
   
   mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed."
   rm -rf Trading212-darwin-x64/
+
+  # Remove context menu - not necessary anymore, since 7.6.4
+  # mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
+  # if [[ -e "$mainpath" ]]; then
+  #   mainjs=$(cat "$mainpath")
+  #   contextmenustart=$(echo "$mainjs" | grep -n "_electron.ipcMain.on('contextMenuOpened', function (event, targetHref) {" | awk '{ print $1 + 0; }') # 6893
+  #   contextmenuend=$(echo "$mainjs" | grep -n 'mainWindow.contextMenuOpen = true;' | awk '{ print $1 + 1; }') # 6928
+  #   if [[ -n $contextmenustart && -n $contextmenuend ]]; then
+  #     echo "$mainjs" | sed "${contextmenustart},${contextmenuend}d" > "$mainpath"
+  #     echo "Successfully removed context menu (sed '${contextmenustart},${contextmenuend}d')"
+  #   else
+  #     echo "Failed to fetch context menu location. Please remove context menu initialization manually."
+  #     echo "mate -l '6893-6928' \"$mainpath\" # location with nativefier 7.6.1; leave surrounding 'function initContextMenu(mainWindow) {'"
+  #   fi
+  # else
+  #   echo "Failed to remove context menu. File not found: $mainpath"
+  # fi
+
+  mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
+  if [[ -e "$mainpath" ]]; then
+    mainjs=$(cat "$mainpath")
+    lineToInsert=$(echo "$mainjs" | grep -n "mainWindow.webContents.on('will-navigate', onWillNavigate);" | awk '{ print $1 + 0; }') #5335
+    if [[ -n $lineToInsert ]]; then
+      line='  mainWindow.webContents.on("did-finish-load", function () { setTimeout(function () { mainWindow.webContents.send("loadListener"); }, 10000); })'
+      echo "$mainjs" | sed -n "1,${lineToInsert}p" > "${mainpath}"
+      echo "$line" >> "${mainpath}"
+      echo "$mainjs" | sed -n "${lineToInsert},\$p" >> "${mainpath}"
+      echo "Successfully injected listener call!"
+    else
+      echo "Failed to fetch listener insertion location. Please insert manually:  $line"
+      echo "mate -l '5306' \"$mainpath\" # location with nativefier 7.6.4: mainWindow.webContents.on('will-navigate', onWillNavigate);"
+    fi
+
+    appdir=$(dirname "$mainpath")
+    pushd "$appdir/.." &>/dev/null || die "cd to $appdir/.. failed"
+    npm i --save ws || die "npm install ws failed"
+    popd &>/dev/null || die "cd failed"
+  else
+    echo "Failed to insert listener script call function. File not found: $mainpath"
+  fi
+
 else
   echo "Skipped creation of Trading212.app with nativefier."
 fi
 else
   echo "Skipped brew, brew cask, mas and nativefier installs."
 fi
-
-# TODO
-# Thunderbird folder
-# IdeaProjects
-# other files (documents, pictures, music)
-# place minecraft in /Applications
-# copy power point draft uniwue
-# install fonts (from Word as well?)
 
 echo
 ####################################################
@@ -712,6 +735,7 @@ fi
 # - wine installs (jardinains, siedler5, finale)
 # - Go2Shell: cd %PATH%; printf "\e[F\e[K"
 # - install textmate bundles
+# - check all prefs
 # - check os shortcuts
 # - check dictionaries
   # German - English.dictionary
