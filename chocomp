@@ -1,7 +1,7 @@
 #!/bin/bash
 
 chordlong=chordpro_long.json
-usage="Usage: \e[1mchocomp\e[0m \e[4mfile\e[0m"
+usage="Usage: \e[1mchocomp\e[0m -h | [-l] \e[4mchofile\e[0m"
 help="Compiler from chordpro/chordii files to pdf. Give an \".cho\"-file as argument.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
@@ -15,10 +15,10 @@ die() {
   exit 1
 }
 
-while [[ -n $1 ]]; do
+while [[ -n "$1" ]]; do
   case $1 in
   -h)
-    printf "$help\n"
+    printf "$help"
     exit 0
     ;;
   -l)
@@ -26,10 +26,6 @@ while [[ -n $1 ]]; do
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" $1
-    exit 1
-    ;;
-  "")
-    echo "Please give a chordpro/chordii file to compile."
     exit 1
     ;;
   *)
@@ -52,6 +48,8 @@ while [[ -n $1 ]]; do
   shift
 done
 
+[[ -z "$filename" ]] && die "Please give a chordpro/chordii file to compile."
+
 getPageNumber() {
   mdls -name kMDItemNumberOfPages "$1" | cut -d " " -f 3
 }
@@ -62,8 +60,8 @@ fi
 
 if [[ -n $(which chordpro) ]]; then
   if [[ -n $long ]]; then
-    [[ ! -f $chordlong ]] && die "Configuration file not found: $chordlong"
-    echo "Using configuration file for longer lyrics."
+    [[ ! -f "$chordlong" ]] && die "Configuation file for longer lyrics not found: $chordlong"
+    echo "Using configuation file for longer lyrics."
     chordpro --config="$chordlong" -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
   else
     chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
@@ -72,7 +70,7 @@ if [[ -n $(which chordpro) ]]; then
       pagenumber=$(getPageNumber pdf/"$filename".pdf)
       #echo "$pagenumber"
       if [[ -n $pagenumber && $pagenumber == 2 ]]; then
-        echo "Well, that lyrics seems to be a little longer. Let's try the json for long lyrics."
+        echo "Well, that lyrics seems to be a little longer. Let try the json for long lyrics."
         chordpro --config="$chordlong" -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
         open -g pdf/"$filename".pdf && sleep 1
         pagenumber=$(getPageNumber pdf/"$filename".pdf)
