@@ -1,18 +1,28 @@
 #!/bin/bash
 
+chordlong=chordpro_long.json
 usage="Usage: \e[1mchocomp\e[0m \e[4mfile\e[0m"
+help="Compiler from chordpro/chordii files to pdf. Give an \".cho\"-file as argument.
+$usage
+	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-l\e[0m	Forces using configuration file for longer lyrics.
+"
 filename=
+long=
 
 die() {
   echo "$*"
   exit 1
 }
 
-case $1 in
+while [[ -n $1 ]]; do
+  case $1 in
   -h)
-    echo "Compiler from chordpro/chordii files to pdf. Give an \".cho\"-file as argument."
-    printf "$usage\n"
+    printf "$help\n"
     exit 0
+    ;;
+  -l)
+    long=true
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" $1
@@ -27,13 +37,20 @@ case $1 in
       echo "Please give a chordpro/chordii file to compile."
       exit 1
     fi
-    if [[ ! -f "$1" || ! -r "$1" ]]; then
+    if [[ ! -f "$1" ]]; then
+      echo "File not found: $1"
+      echo "Please give an existing and readable chordii file to compile."
+      exit 1
+    elif [[ ! -r "$1" ]]; then
+      echo "File not readable: $1"
       echo "Please give an existing and readable chordii file to compile."
       exit 1
     fi
     filename=${1%.*}
     ;;
-esac
+  esac
+  shift
+done
 
 getPageNumber() {
   mdls -name kMDItemNumberOfPages "$1" | cut -d " " -f 3
@@ -44,20 +61,31 @@ if [[ ! -d pdf ]]; then
 fi
 
 if [[ -n $(which chordpro) ]]; then
-  chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
-  if [[ -f chordpro_long.json && -n $(which mdls) ]]; then
-    open -g pdf/"$filename".pdf && sleep 1
-    pagenumber=$(getPageNumber pdf/"$filename".pdf)
-    #echo "$pagenumber"
-    if [[ -n $pagenumber && $pagenumber == 2 ]]; then
-      echo "Well, that lyrics seems to be a little longer. Let try the json for long lyrics."
-      chordpro --config=chordpro_long.json -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+  if [[ -n $long ]]; then
+    [[ ! -f $chordlong ]] && die "Configuration file not found: $chordlong"
+    echo "Using configuration file for longer lyrics."
+    chordpro --config="$chordlong" -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+  else
+    chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+    if [[ -f "$chordlong" && -n $(which mdls) ]]; then
       open -g pdf/"$filename".pdf && sleep 1
       pagenumber=$(getPageNumber pdf/"$filename".pdf)
       #echo "$pagenumber"
       if [[ -n $pagenumber && $pagenumber == 2 ]]; then
-        echo "That didn't work. Lyrics seems too long for one page. Reverting to default settings."
-        chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+        echo "Well, that lyrics seems to be a little longer. Let's try the json for long lyrics."
+        chordpro --config="$chordlong" -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+        open -g pdf/"$filename".pdf && sleep 1
+        pagenumber=$(getPageNumber pdf/"$filename".pdf)
+        #echo "$pagenumber"
+        if [[ -n $pagenumber && $pagenumber == 2 ]]; then
+          printf "That didn't work. Lyrics seems too long for one page."
+          if [[ -z $long ]]; then
+            echo " Reverting to default settings."
+            chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
+          else
+            echo
+          fi
+        fi
       fi
     fi
   fi
