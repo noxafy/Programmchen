@@ -4,11 +4,13 @@ timeout=15
 sendNote=
 waitflag=
 wifiDevice=en0
-output=2 # 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
-usage="Usage: \e[1mwaitnet\e[0m -h | [-q|-s] [-n] [-t \e[4mtimeout\e[0m]"
+starttime=$(date "+%s")
+output=2 # 3=debug; 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
+usage="Usage: \e[1mwaitnet\e[0m -h | [-d|-s|-q] [-n] [-t \e[4mtimeout\e[0m]"
 help="Test for internet connection establishment.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-d\e[0m	Debug output.
 	\e[1m-s\e[0m	No output on success without waiting (best for scripts).
 	\e[1m-q\e[0m	No console output, except errors.
 	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
@@ -26,6 +28,9 @@ while [[ -n $1 ]]; do
     ;;
   -s)
     output=1
+    ;;
+  -d)
+    output=3
     ;;
   -n)
     sendNote=1
@@ -64,13 +69,13 @@ case $(ps -o stat= -p $$) in
 esac
 
 log() {
-  if [[ $output ]]; then
+  if [[ -n $output ]]; then
     printf "%s\n" "$@"
   fi
 }
 
 sendNoteF() {
-  if [[ $sendNote ]]; then
+  if [[ -n $sendNote ]]; then
     note -m "$*" || echo "This script has a dependency to \"note\" to send notification messages."
   fi
 }
@@ -102,7 +107,7 @@ if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
   networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
 fi
 
-cnt=0
+elapsedTime=0
 ssid_estabilshed=
 while true; do
   #test on ssid connected
@@ -112,37 +117,43 @@ while true; do
       log "Connection to $ssid_estabilshed lost."
       ssid_estabilshed=
     fi
+    if [[ $elapsedTime -ge $timeout ]]; then
+      fail "Timeout: Auto-connecting to a SSID"
+    fi
     waitflag=1
-    if [[ $((cnt % 3)) -eq 0 ]]; then
+    if [[ $((elapsedTime % 3)) -lt 1 ]]; then
       log "Waiting for SSID ..."
     fi
     sleep 1
-    if [[ $cnt -ge $timeout ]]; then
-      fail "Timeout: Auto-connecting to a SSID"
-    fi
   else
-    if [[ $output == 2 || $waitflag == 1 ]]; then
+    [[ $output -ge 3 ]] && echo "waitflag: $waitflag"
+    if [[ $output -ge 2 && $waitflag -eq 1 ]]; then
       ssid_estabilshed=$(echo "${ssid}" | xargs)
       log "Connected to $ssid_estabilshed"
+    fi
+    if [[ $elapsedTime -ge $timeout ]]; then
+      fail "Timeout: Internet connection detection"
     fi
     #test on internet connection
     netTest=$(ping -t 3 -c 1 google.com 2>/dev/null)
     if [[ $? -ne 0 ]]; then
       waitflag=2
-      if [[ $((cnt % 3)) -eq 0 ]]; then
+      if [[ $((elapsedTime % 3)) -lt 1 ]]; then
         log "Waiting for internet connection ..."
       fi
       sleep 1
-      if [[ $cnt -ge $timeout ]]; then
-        fail "Timeout: Internet connection detection"
-      fi
     else
       sendNoteF 'Internet connection avaliable!'
-      if [[ $output -gt 1 || -n $waitflag ]]; then
-        log 'Internet connection avaliable!'
+      if [[ $output -ge 1 || -n $waitflag ]]; then
+        log 'Internet connection available!'
       fi
       exit 0
     fi
   fi
-  ((cnt++))
+  elapsedTime=$(($(date "+%s") - starttime))
+  if [[ $output -ge 3 ]]; then
+    printf 'Last line from ping: '
+    echo "$netTest" | tail -1
+    echo "elapsedTime: $elapsedTime"
+  fi
 done
