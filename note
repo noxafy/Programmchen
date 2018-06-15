@@ -1,4 +1,5 @@
 #!/bin/bash
+starttime=$(date "+%s")
 desttime=0
 verbose=1 #1=show remaining time, 0=don't
 usage="Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [ [-m] \e[4mmes\e[0m \e[4m...\e[0m] | [-m] \e[4mmes\e[0m \e[4m...\e[0m"
@@ -173,7 +174,7 @@ case $(ps -o stat= -p $$) in
     ;;
 esac
 
-if [[ $desttime -gt 0 ]]; then
+if [[ $desttime -gt $starttime ]]; then
   #see if it is on next day
   if [[ $desttime -lt $(date "+%s") ]]; then
     if [[ $verbose -eq 1 ]]; then
@@ -182,14 +183,14 @@ if [[ $desttime -gt 0 ]]; then
     desttime=$((desttime + 86400))
   fi
 
-  #read out the optional message
-  mes=${*-"Time is up!"}
-
   timeout
   if [[ $verbose -eq 1 ]]; then
     printf "\r\e[KTime left: 0s"
   fi
 fi
+
+#read out the optional message
+mes=${*-"Time is up!"}
 
 scriptcmd="tell app \"System Events\" to display notification \"$mes\""
 osascript -e "$scriptcmd"
