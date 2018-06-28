@@ -24,7 +24,7 @@ while [[ -n $1 ]]; do
     exit 0
     ;;
   -q)
-    output=
+    output=0
     ;;
   -s)
     output=1
@@ -69,7 +69,7 @@ case $(ps -o stat= -p $$) in
 esac
 
 log() {
-  if [[ -n $output ]]; then
+  if [[ $output -ge 1 ]]; then
     printf "%s\n" "$@"
   fi
 }
@@ -86,15 +86,20 @@ fail() {
   exit 1
 }
 
-#for preformance, first test if internet connection is established
-# time is 40ms more when not working, but 100ms less when working (and the letter is most of the times)
-netTest=$(ping -t 3 -c 1 google.com 2>/dev/null)
-if [[ $? -eq 0 ]]; then
-  if [[ $output -gt 1 ]]; then
-    echo 'Internet connection avaliable!'
+elapsedTime=
+lastOutput=-4
+shouldOutput=false
+setShouldOutput() {
+  elapsedTime=$(($(date "+%s") - starttime))
+  [[ $output -ge 3 ]] && echo "elapsedTime: $elapsedTime, lastOutput: $lastOutput"
+  if [[ $((elapsedTime - lastOutput)) -ge 3 ]]; then
+    lastOutput=$elapsedTime
+    shouldOutput=true
+  else
+    shouldOutput=false
   fi
-  exit 0
-fi
+ # echo "shouldOutput: $shouldOutput"
+}
 
 #toggle wifi on
 wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice")
@@ -103,8 +108,19 @@ if [[ $? -ne 0 ]]; then
   wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice")
 fi
 if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
+  [[ $output -ge 3 ]] && echo "Wi-Fi ($wifiDevice) \"Off\" detected!"
   log "Toggling Wi-Fi ($wifiDevice) on ..."
   networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
+else
+  #for preformance, first test if internet connection is established
+  # time is 40ms more when not working, but 100ms less when working (and the letter is most of the times)
+  netTest=$(ping -t 3 -c 1 8.8.8.8 2>/dev/null)
+  if [[ $? -eq 0 ]]; then
+    if [[ $output -gt 1 ]]; then
+      echo 'Internet connection avaliable!'
+    fi
+    exit 0
+  fi
 fi
 
 elapsedTime=0
@@ -118,10 +134,12 @@ while true; do
       ssid_estabilshed=
     fi
     if [[ $elapsedTime -ge $timeout ]]; then
+      [[ -n "$ssid" && $output -ge 1 ]] && echo "airport -I: $ssid"
       fail "Timeout: Auto-connecting to a SSID"
     fi
     waitflag=1
-    if [[ $((elapsedTime % 3)) -lt 1 ]]; then
+    setShouldOutput
+    if [[ $shouldOutput == "true" ]]; then
       log "Waiting for SSID ..."
     fi
     sleep 1
@@ -132,13 +150,16 @@ while true; do
       log "Connected to $ssid_estabilshed"
     fi
     if [[ $elapsedTime -ge $timeout ]]; then
+      [[ -n "$netTest" && $output -ge 1 ]] && echo "$netTest" | tail -1
       fail "Timeout: Internet connection detection"
     fi
     #test on internet connection
-    netTest=$(ping -t 3 -c 1 google.com 2>/dev/null)
+    netTest=$(ping -t 3 -c 1 8.8.8.8 2>&1 >/dev/null)
     if [[ $? -ne 0 ]]; then
+      [[ $output -ge 3 ]] && echo "ping output: $netTest"
       waitflag=2
-      if [[ $((elapsedTime % 3)) -lt 1 ]]; then
+      setShouldOutput
+      if [[ $shouldOutput == "true" ]]; then
         log "Waiting for internet connection ..."
       fi
       sleep 1
@@ -149,11 +170,5 @@ while true; do
       fi
       exit 0
     fi
-  fi
-  elapsedTime=$(($(date "+%s") - starttime))
-  if [[ $output -ge 3 ]]; then
-    printf 'Last line from ping: '
-    echo "$netTest" | tail -1
-    echo "elapsedTime: $elapsedTime"
   fi
 done
