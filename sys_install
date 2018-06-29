@@ -22,8 +22,8 @@ def_password=
 #resources
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
 trading_script="$IT/Programmchen/212listener.js" # listener for Trading212.app
-dashboard="$thisdir/dashboard" # Dashboard widgets
-# ~/Library
+dashboard="$thisdir/Dashboard" # Dashboard widgets
+### ~/Library
 keylayouts="Keyboard Layouts" # keyboard layouts
 dictionaries="Dictionaries"
 # TODO
@@ -32,8 +32,7 @@ dictionaries="Dictionaries"
 # intellij folder
 # minecraft
 # IdeaProjects Documents Pictures Music
-# power point draft uniwue
-# wifi data (save in pass?)
+# power point draft uniwue (in $D)
 
 brews=(agedu
 aspell
@@ -222,7 +221,7 @@ installWifi() {
   while [[ -z "$passwd" ]]; do
     read -p "Please enter the password for $ssid: " passwd
   done
-  networksetup -addpreferredwirelessnetworkatindex Airport "$ssid" 0 WPA2 "$passwd"
+  networksetup -addpreferredwirelessnetworkatindex en0 "$ssid" 1000 WPA2 "$passwd"
 }
 
 waitUser() {
@@ -352,6 +351,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   )"
   defaults write com.apple.DictionaryServices DCSActiveDictionaries '(
     "/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary",
+    "com.apple.dictionary.OxfordGerman",
     "~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary",
     "~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary",
     "com.apple.dictionary.AppleDictionary",
@@ -359,7 +359,6 @@ if [[ -z "$IT" ]]; then # $IT is required by script
     "com.apple.dictionary.NOAD",
     "com.apple.dictionary.OTE",
     "com.apple.dictionary.de.DDDSI",
-    "com.apple.dictionary.OxfordGerman",
     "com.apple.dictionary.OxfordFrench",
     "com.apple.dictionary.OxfordItalian",
     "com.apple.dictionary.OxfordRussian",
@@ -370,7 +369,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   defaults write com.apple.Terminal NSUserKeyEquivalents '{ "Standardgr\\U00f6\\U00dfe wiederherstellen" = "@$r"; }'
   defaults write com.apple.Preview NSUserKeyEquivalents '{ "Text hervorheben" = "@h"; }'
   defaults write com.microsoft.onenote.mac NSUserKeyEquivalents '{ "Einf\\U00fcgen" = "@$v";
-        "Einf\\U00fcgen und Formatierung angleichen" = "@v";
+        "Einf\\U00fcgen und an Formatierung anpassen" = "@v";
         "Sprache f\\U00fcr Korrekturhilfen festlegen..." = "@l"; }'
   defaults write org.audacityteam.audacity NSUserKeyEquivalents '{ "Audio exportieren ..." = "@$s"; }'
 
