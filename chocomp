@@ -69,14 +69,18 @@ if [[ -n $(which chordpro) ]]; then
       open -g pdf/"$filename".pdf && sleep 1
       pagenumber=$(getPageNumber pdf/"$filename".pdf)
       #echo "$pagenumber"
-      if [[ -n $pagenumber && $pagenumber == 2 ]]; then
+      if [[ -n $pagenumber && $pagenumber -ge 2 ]]; then
         echo "Well, that lyrics seems to be a little longer. Let try the json for long lyrics."
         chordpro --config="$chordlong" -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
         open -g pdf/"$filename".pdf && sleep 1
-        pagenumber=$(getPageNumber pdf/"$filename".pdf)
-        #echo "$pagenumber"
-        if [[ -n $pagenumber && $pagenumber == 2 ]]; then
-          printf "That didn't work. Lyrics seems too long for one page."
+        npagenumber=$(getPageNumber pdf/"$filename".pdf)
+        #echo "$npagenumber"
+        if [[ -n $npagenumber && $npagenumber -ge $pagenumber ]]; then
+          if [[ $pagenumber -le 2 ]]; then
+            printf "That didn't work. Lyrics seems too long for one page."
+          else
+            printf "That didn't work. Lyrics seems too long to fit in less pages."
+          fi
           if [[ -z $long ]]; then
             echo " Reverting to default settings."
             chordpro -o pdf/"$filename".pdf "$filename".cho || die "Fail to print pdf from $filename."
@@ -85,6 +89,8 @@ if [[ -n $(which chordpro) ]]; then
           fi
         fi
       fi
+    else
+      echo "Configuration file for longer lyrics not found."
     fi
   fi
 else
