@@ -57,32 +57,31 @@ ctt() {
   while [[ -n $1 ]]; do
     printf "Copying $PWD/$1 "
     printf "($(du -sh "$1" | awk '{print $1}')) ...\n"
-    cp -a "$1" "$target/" || die "Copying $1 to $target failed"
+    cp -a "$1" "$target/$1" || die "Copying $1 to $target failed"
     shift
   done
 }
 
 # Copy from ~
-cd "$HOME" || die "cd to $HOME failed"
+pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 ctt .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
-# - IdeaProjects Documents, Pictures, Music
 ctt IdeaProjects Documents Pictures Music
 
 cd "Library" || die "cd to $HOME/Library failed"
 ctt Thunderbird # - Thunderbird folder
 ctt "Keyboard Layouts" # - keyboard layout
 ctt IntelliJIdea* # IntelliJ config folder
-ctt "Dictionaries"
+ctt "Dictionaries" # Databases for Dictionary.app
 
 # - minecraft launcher
 cd /Applications
 ctt Minecraft
 
+popd &> /dev/null
 
 ####################################################
 ### Manual
 ####################################################
-cd "$target"
 
 #export:
 mkdir manual
