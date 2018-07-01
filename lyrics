@@ -221,7 +221,8 @@ function finishIt() {
     if [[ -t 1 ]]; then
       printf "\n\e[1;4m%s - %s\e[0m\n" "$ARTIST" "$TITLE"
     else
-      printf "%s - %s\n" "$ARTIST" "$TITLE"
+      if [[ -n "$QUIET" ]]; then titleAndArtistDelim="  -  "; else titleAndArtistDelim=" - "; fi
+      printf "%s%s%s\n" "$ARTIST" "$titleAndArtistDelim" "$TITLE"
       [[ -z "$QUIET" ]] && echo "Songtext piped (length: ${#res})." >&2
     fi
   fi
