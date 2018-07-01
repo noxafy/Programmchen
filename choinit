@@ -50,9 +50,12 @@ done
 
 extractFromLyrics() {
   res=$(echo "$lyrics" | sed -n 1p)
+  [[ -n $debug ]] && echo "First line from lyrics: $res"
   if [[ -n "$res" ]]; then
-    [[ -z "$artist" ]] && artist=$(echo "$res" | sed 's/ - .*//g')
-    [[ -z "$title" ]] && title=$(echo "$res" | sed 's/.* - //g')
+    [[ -z "$artist" ]] && artist=$(echo "$res" | sed 's/  -  .*//g')
+    [[ -n $debug ]] && echo "Set artist to: $artist"
+    [[ -z "$title" ]] && title=$(echo "$res" | sed -e 's/.*  -  //g' -e 's/ - .*//g')
+    [[ -n $debug ]] && echo "Set title to: $title"
     lyrics=$(echo "$lyrics" | sed -n '3,$p')
   else
     lyrics=$(echo "$lyrics" | sed -n '2,$p')
@@ -63,10 +66,10 @@ extractFromLyrics() {
 toFilename() {
   echo "$*" | sed -e "s/'//g" \
   -e 's/"//g' \
+  -e 's/ - .*//g' \
   -e 's/ \{1,\}/_/g' \
   -e 's/(.*)//g' \
   -e 's/\[.*\]//g' \
-  -e 's/ - .*//g' \
   -e 's/_$//' \
   -e 's/\///'
 }
@@ -147,9 +150,8 @@ if [[ -z "$lyrics" ]]; then
   fi
 fi
 
-[[ -n $debug ]] && echo "Filename: $(toFilename $title)-$(toFilename $artist).cho"
 filename="$(toFilename $title)-$(toFilename $artist).cho"
-#echo "filename: $filename"
+[[ -n $debug ]] && echo "Filename: $filename"
 
 if [[ -e "$filename" && ! -n $forceOverwriting ]]; then
   [[ ! -t 0 ]] && die "Leadsheet \"$filename\" already exists."
