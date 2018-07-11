@@ -65,7 +65,7 @@ ctt() {
 # Copy from ~
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 ctt .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
-ctt IdeaProjects Documents Pictures Music
+ctt IdeaProjects Documents Pictures Music Dropbox
 
 cd "Library" || die "cd to $HOME/Library failed"
 ctt Thunderbird # - Thunderbird folder
