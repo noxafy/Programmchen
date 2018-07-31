@@ -228,9 +228,15 @@ else if ($all) {
 		//if (skipped !== 0) {
 		//	console.log(skipped + " skipped translation(s) found. Nevertheless showing all results of the first page now.");
 		//} else {
-		console.log("No exact translation found. Showing all results of the first page now.");
+		// no space OR one space, but a "to" at beginning
+		if (key.indexOf(" ") == -1 || (key.indexOf(" ") === key.lastIndexOf(" ") && key.indexOf("to") == 0)) {
+			console.log("No exact translation found. Showing all results of the first page now.");
+			setTimeout(listAll, 1500);
+		}
+		else {
+			listAll();
+		}
 		//}
-		setTimeout(listAll, 1500);
 	}
 } else {
 	listAll();
@@ -268,9 +274,9 @@ function listAll() {
 	}
 }
 
-function contains(a, obj) {
+function contains(a, key) {
 	for (var i = 0; i < a.length; i++) {
-		if (a[i].toLowerCase() === obj) {
+		if (a[i].toLowerCase() === key) {
 			return true;
 		}
 	}
