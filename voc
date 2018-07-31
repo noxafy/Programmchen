@@ -29,6 +29,7 @@ Create the .csv in the following form:
  \"word\",\"meaning\",\"helping comment for memorizing or pronouncing\"
 "
 #TODO when found multiple search results and opening intended, ask which one to open
+#TODO perform search when "-o" with an argument
 #TODO provide sorting (sort ignoring "to"'s)
 #TODO forbid "," in word, translation or additional
 

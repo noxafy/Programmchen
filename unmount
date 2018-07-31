@@ -29,10 +29,12 @@ case $ans in
 *)
   if [[ "$ans" =~ disk* && -n $(echo "$disks" | grep -- "$ans") ]]; then
     if [[ "$ans" =~ disk.*s.* ]]; then
-      diskutil unmount "$ans"
+      res=$(diskutil unmount "$ans")
     else
-      diskutil unmountDisk "$ans"
+      res=$(diskutil unmountDisk "$ans")
     fi
+    echo "res length: ${#res}"
+    # TODO: Filter if failed by blocking pid, ask for killing, kill, i.a., and try again
   else
     echo "Invalid answer."
     exit 1
