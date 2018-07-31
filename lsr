@@ -199,7 +199,7 @@ resumee() {
 	fi
 
   if [ $fileCnt -gt 0 ]; then
-    printf " (size: %s)" $(du -hs $path | awk '{print $1}')
+    printf " (size: %s)" $(du -hs "$path" | awk '{print $1}')
   fi
   echo ""
 }
