@@ -16,6 +16,8 @@ die() {
   exit 1
 }
 
+#TODO: Add medium configuration file (headspace: 52, margintop: 82, empty: 1.3)
+
 getPageNumber() {
   mdls -name kMDItemNumberOfPages "$1" | cut -d " " -f 3
 }
