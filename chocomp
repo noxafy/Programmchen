@@ -132,14 +132,16 @@ while [[ -n "$1" ]]; do
     exit 1
     ;;
   *)
-    if [[ ! -f "$1" ]]; then
-      echo "File not found: $1"
-      echo "Please give an existing and readable chordii file to compile."
+    if [[ -d "$1" ]]; then
+      echo "$1: not a file - Please give an existing and readable chordpro file to compile."
+      shift
+      continue
+    elif [[ ! -f "$1" ]]; then
+      echo "$1: file not found - Please give an existing and readable chordpro file to compile."
       shift
       continue
     elif [[ ! -r "$1" ]]; then
-      echo "File not readable: $1"
-      echo "Please give an existing and readable chordii file to compile."
+      echo "$1: file not readable - Please give an existing and readable chordpro file to compile."
       shift
       continue
     fi
