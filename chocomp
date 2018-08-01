@@ -1,12 +1,15 @@
 #!/bin/bash
 
 chordlong=chordpro_long.json
+chordmedium=chordpro_medium.json
 transpose=0
-long=
-usage="Usage: \e[1mchocomp\e[0m -h | [-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m"
+long=0
+multipleFiles=
+usage="Usage: \e[1mchocomp\e[0m -h | [-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m"
 help="Compiler from chordpro/chordii files to pdf. Give a \".cho\"-file as argument (\e[4mchofile\e[0m).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-m\e[0m	Forces using configuration file for medium lyrics.
 	\e[1m-l\e[0m	Forces using configuration file for longer lyrics.
 	\e[1m-t \e[4mN\e[0m\e[0m	Transpose by \e[4mN\e[0m semi-tones (-11 to 11), mirrored in resulting name.
 "
@@ -16,9 +19,13 @@ die() {
   exit 1
 }
 
-#TODO: Add medium configuration file (headspace: 52, margintop: 82, empty: 1.3)
+tryConfig() {
+  [[ -f "$1" ]] || die "Configuration file for longer lyrics not found: $PWD/$1"
+  chordpro --config="$1" -x $transpose -o "$2" "$3" || die "Failed to print pdf from $3."
+}
 
 getPageNumber() {
+  open -g "$1" && sleep 1 # wait until metadata is updated
   mdls -name kMDItemNumberOfPages "$1" | cut -d " " -f 3
 }
 
@@ -46,31 +53,40 @@ compileToPdf() {
 
   # try with chordpro
   if [[ -n $(which chordpro) ]]; then
+    # if user desires the use of medium config
+    if [[ $long -eq 1 ]]; then
+      echo "Using configuation file for medium lyrics."
+      tryConfig "$chordmedium" "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
     # if user desires the use of long config
-    if [[ -n $long ]]; then
-      [[ ! -f "$chordlong" ]] && die "Configuation file for longer lyrics not found: $chordlong"
+    elif [[ $long -eq 2 ]]; then
       echo "Using configuation file for longer lyrics."
-      chordpro --config="$chordlong" -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
+      tryConfig "$chordlong" "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
     # else detect it self
-    else
+    else # $long -eq 0
       chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
-      if [[ -f "$chordlong" && -n $(which mdls) ]]; then
-        open -g "$pdfFile" && sleep 1 # wait until metadata is updated
+      if [[ -n $(which mdls) ]]; then
         pagenumber=$(getPageNumber "$pdfFile")
-        if [[ -n $pagenumber && $pagenumber -ge 2 ]]; then
-          echo "Well, that lyrics seems to be a little longer. Let try the json for long lyrics."
-          chordpro --config="$chordlong" -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
-          open -g "$pdfFile" && sleep 1 # wait until metadata is updated
+        [[ -z $pagenumber ]] && die "Failed to get page number (1) for: $pdfFile"
+        if [[ $pagenumber -ge 2 ]]; then
+          echo "Well, that lyrics seems to be a little longer. Let's try the json for medium lyrics."
+          tryConfig "$chordmedium" "$pdfFile" "$choFile"
           npagenumber=$(getPageNumber "$pdfFile")
-          if [[ -n $npagenumber && $npagenumber -ge $pagenumber ]]; then
-            printf "That didn't work. Lyrics seems too long"
-            [[ $pagenumber -eq 2 ]] && printf " for one page." || printf " to fit in less pages."
-            echo " Reverting to default settings."
-            chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
+          [[ -z $npagenumber ]] && die "Failed to get page number (2) for: $pdfFile"
+          if [[ $npagenumber -ge $pagenumber ]]; then
+            echo "That didn't work. Let's try the json for long lyrics."
+            tryConfig "$chordlong" "$pdfFile" "$choFile"
+            npagenumber=$(getPageNumber "$pdfFile")
+            [[ -z $npagenumber ]] && die "Failed to get page number (3) for: $pdfFile"
+            if [[ $npagenumber -ge $pagenumber ]]; then
+              printf "That didn't work. Lyrics seems too long"
+              [[ $pagenumber -eq 2 ]] && printf " for one page." || printf " to fit in less pages."
+              echo " Reverting to default settings."
+              chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
+            fi
           fi
         fi
       else
-        echo "Configuration file for longer lyrics not found."
+        echo "Failed to read metadata from pdf: mdls not found!"
       fi
     fi
   # else try to use chordii
@@ -90,8 +106,11 @@ while [[ -n "$1" ]]; do
     printf "$help"
     exit 0
     ;;
+  -m)
+    long=1
+    ;;
   -l)
-    long=true
+    long=2
     ;;
   -t)
     case $2 in
@@ -113,15 +132,19 @@ while [[ -n "$1" ]]; do
     if [[ ! -f "$1" ]]; then
       echo "File not found: $1"
       echo "Please give an existing and readable chordii file to compile."
-      exit 1
+      continue;
     elif [[ ! -r "$1" ]]; then
       echo "File not readable: $1"
       echo "Please give an existing and readable chordii file to compile."
-      exit 1
+      continue;
     fi
     if [[ "$1" != *.cho ]]; then
-      echo "Wrong file type! Please give a chordpro/chordii file to compile."
-      exit 1
+      printf "%s: Wrong file type! Please give a chordpro/chordii file to compile.\n" "$1"
+      continue;
+    fi
+    [[ -n $2 ]] && multipleFiles=true
+    if [[ $multipleFiles ]]; then
+      echo "Compiling: $1"
     fi
     compileToPdf "${1%.*}"
     ;;
