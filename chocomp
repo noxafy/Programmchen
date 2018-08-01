@@ -4,7 +4,7 @@ chordlong=chordpro_long.json
 chordmedium=chordpro_medium.json
 transpose=0
 long=0
-multipleFiles=
+files=0
 usage="Usage: \e[1mchocomp\e[0m -h | [-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m"
 help="Compiler from chordpro/chordii files to pdf. Give a \".cho\"-file as argument (\e[4mchofile\e[0m).
 $usage
@@ -19,7 +19,7 @@ die() {
   exit 1
 }
 
-tryConfig() {
+useConfig() {
   [[ -f "$1" ]] || die "Configuration file for longer lyrics not found: $PWD/$1"
   chordpro --config="$1" -x $transpose -o "$2" "$3" || die "Failed to print pdf from $3."
 }
@@ -56,11 +56,11 @@ compileToPdf() {
     # if user desires the use of medium config
     if [[ $long -eq 1 ]]; then
       echo "Using configuation file for medium lyrics."
-      tryConfig "$chordmedium" "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
+      useConfig "$chordmedium" "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
     # if user desires the use of long config
     elif [[ $long -eq 2 ]]; then
       echo "Using configuation file for longer lyrics."
-      tryConfig "$chordlong" "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
+      useConfig "$chordlong" "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
     # else detect it self
     else # $long -eq 0
       chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
@@ -68,21 +68,24 @@ compileToPdf() {
         pagenumber=$(getPageNumber "$pdfFile")
         [[ -z $pagenumber ]] && die "Failed to get page number (1) for: $pdfFile"
         if [[ $pagenumber -ge 2 ]]; then
-          echo "Well, that lyrics seems to be a little longer. Let's try the json for medium lyrics."
-          tryConfig "$chordmedium" "$pdfFile" "$choFile"
-          npagenumber=$(getPageNumber "$pdfFile")
-          [[ -z $npagenumber ]] && die "Failed to get page number (2) for: $pdfFile"
-          if [[ $npagenumber -ge $pagenumber ]]; then
-            echo "That didn't work. Let's try the json for long lyrics."
-            tryConfig "$chordlong" "$pdfFile" "$choFile"
-            npagenumber=$(getPageNumber "$pdfFile")
-            [[ -z $npagenumber ]] && die "Failed to get page number (3) for: $pdfFile"
-            if [[ $npagenumber -ge $pagenumber ]]; then
-              printf "That didn't work. Lyrics seems too long"
-              [[ $pagenumber -eq 2 ]] && printf " for one page." || printf " to fit in less pages."
-              echo " Reverting to default settings."
-              chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
+          echo "Well, that lyrics seems to be a little longer. Let's try the json for long lyrics."
+          useConfig "$chordlong" "$pdfFile" "$choFile"
+          lpagenumber=$(getPageNumber "$pdfFile")
+          [[ -z $lpagenumber ]] && die "Failed to get page number (2) for: $pdfFile"
+          if [[ $lpagenumber -lt $pagenumber ]]; then
+            echo "Okay, there is an improvement. But let's see if the json for medium lyrics fits even better."
+            useConfig "$chordmedium" "$pdfFile" "$choFile"
+            mpagenumber=$(getPageNumber "$pdfFile")
+            [[ -z $mpagenumber ]] && die "Failed to get page number (3) for: $pdfFile"
+            if [[ $mpagenumber -gt $lpagenumber ]]; then
+              echo "That didn't work. Lyrics seem to fit better in long lyrics settings."
+              useConfig "$chordlong" "$pdfFile" "$choFile"
+            else
+              echo "Great!"
             fi
+          else
+            echo "That didn't work. Lyrics seem to fit good in default settings."
+            chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
           fi
         fi
       else
@@ -132,22 +135,25 @@ while [[ -n "$1" ]]; do
     if [[ ! -f "$1" ]]; then
       echo "File not found: $1"
       echo "Please give an existing and readable chordii file to compile."
-      continue;
+      shift
+      continue
     elif [[ ! -r "$1" ]]; then
       echo "File not readable: $1"
       echo "Please give an existing and readable chordii file to compile."
-      continue;
+      shift
+      continue
     fi
     if [[ "$1" != *.cho ]]; then
       printf "%s: Wrong file type! Please give a chordpro/chordii file to compile.\n" "$1"
-      continue;
+      shift
+      continue
     fi
-    [[ -n $2 ]] && multipleFiles=true
-    if [[ $multipleFiles ]]; then
-      echo "Compiling: $1"
-    fi
+    [[ $files -gt 0 || -n $2 ]] && echo "Compiling: $1"
     compileToPdf "${1%.*}"
+    ((files++))
     ;;
   esac
   shift
 done
+
+[[ $files -gt 1 ]] && echo "$files files done."
