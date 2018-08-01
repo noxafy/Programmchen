@@ -5,10 +5,12 @@ chordmedium=chordpro_medium.json
 transpose=0
 long=0
 files=0
-usage="Usage: \e[1mchocomp\e[0m -h | [-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m"
+multipleFiles=
+usage="Usage: \e[1mchocomp\e[0m -h | [-s|-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m"
 help="Compiler from chordpro/chordii files to pdf. Give a \".cho\"-file as argument (\e[4mchofile\e[0m).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
+	\e[1m-s\e[0m	Forces using configuration file for short lyrics (default).
 	\e[1m-m\e[0m	Forces using configuration file for medium lyrics.
 	\e[1m-l\e[0m	Forces using configuration file for longer lyrics.
 	\e[1m-t \e[4mN\e[0m\e[0m	Transpose by \e[4mN\e[0m semi-tones (-11 to 11), mirrored in resulting name.
@@ -53,8 +55,12 @@ compileToPdf() {
 
   # try with chordpro
   if [[ -n $(which chordpro) ]]; then
+    # if user desires the use of short config
+    if [[ $long -eq -1 ]]; then
+      echo "Using configuation file for short lyrics."
+      chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
     # if user desires the use of medium config
-    if [[ $long -eq 1 ]]; then
+    elif [[ $long -eq 1 ]]; then
       echo "Using configuation file for medium lyrics."
       useConfig "$chordmedium" "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
     # if user desires the use of long config
@@ -100,7 +106,11 @@ compileToPdf() {
     rm "$filename".ps || die "Could not remove ${filename}.ps"
   fi
 
-  open "$pdfFile" || die "Could not open \"$pdfFile\""
+  if [[ $multipleFiles ]]; then
+    open -gF "$pdfFile" || die "Could not open \"$pdfFile\""
+  else
+    open "$pdfFile" || die "Could not open \"$pdfFile\""
+  fi
 }
 
 while [[ -n "$1" ]]; do
@@ -108,6 +118,9 @@ while [[ -n "$1" ]]; do
   -h)
     printf "$help"
     exit 0
+    ;;
+  -s)
+    long=-1
     ;;
   -m)
     long=1
@@ -150,7 +163,10 @@ while [[ -n "$1" ]]; do
       shift
       continue
     fi
-    [[ $files -gt 0 || -n $2 ]] && echo "Compiling: $1"
+    if [[ $files -gt 0 || -n $2 ]]; then
+      multipleFiles=true
+      echo "Compiling: $1"
+    fi
     compileToPdf "${1%.*}"
     ((files++))
     ;;
