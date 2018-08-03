@@ -9,7 +9,7 @@ $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[4mlinks\e[0m	A link where the html should redirect or multiple links.
 	\e[1m-o\e[0m	Give an output file where to write the html content.
-	\e[1m--wa\e[0m	On smartphones, a link will open Whatapp for sharing it.
+	\e[1m--wa\e[0m	On mobiles, the link will open What's App for sharing.
 "
 
 case $1 in
