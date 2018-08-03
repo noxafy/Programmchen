@@ -6,14 +6,15 @@ transpose=0
 long=0
 files=0
 multipleFiles=
-usage="Usage: \e[1mchocomp\e[0m -h | [-s|-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m"
+usage="Usage: \e[1mchocomp\e[0m -h | [-s|-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m \e[4m...\e[0m"
 help="Compiler from chordpro/chordii files to pdf. Give a \".cho\"-file as argument (\e[4mchofile\e[0m).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
-	\e[1m-s\e[0m	Forces using configuration file for short lyrics (default).
+	\e[1m-s\e[0m	Forces using configuration file for short lyrics (= default settings).
 	\e[1m-m\e[0m	Forces using configuration file for medium lyrics.
 	\e[1m-l\e[0m	Forces using configuration file for longer lyrics.
 	\e[1m-t \e[4mN\e[0m\e[0m	Transpose by \e[4mN\e[0m semi-tones (-11 to 11), mirrored in resulting name.
+If none of \e[1m-s\e[0m, \e[1m-m\e[0m or \e[1m-l\e[0m given, it tries which is the best fitting.
 "
 
 die() {
