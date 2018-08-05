@@ -18,21 +18,31 @@ Warning: Leave in place!
 skipauto=
 def_ssid=
 def_password=
+wlan_device=en0
 
 #resources
+### use or execute
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
 trading_script="$IT/Programmchen/212listener.js" # listener for Trading212.app
 dashboard="$thisdir/Dashboard" # Dashboard widgets
-### ~/Library
+# TODO
+# adobe installer
+# power point draft uniwue (in $D)
+
+### place at ~/Library
 keylayouts="Keyboard Layouts" # keyboard layouts
 dictionaries="Dictionaries"
 # TODO
-# adobe installer
 # thunderbird folder
 # intellij folder
+
+### place at /Applications
+# TODO
 # minecraft
+
+### Place at ~
+# TODO
 # IdeaProjects Documents Pictures Music
-# power point draft uniwue (in $D)
 
 brews=(agedu
 aspell
@@ -46,13 +56,16 @@ brightness
 cloc
 darksky-weather
 diff-pdf
+#exiftool
 #expect
 fd
 #ffmpeg # required by audacity?
 fortune
+#freeling
 #geoipupdate
 git
 go
+#gobject-introspection
 googler
 hexedit
 howdoi
@@ -60,16 +73,18 @@ lorem
 #mas #already installed
 maven
 maven-completion
-mplayer
+#mplayer
 #mujs
-mysql
+#mysql
 nativefier
 #pass
 pdfgrep
 pick
+#plan9port
 pup
 recode
 shpotify
+#sic
 testdisk
 wget
 wiki
@@ -84,13 +99,14 @@ android-studio
 anki
 axure-rp
 betterzipql
+#blender
 calibre
 disablemonitor
 #dropbox #already installed
 firefox
 flux
 freefilesync
-freemind
+#freemind
 geogebra
 go2shell
 google-chrome
@@ -99,7 +115,7 @@ intellij-idea
 #iterm2
 java
 #jwzlyrics
-mactex
+#mactex
 mpv
 notational-velocity
 #osxfuse
@@ -108,7 +124,7 @@ qlstephen
 soundflower
 spotify
 telegram
-texstudio
+#texstudio
 textmate
 the-unarchiver
 thunderbird
@@ -214,14 +230,14 @@ installWifi() {
       ssid=
     fi
   done
-  if [[ -n $(networksetup -listpreferredwirelessnetworks en0 | grep -- "^[[:space:]]*${ssid}\$") ]]; then
+  if [[ -n $(networksetup -listpreferredwirelessnetworks "$wlan_device" | grep -- "^[[:space:]]*${ssid}\$") ]]; then
     printf "%s already installed!\n" "$ssid"
     return;
   fi
   while [[ -z "$passwd" ]]; do
     read -p "Please enter the password for $ssid: " passwd
   done
-  networksetup -addpreferredwirelessnetworkatindex en0 "$ssid" 1000 WPA2 "$passwd"
+  networksetup -addpreferredwirelessnetworkatindex "$wlan_device" "$ssid" 1000 WPA2 "$passwd"
 }
 
 waitUser() {
@@ -257,7 +273,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   c -s .bash_profile
   # install the other shit
   c .m2/settings.xml .tm_properties .ssh .password-store .gnupg
-  
+
   #install terminal layouts
   open "$thisdir/*.terminal"
 
@@ -269,7 +285,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   c "$dictionaries/"
   popd &> /dev/null
 
-  #defaults write com.apple.Siri StatusMenuVisible 0 #user siri in status bar as reminder of deactivating it
+  #defaults write com.apple.Siri StatusMenuVisible 0 #use siri in status bar as reminder of deactivating it
 
   #print all defaults, major unreadable values filtered out
   #defaults read | grep -v "AppleIDAgentMetaInfo" | grep -v "AppleIDAccount" | grep -v 'FZPersonPictureData' | grep -v 'pref:200:Machine Preferences' | grep -v 'FZPersonSmallPictureData' | grep -v 'FZPersonPictureData' | grep -v "iTunes Location" | grep -v 'ProcessViewerColumns' | grep -v '\\Ud83c' | grep -v 'FFNamingPresets' | grep -v 'FFMediaImportOrganizerFilmListView' | grep -v 'timeFormatLK' | grep -v 'FFShareDestinationsKey' | grep -v 'folderActions' | grep -v 'LibraryBookmark' | grep -v 'IPXDefaultLibraryURLBookmark' | grep -v 'IPXDefaultWorkspace' | grep -v 'Data =' | grep -v 'WebKitUserStyleSheetLocationPreferenceKey' | grep -v 'TTInspectorProcesses' | grep -v 'TextBoldColor' | grep -v 'BackgroundColor' | grep -v 'CursorColor' | grep -v 'SelectionColor' | grep -v 'TextColor' | grep -v 'book =' | grep -v 'DVTRecentColors' | grep -v CacheBag | grep -v 'file-bookmark' | grep -v 'TSWPInvisiblesColor' | grep -v 'FFMediaImportOrganizerFilmListView' | grep -v 'pref:130:Preferences' | grep -v 'eqps:129:EQPreset' | grep -v 'services =' | grep -v 'GarageBand' | grep -v 'weather =' | grep -v 'UserCrossfade' | grep -v 'BookmarkData' | grep -v 'kBookmarkDataKey' | grep -v 'FFShareDestinationsKey' | grep -v 'KeyBingingTable' | grep -v 'MacAppStoreReceiptData_11.0' | grep -v 'LoginItemsColumn2' | grep -v ' req = ' | grep -v 'LogicBinaryPreferences' | grep -v 'CachedBag'
@@ -400,7 +416,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   defaults write com.apple.desktopservices DSDontWriteUSBStores 1
 
   defaults write -g AppleShowAllExtensions 1
-  defaults write -g KeyRepeat 6
+  defaults write -g KeyRepeat 2
   defaults write -g InitialKeyRepeat 15
 
   #let user choose layout and restart terminal & install script
@@ -408,7 +424,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   printf "\e[4mHint\e[0m: Just set your favourite terminal layout to default.\n"
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
   printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. "
-  waitUser
+  waitUser "Press enter to restart ..."
   echo "sudo shutdown -r now ..."
   sudo shutdown -r now
   exit 0
@@ -418,16 +434,20 @@ fi
 
 # install internet
 ping -t 3 -c 1 8.8.8.8 >& /dev/null
-if [[ $? -ne 0 ]]; then #first time. no internet installed
-  tell "Internet connection installation"
-  networksetup -setairportpower en0 on
-  #wlan login
-  installWifi "$def_ssid" "def_password" #pass not installed yet, so paste password in prefs section (at top) before running
+if [[ $? -ne 0 ]]; then # no internet connection
+  if [[ $(networksetup -listpreferredwirelessnetworks "$wlan_device" | wc -l) -le 1 ]]; then #first time; no internet installed
+    tell "Internet connection installation"
+    networksetup -setairportpower "$wlan_device" on
+    #wlan login
+    installWifi "$def_ssid" "$def_password" #pass not installed yet, so paste password in prefs section (at top) before running
+  else
+    echo "No internet connection detected."
+  fi
   #AEG
   printf "Turning Wi-Fi off ..."
-  networksetup -setairportpower en0 off
+  networksetup -setairportpower "$wlan_device" off
   echo " and on ..."
-  networksetup -setairportpower en0 on
+  networksetup -setairportpower "$wlan_device" on
   sleep 3
   ping -t 3 -c 1 8.8.8.8 >& /dev/null
   if [[ $? -ne 0 ]]; then
@@ -443,7 +463,13 @@ else
   echo "Skipped internet installation."
 fi
 
-# sudo cpan chordpro
+# install chordpro
+if [[ -z $(which chordpro) ]]; then
+  tell "Chordpro installation"
+  sudo cpan chordpro
+else
+  echo "Skipped chordpro installation."
+fi
 
 # install dashboard apps
 if [[ -d "$dashboard" ]]; then
@@ -459,6 +485,19 @@ if [[ -d "$dashboard" ]]; then
 else
   echo "Skipped Dashboard apps (no \"dashboard\" directory available at $thisdir)"
 fi
+
+if [[ -z $(which pass) ]]; then
+  tell "pass installation"
+  brew install pass || die "brew install pass failed."
+else
+  echo "Skipped pass installation."
+fi
+
+#TODO
+# install other wifis (requires "pass")
+# pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
+# - install "RZUWsec"
+# provide optional network change (and connection test afterwards)
 
 # install homebrew
 if [[ -z $(which brew) ]]; then
@@ -476,18 +515,12 @@ if [[ ! -e /Applications/Dropbox.app/ ]]; then
   tell "Dropbox installation"
   brew cask install dropbox || die "brew cask install dropbox failed!"
   #log in dropbox
-  open /Applications/Dropbox.app/
+  open -g /Applications/Dropbox.app/
+  pc dropbox
   waitUser "Please log in to dropbox!" #deps in Programmchen now available
 else
   echo "Skipped dropbox installation."
 fi
-
-#TODO
-# install other wifis
-# pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
-# - install "RZUWsec"
-# provide optional network change (and connection test afterwards)
-
 
 # TODO
 # install adobe, contains key
@@ -509,39 +542,46 @@ else
   echo "Skipped mas installation."
 fi
 
-if [[ -z $(which pass) ]]; then
-  tell "pass installation"
-  brew install pass || die "brew install pass failed."
-else
-  echo "Skipped pass installation."
+if [[ -z $(mas account) ]]; then
+  open /Applications/App\ Store.app/
+  waitUser "Please sign in to App Store"
 fi
-
-# TODO
-#IntelliJ config folder
-#install intelliJ
 
 echo
 ########################################################################################################
 ##### Full automatic part (place as much as possible here)
 ########################################################################################################
 # In this part, there is *no* need for user intervention at all
+# no use of waitUser function, die only in severe error cases
 tell "Full automatic part"
 echo
 
 if [[ -z $skipauto ]]; then
-# ensure required dropbox content synced
-while [[ ! -e "$trading_icon" ]]; do
-  printf "Please wait until required dropbox data is syncing "
-  sleep 1
-  printf "."
-  sleep 1
-  printf "."
-  sleep 1
-  printf "."
-  sleep 1
-  printf "\r\e[K"
+
+#app store
+tell "App Store apps installation"
+failedapps=""
+masls=$(mas list | awk '{print $1}')
+for app in ${masinstalls[@]}; do
+  if [[ -z $(echo "$masls" | grep $app) ]]; then
+    echo "Installing $cask ..."
+    mas install $app
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $app $(mas info $app | sed -n 1p)"
+      failedapps+="$app "
+    fi
+  else
+    echo "Skipped already installed app: $app"
+  fi
 done
-echo "All required dropbox data available."
+if [[ -n "$failedapps" ]]; then
+  echo "Retry following app installs:"
+  for app in $failedapps; do
+    echo "mas install $app"
+  done
+else
+  echo "All apps installed with no obvious problems."
+fi
 echo
 
 tell "brew cask installs"
@@ -598,43 +638,31 @@ else
 fi
 echo
 
-#app store
-if [[ -z $(mas account) ]]; then
-  open /Applications/App\ Store.app/
-  waitUser "Please sign in to App Store"
-fi
-tell "App Store apps installation"
-failedapps=""
-masls=$(mas list | awk '{print $1}')
-for app in ${masinstalls[@]}; do
-  if [[ -z $(echo "$masls" | grep $app) ]]; then
-    echo "Installing $cask ..."
-    mas install $app
-    if [[ $? -ne 0 ]]; then
-      echo "Failed installing $app $(mas info $app | sed -n 1p)"
-      failedapps+="$app "
-    fi
-  else
-    echo "Skipped already installed app: $app"
-  fi
-done
-if [[ -n "$failedapps" ]]; then
-  echo "Retry following app installs:"
-  for app in $failedapps; do
-    echo "mas install $app"
-  done
-else
-  echo "All apps installed with no obvious problems."
-fi
-echo
-
 # TODO
 # Thunderbird folder
 # IdeaProjects
+# IntelliJ config folder
 # other files (documents, pictures, music)
 # place minecraft in /Applications
-# copy power point draft uniwue
 # install fonts (from Word as well?)
+
+# ensure required dropbox content synced
+while [[ ! -e "$trading_icon" ]]; do # TODO: uniwue, trading_script
+  printf "Please wait until required dropbox data is syncing "
+  sleep 1
+  printf "."
+  sleep 1
+  printf "."
+  sleep 1
+  printf "."
+  sleep 1
+  printf "\r\e[K"
+done
+echo "All required dropbox data available."
+echo
+
+#TODO:
+# copy power point draft uniwue
 
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
@@ -651,7 +679,7 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
   tell "Trading212.app installation"
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
   nativefier -i "$trading_icon" --inject "$trading_script" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
-  
+
   mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed."
   rm -rf Trading212-darwin-x64/
 
@@ -734,7 +762,7 @@ fi
 # - wine installs (jardinains, siedler5, finale)
 # - Go2Shell: cd %PATH%; printf "\e[F\e[K"
 # - install textmate bundles
-# - check all prefs
+# - check all prefs: open  /Applications/System\ Preferences.app/
 # - check os shortcuts
 # - check dictionaries
   # German - English.dictionary
