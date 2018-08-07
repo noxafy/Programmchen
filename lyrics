@@ -525,15 +525,15 @@ while [[ -n $1 ]]; do
     printf "%s" "$help"
     exit 0
     ;;
-  -v)
+  -v|--verbose)
     VERBOSE=true
     shift
     ;;
-  -q)
+  -q|--quiet)
     QUIET=true;
     shift
     ;;
-  --ask)
+  -a|--ask)
     AUTOSELECT=""
     shift
     ;;
