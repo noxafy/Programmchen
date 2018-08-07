@@ -29,6 +29,8 @@ Also, you can give an url for extracting directly:
 
 Dependency to \"recode\". Parameter -v produces debugging output, --ask disables autoselection, -q suppresses most messages.
 "
+#TODO: improve help message
+
 # prevent sed error on bad encoded characters by reading as ascii (test for failing (greek text): https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas)
 LC_CTYPE=C
 LANG=C
