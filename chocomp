@@ -13,8 +13,8 @@ $usage
 	\e[1m-s\e[0m	Forces using configuration file for short lyrics (= default settings).
 	\e[1m-m\e[0m	Forces using configuration file for medium lyrics.
 	\e[1m-l\e[0m	Forces using configuration file for longer lyrics.
-	\e[1m-t \e[4mN\e[0m\e[0m	Transpose by \e[4mN\e[0m semi-tones (-11 to 11), mirrored in resulting name.
-If none of \e[1m-s\e[0m, \e[1m-m\e[0m or \e[1m-l\e[0m given, it tries which is the best fitting.
+	\e[1m-t\e[0m \e[4mN\e[0m	Transpose by \e[4mN\e[0m semi-tones (-11 to (+)11), mirrored in resulting name.
+If none of \e[1m-s\e[0m, \e[1m-m\e[0m or \e[1m-l\e[0m given, it tries automatically which is the best fitting.
 "
 
 die() {
@@ -41,7 +41,7 @@ compileToPdf() {
   if [[ $transpose -eq 0 ]]; then
     pdfFile=pdf/"$filename".pdf
   else
-    if [[ $transpose -gt 0 ]]; then
+    if [[ $transpose -gt 0 && $transpose != +* ]]; then
       strtranspose="+$transpose"
     else
       strtranspose="$transpose"
@@ -131,7 +131,7 @@ while [[ -n "$1" ]]; do
     ;;
   -t)
     case $2 in
-      [0-9]|[0-9][0-9]|-[0-9]|-[0-9][0-9])
+      [0-9]|[0-9][0-9]|+[0-9]|+[0-9][0-9]|-[0-9]|-[0-9][0-9])
         transpose=$2
         ;;
       *)
