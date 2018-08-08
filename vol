@@ -1,0 +1,52 @@
+#!/bin/bash
+
+volume=
+usage="Usage: \e[1mvol\e[0m -h | [\e[4mvolume\e[0m]"
+help="Get or set the system output volume.
+$usage
+        \e[1m-h\e[0m	Displays this help message and exists.
+        \e[4mvolume\e[0m	The value the output volume to set to (0-100).
+If no argument given, it prints the current volume.
+"
+
+getNumber() {
+  echo "$*" | grep '^\(\d\+\(\.\d\+\)\?\|\.\d\+\)$'
+}
+
+case $1 in
+-h)
+  printf "$help"
+  exit 0
+  ;;
+-m)
+  if [[ $1 == "true" || $1 == "false" ]]; then
+    osascript -e "Set volume output muted $1"
+  else
+    osascript -e 'output muted of (get volume settings)'
+  fi
+  exit 0
+  ;;
+-*)
+  printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+  exit 1
+  ;;
+*)
+  volume=$(getNumber "$*")
+  if [[ -z $volume && -n $1 ]]; then
+    printf "Bad volume value: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+  fi
+  ;;
+esac
+
+if [[ -n $volume ]]; then
+  osascript -e "Set volume output volume $volume"
+else
+  volume=$(osascript -e 'output volume of (get volume settings)')
+  muted=$(osascript -e 'output muted of (get volume settings)')
+  if ($muted); then
+    echo "$volume (muted)"
+  else
+    echo "$volume"
+  fi
+fi
