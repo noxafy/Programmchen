@@ -169,7 +169,7 @@ fi
 
 content="{title:$(toAscii $title)}
 {composer:$(toAscii $artist)}
-{copyright: © 2018 $(git config --global user.name)}
+{copyright: © $(date +%Y) $(git config --global user.name)}
 {meta: arr Arr.: $(git config --global user.name)}
 #{tempo: bpm}
 
