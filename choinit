@@ -168,27 +168,32 @@ if [[ -e "$filename" && ! -n $forceOverwriting ]]; then
 fi
 
 content="{title:$(toAscii $title)}
-{st:$(toAscii $artist)}
+{composer:$(toAscii $artist)}
+{copyright: © 2018 $(git config --global user.name)}
+{meta: arr Arr.: $(git config --global user.name)}
+#{tempo: bpm}
 
 $lyrics"
 
 echo "$content" > "$filename"
 echo "Wrote ${#content} bytes to $PWD/$filename"
 
-mate -l 4 -- "$filename"
+mate -l 7 -- "$filename"
 
 [[ ! -t 0 ]] && exit 0
 [[ -z $(which chocomp) ]] && exit 0 #die "Chodrii compiler (chocomp) not found!"
 
 read -p "Compile now? (y/n) [y]: " ans
+firsttime=true
 while true; do
   case $ans in
   n)
-    printf "chocomp \"%s\"" "$filename" | pbcopy 2>&1 > /dev/null && echo "Copied to cilpboard."
+    $firsttime && printf "chocomp \"%s\"" "$filename" | pbcopy 2>&1 > /dev/null && echo "Copied to cilpboard."
     exit 0
     ;;
   *)
     chocomp "$filename"
   esac
   read -p "Compile again? (y/n) [y]: " ans
+  firsttime=false
 done
