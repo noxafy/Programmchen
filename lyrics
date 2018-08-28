@@ -90,6 +90,12 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
   testUrl=$($CURL -H "$header" -SI "$1" 2>&1)
   state=$(echo "$testUrl" | sed -n 1p)
   if [[ $state != *200* ]]; then
+    if [[ $state == *301* ]]; then
+      [[ -z "$QUIET" ]] && echo "$state" >&2
+      link=$(echo "$testUrl"  | grep 'Location: ' | grep -oi 'https\?://\S*')
+      fetchResult "$link" "$2"
+      return;
+    fi
     printf "Error in fetching site: $state" >&2
     [[ ! -t 0 ]] && die
 
@@ -106,9 +112,9 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
       
       Answer (${#res}):
       $res" | less
+      return
       ;;
     esac
-    return
   fi
   if [[ -n $VERBOSE ]]; then
     echo "******Answer-Header (START)******" >&2
