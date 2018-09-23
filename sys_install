@@ -24,9 +24,7 @@ wlan_device=en0
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
 trading_script="$IT/Programmchen/212listener.js" # listener for Trading212.app
 dashboard="$thisdir/Dashboard" # Dashboard widgets
-# TODO
-# power point draft uniwue (in $D)
-# adobe installer
+pptxDraftFolder="$D/Org/Studium/"
 
 brews=(agedu
 aspell
@@ -269,7 +267,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   # copy dictionaries
   c "Dictionaries/"
   popd &> /dev/null
-  
+
   # TODO
   # install fonts (from Word as well?)
 
@@ -644,7 +642,7 @@ fi
 echo
 
 # ensure required dropbox content synced
-while [[ ! -e "$trading_icon" ]]; do # TODO: uniwue, trading_script
+while [[ ! ( -e "$trading_icon" && -e "$pptxDraftFolder" && -e "$trading_script" ) ]]; do
   printf "Please wait until required dropbox data is syncing "
   sleep 1
   printf "."
@@ -657,9 +655,6 @@ while [[ ! -e "$trading_icon" ]]; do # TODO: uniwue, trading_script
 done
 echo "All required dropbox data available."
 echo
-
-#TODO:
-# copy power point draft uniwue
 
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
@@ -759,7 +754,8 @@ fi
 # - wine installs (jardinains, siedler5, finale)
 # - Go2Shell: cd %PATH%; printf "\e[F\e[K"
 # - install textmate bundles
-# - check all prefs: open  /Applications/System\ Preferences.app/
+# - copy power point drafts uniwue from $pptxDraftFolder # target was "$HOME/Library/Group Containers/UBF8T346G9.Office/User Content.localized/Templates.localized"
+# - check all prefs: open /Applications/System\ Preferences.app/
 # - check os shortcuts
 # - check dictionaries
   # German - English.dictionary
@@ -775,5 +771,8 @@ fi
   # Spanish - English.dictionary
   # Italian - English.dictionary
   # Russian - English.dictionary
+
+# TODO
+# adobe installer
 
 popd &> /dev/null
