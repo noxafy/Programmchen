@@ -35,7 +35,7 @@ case $1 in
       printf "Please give a target folder, not a file, with argument -t. See -h for more help.\n"
       exit 1
     fi
-    target=$(cd $(dirname "$2"); pwd)/$(basename "$2")
+    target=$(cd $(dirname "$2"); pwd)/$(basename "$2") || die "Bad target path: $2"
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -68,13 +68,15 @@ ctt .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 ctt IdeaProjects Documents Pictures Music Dropbox
 
 cd "Library" || die "cd to $HOME/Library failed"
-ctt Thunderbird # - Thunderbird folder
+ctt Thunderbird/Profiles # - Thunderbird folder
 ctt "Keyboard Layouts" # - keyboard layout
-ctt IntelliJIdea* # IntelliJ config folder
 ctt "Dictionaries" # Databases for Dictionary.app
 
+cd "Library/Application Support" || die "cd to $HOME/Library/Application\ Support failed"
+ctt IntelliJIdea* # IntelliJ config folder
+
 # - minecraft launcher
-cd /Applications
+cd /Applications || die "cd to /Applications failed"
 ctt Minecraft
 
 popd &> /dev/null
