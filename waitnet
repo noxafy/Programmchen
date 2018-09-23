@@ -145,7 +145,7 @@ while true; do
     sleep 1
   else
     [[ $output -ge 3 ]] && echo "waitflag: $waitflag"
-    if [[ $output -ge 2 && $waitflag -eq 1 ]]; then
+    if [[ $output -ge 1 && $waitflag -eq 1 ]]; then
       ssid_estabilshed=$(echo "${ssid}" | xargs)
       log "Connected to $ssid_estabilshed"
     fi
