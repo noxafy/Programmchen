@@ -20,29 +20,13 @@ def_ssid=
 def_password=
 wlan_device=en0
 
-#resources
-### use or execute
+#resource paths
 trading_icon="$IT/trading212.icns" # icon for Trading212.app
 trading_script="$IT/Programmchen/212listener.js" # listener for Trading212.app
 dashboard="$thisdir/Dashboard" # Dashboard widgets
 # TODO
-# adobe installer
 # power point draft uniwue (in $D)
-
-### place at ~/Library
-keylayouts="Keyboard Layouts" # keyboard layouts
-dictionaries="Dictionaries"
-# TODO
-# thunderbird folder
-# intellij folder
-
-### place at /Applications
-# TODO
-# minecraft
-
-### Place at ~
-# TODO
-# IdeaProjects Documents Pictures Music
+# adobe installer
 
 brews=(agedu
 aspell
@@ -59,7 +43,7 @@ diff-pdf
 #exiftool
 #expect
 fd
-#ffmpeg # required by audacity?
+#ffmpeg #required by audacity?
 fortune
 #freeling
 #geoipupdate
@@ -69,6 +53,7 @@ go
 googler
 hexedit
 howdoi
+lf
 lorem
 #mas #already installed
 maven
@@ -77,7 +62,7 @@ maven-completion
 #mujs
 #mysql
 nativefier
-#pass
+#pass #already installed
 pdfgrep
 pick
 #plan9port
@@ -97,8 +82,7 @@ brewcasks=(android-file-transfer
 android-sdk
 android-studio
 anki
-axure-rp
-betterzipql
+#axure-rp
 #blender
 calibre
 disablemonitor
@@ -118,6 +102,7 @@ java
 #mactex
 mpv
 notational-velocity
+#openoffice
 #osxfuse
 qlimagesize
 qlstephen
@@ -175,7 +160,7 @@ case $1 in
 esac
 
 ########################################################################################################
-##### Function declarations
+##### Helper functions
 ########################################################################################################
 
 die() {
@@ -192,6 +177,7 @@ c() {
   fi
   while [[ -n $1 ]]; do
     origin="$thisdir/$1"
+    shift
     if [[ ! -e "$origin" ]]; then
       echo "WARNING: Requested file or dir not available: $origin"
       continue;
@@ -200,8 +186,8 @@ c() {
     if [[ -d "$target" && "$origin" == */ ]]; then
       printf "Copying contents of $origin to $target"
     else
-      rm -f "$target" &> /dev/null
-      printf "Copying whole folder $origin to $target"
+      #rm -f "$target" &> /dev/null
+      printf "Copying folder $origin to $target"
     fi
     printf " ($(du -sh "$origin" | awk '{print $1}')) ...\n"
     if [[ -n $sudo ]]; then
@@ -209,7 +195,6 @@ c() {
     else
       cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
     fi
-    shift
   done
 }
 
@@ -279,11 +264,14 @@ if [[ -z "$IT" ]]; then # $IT is required by script
 
   #keyboard layout
   pushd "$HOME/Library" &> /dev/null || die "cd to $HOME/Library failed!"
-  c "$keylayouts/" # - keyboard layout
+  c "Keyboard Layouts/" # - keyboard layout
 
   # copy dictionaries
-  c "$dictionaries/"
+  c "Dictionaries/"
   popd &> /dev/null
+  
+  # TODO
+  # install fonts (from Word as well?)
 
   #defaults write com.apple.Siri StatusMenuVisible 0 #use siri in status bar as reminder of deactivating it
 
@@ -463,14 +451,6 @@ else
   echo "Skipped internet installation."
 fi
 
-# install chordpro
-if [[ -z $(which chordpro) ]]; then
-  tell "Chordpro installation"
-  sudo cpan chordpro
-else
-  echo "Skipped chordpro installation."
-fi
-
 # install dashboard apps
 if [[ -d "$dashboard" ]]; then
   tell "Dashboard app installation"
@@ -486,6 +466,16 @@ else
   echo "Skipped Dashboard apps (no \"dashboard\" directory available at $thisdir)"
 fi
 
+# install homebrew
+if [[ -z $(which brew) ]]; then
+  echo "Installing Homebrew ..."
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed."
+  echo "Tapping caskroom ..."
+  brew tap caskroom/cask || die "brew tap caskroom/cask failed."
+else
+  echo "Skipped brew installation."
+fi
+
 if [[ -z $(which pass) ]]; then
   tell "pass installation"
   brew install pass || die "brew install pass failed."
@@ -498,16 +488,6 @@ fi
 # pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
 # - install "RZUWsec"
 # provide optional network change (and connection test afterwards)
-
-# install homebrew
-if [[ -z $(which brew) ]]; then
-  echo "Installing Homebrew ..."
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed."
-  echo "Tapping caskroom ..."
-  brew tap caskroom/cask || die "brew tap caskroom/cask failed."
-else
-  echo "Skipped brew installation."
-fi
 
 # install dropbox
 if [[ ! -e /Applications/Dropbox.app/ ]]; then
@@ -547,6 +527,14 @@ if [[ -z $(mas account) ]]; then
   waitUser "Please sign in to App Store"
 fi
 
+# install chordpro
+if [[ -z $(which chordpro) ]]; then
+  tell "Chordpro installation"
+  sudo cpan chordpro
+else
+  echo "Skipped chordpro installation."
+fi
+
 echo
 ########################################################################################################
 ##### Full automatic part (place as much as possible here)
@@ -557,6 +545,23 @@ tell "Full automatic part"
 echo
 
 if [[ -z $skipauto ]]; then
+
+#move remaining files from baskup
+pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
+c IdeaProjects Documents/ Pictures/ Music/
+
+cd "Library" || die "cd to $HOME/Library failed!"
+c "Thunderbird"
+
+### place at ~/Library/Application\ Support
+cd "Application Support" || die "cd to $HOME/Library/Application\ Support failed!"
+c IntelliJIdea*
+
+### place at /Applications
+cd "/Applications" || die "cd to /Applications failed!"
+c Minecraft
+
+popd &> /dev/null || die "cd failed"
 
 #app store
 tell "App Store apps installation"
@@ -637,14 +642,6 @@ else
   echo "All formulas installed with no obvious problems."
 fi
 echo
-
-# TODO
-# Thunderbird folder
-# IdeaProjects
-# IntelliJ config folder
-# other files (documents, pictures, music)
-# place minecraft in /Applications
-# install fonts (from Word as well?)
 
 # ensure required dropbox content synced
 while [[ ! -e "$trading_icon" ]]; do # TODO: uniwue, trading_script
@@ -740,10 +737,10 @@ echo
 
 #one time prefs, that need sudo
 bash4=/usr/local/bin/bash
-if [[ -f $bash4 && -z $(cat /etc/shells | grep $bash4) ]]; then
+if [[ -f "$bash4" && -z $(cat /etc/shells | grep $bash4) ]]; then
   tell "Changing the login shell to $bash4 (bash4)"
-  sudo bash -c 'echo $bash4 >> /etc/shells' || die "Adding $bash4 to /etc/shells failed."
-  chsh -s $bash4 || die "Changing users default shell failed."
+  sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
+  chsh -s "$bash4" || die "Changing users default shell failed."
   waitUser "Please close this window now and start this script again."
   echo "Now."
   exit 0
