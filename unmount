@@ -33,7 +33,7 @@ case $ans in
     else
       res=$(diskutil unmountDisk "$ans")
     fi
-    echo "res length: ${#res}"
+    echo "$res (${#res})"
     # TODO: Filter if failed by blocking pid, ask for killing, kill, i.a., and try again
   else
     echo "Invalid answer."
