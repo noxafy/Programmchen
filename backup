@@ -6,6 +6,7 @@ help="An preparation script for the install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
 	\e[1m-t\e[0m	Give a target folder where the data should be stored.
+	\e[1m-c\e[0m	Calculate needed space for backup.
 "
 
 die() {
@@ -20,6 +21,46 @@ die() {
 case $1 in
   -h)
     printf "$help"
+    exit 0
+    ;;
+  -c)
+    sizeFormat() {
+      if [[ $1 -ge 100000000000 ]]; then
+        printf "%.0f GB" $(echo "scale=1; $1/1000000000" | bc)
+      elif [[ $1 -ge 10000000000 ]]; then
+        printf "%.1f GB" $(echo "scale=2; $1/1000000000" | bc)
+      elif [[ $1 -ge 1000000000 ]]; then
+        printf "%.2f GB" $(echo "scale=3; $1/1000000000" | bc)
+      elif [[ $1 -ge 100000000 ]]; then
+        printf "%.0f MB" $(echo "scale=1; $1/1000000" | bc)
+      elif [[ $1 -ge 10000000 ]]; then
+        printf "%.1f MB" $(echo "scale=2; $1/1000000" | bc)
+      elif [[ $1 -ge 1000000 ]]; then
+        printf "%.2f MB" $(echo "scale=3; $1/1000000" | bc)
+      elif [[ $1 -ge 100000 ]]; then
+        printf "%.0f kB" $(echo "scale=1; $1/1000" | bc)
+      elif [[ $1 -ge 10000 ]]; then
+        printf "%.1f kB" $(echo "scale=2; $1/1000" | bc)
+      elif [[ $1 -ge 1000 ]]; then
+        printf "%.2f kB" $(echo "scale=3; $1/1000" | bc)
+      else
+        printf "$1 Bytes"
+      fi
+    }
+
+    pushd "$HOME" &> /dev/null
+    idea=$(du -s IdeaProjects/ | awk '{print $1}')
+    docs=$(du -s Documents/ | awk '{print $1}')
+    pics=$(du -s Pictures/ | awk '{print $1}')
+    mus=$(du -s Music/ | awk '{print $1}')
+    drop=$(du -s Dropbox/ | awk '{print $1}')
+    thund=$(du -s Library/Thunderbird/Profiles | awk '{print $1}')
+    dicts=$(du -s Library/Dictionaries | awk '{print $1}')
+    intelli=$(du -s Library/Application\ Support/IntelliJIdea* | awk '{print $1}' | xargs -n 1 printf "%d + ")
+    intelli=$(echo "$intelli 0" | bc)
+    all=$(echo "($idea + $docs + $pics + $mus + $drop + $thund + $dicts + $intelli) * 512" | bc)
+    echo "You will need about $(sizeFormat $all)."
+    popd &> /dev/null
     exit 0
     ;;
   -t)
@@ -57,22 +98,32 @@ ctt() {
   while [[ -n $1 ]]; do
     printf "Copying $PWD/$1 "
     printf "($(du -sh "$1" | awk '{print $1}')) ...\n"
-    cp -a "$1" "$target/$1" || die "Copying $1 to $target failed"
+    if [[ -d "$1" ]]; then
+      rsync --size-only --delete -a "$1/" "$target/$1" || die "Copying folder $1 to $target failed"
+    else
+      rsync --size-only --delete -a "$1" "$target/$1" || die "Copying file $1 to $target failed"
+    fi
     shift
   done
 }
 
 # Copy from ~
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
+if [[ ! -e "$target/.m2" ]]; then
+  mkdir "$target/.m2" || die "mkdir .m2 failed"
+fi
 ctt .bash_profile .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 ctt IdeaProjects Documents Pictures Music Dropbox
 
 cd "Library" || die "cd to $HOME/Library failed"
+if [[ ! -e "$target/Thunderbird" ]]; then
+  mkdir "$target/Thunderbird" || die "mkdir Thunderbird failed"
+fi
 ctt Thunderbird/Profiles # - Thunderbird folder
 ctt "Keyboard Layouts" # - keyboard layout
 ctt "Dictionaries" # Databases for Dictionary.app
 
-cd "Library/Application Support" || die "cd to $HOME/Library/Application\ Support failed"
+cd "Application Support" || die "cd to $HOME/Library/Application\ Support failed"
 ctt IntelliJIdea* # IntelliJ config folder
 
 # - minecraft launcher
@@ -86,13 +137,13 @@ popd &> /dev/null
 ####################################################
 
 #export:
-mkdir manual
-
-echo "Export and save to $target/manual:"
-echo " - Terminal layouts" # - Terminal layout Homebrew
-echo " - Newsflow OPML" # - Newsflow OPML
-echo " - Keychains (mircosoft, wlans)" # - keychain (microsoft, wlans)
-echo " - Firefox bookmarks" # - firefox bookmarks
+# mkdir manual
+#
+# echo "Export and save to $target/manual:"
+# echo " - Terminal layouts" # - Terminal layout Homebrew
+# echo " - Newsflow OPML" # - Newsflow OPML
+# echo " - Keychains (mircosoft, wlans)" # - keychain (microsoft, wlans)
+# echo " - Firefox bookmarks" # - firefox bookmarks
 
 #ensure:
 #mkdir dashboard
@@ -101,5 +152,5 @@ echo " - Firefox bookmarks" # - firefox bookmarks
 #echo " - iStat Pro.wdgt"
 #echo "Copy to $target/"
 #echo " - [Adobe Pro Installer]" # - adobe installer
-echo "Paste password in sys_install:20, when placed in position"
+# echo "Paste password in sys_install:20, when placed in position"
 
