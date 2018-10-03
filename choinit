@@ -167,11 +167,11 @@ if [[ -e "$filename" && ! -n $forceOverwriting ]]; then
   esac
 fi
 
-content="{title:$(toAscii $title)}
-{composer:$(toAscii $artist)}
+content="{title: $title}
+{composer: $artist}
 {copyright: © $(date +%Y) $(git config --global user.name)}
 {meta: arr Arr.: $(git config --global user.name)}
-#{tempo: bpm}
+#{tempo: 120bpm}
 
 $lyrics"
 
