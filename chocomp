@@ -2,8 +2,8 @@
 
 chordlong=chordpro_long.json
 chordmedium=chordpro_medium.json
-transpose=0
-long=0
+transpose=
+long=0 # -1=short 1=medium 2=long
 files=0
 multipleFiles=
 usage="Usage: \e[1mchocomp\e[0m -h | [-s|-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m \e[4m...\e[0m"
@@ -46,13 +46,18 @@ compileToPdf() {
     else
       strtranspose="$transpose"
     fi
-    pdfFile=pdf/"${filename}_$strtranspose".pdf
+    pdfFile="${filename}_$strtranspose".pdf
+  fi
+
+  if [[ $multipleFiles ]]; then
+    echo "Compiling: $pdfFile"
   fi
 
   # create pdf dir if not existing
   if [[ ! -d pdf ]]; then
     mkdir pdf || die "Failed to create pdf/ dir."
   fi
+  pdfFile=pdf/"$pdfFile"
 
   # try with chordpro
   if [[ -n $(which chordpro) ]]; then
@@ -87,12 +92,15 @@ compileToPdf() {
             if [[ $mpagenumber -gt $lpagenumber ]]; then
               echo "That didn't work. Lyrics seem to fit better in long lyrics settings."
               useConfig "$chordlong" "$pdfFile" "$choFile"
+              long=2
             else
               echo "Great!"
+              long=1
             fi
           else
             echo "That didn't work. Lyrics seem to fit good in default settings."
             chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
+            long=-1
           fi
         fi
       else
@@ -112,6 +120,30 @@ compileToPdf() {
   else
     open "$pdfFile" || die "Could not open \"$pdfFile\""
   fi
+
+  ((files++))
+}
+
+compileTransposes() {
+  file=$1
+  shift
+
+  # minimum two transposes for multifile
+  if [[ -n $1 && -n $2 ]]; then
+    multipleFiles=true
+  fi
+  while [[ -n $1 ]]; do
+    case $1 in
+      [0-9]|[0-9][0-9]|+[0-9]|+[0-9][0-9]|-[0-9]|-[0-9][0-9])
+        transpose=$1
+        compileToPdf "$file"
+        ;;
+      *)
+        echo "Invalid transpose argument: ${1}\nPlease specify a valid number of semi-tones. See -h for more help."
+        ;;
+    esac
+    shift
+  done
 }
 
 while [[ -n "$1" ]]; do
@@ -166,10 +198,19 @@ while [[ -n "$1" ]]; do
     fi
     if [[ $files -gt 0 || -n $2 ]]; then
       multipleFiles=true
-      echo "Compiling: $1"
     fi
-    compileToPdf "${1%.*}"
-    ((files++))
+    if [[ -z $transpose ]]; then
+      # detect transpose instructions
+      transposes=$(cat "$1" | grep "# transpose " | sed 's/# transpose //')
+      if [[ -n "$transposes" ]]; then
+        compileTransposes "${1%.*}" $transposes
+      else
+        transpose=0
+        compileToPdf "${1%.*}"
+      fi
+    else
+      compileToPdf "${1%.*}"
+    fi
     ;;
   esac
   shift
