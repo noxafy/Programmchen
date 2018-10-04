@@ -137,6 +137,7 @@ if [[ -z "$lyrics" ]]; then
       echo "Counldn't grab lyrics automatically. Please give some infomation."
       # ask artist/title and use them with lyrics --ask
       read -p "Who's the artist? " artist
+      read -p "What's the title? " title
       while [[ -z $title ]]; do printf "Title cannot be empty. "; read -p "What's the title? " title; done
       read -p "Do you want to search for lyrics? (y/n) [y]: " ans
       case $ans in
@@ -148,7 +149,6 @@ if [[ -z "$lyrics" ]]; then
         lyrics=$(lyrics -q "$title" "$artist" | sed -n '3,$p')
         ;;
       esac
-      lyrics=$(lyrics -q "$title" "$artist")
     fi
   fi
 fi
@@ -159,7 +159,7 @@ filename="$(toFilename $title)-$(toFilename $artist).cho"
 if [[ -e "$filename" && ! -n $forceOverwriting ]]; then
   [[ ! -t 0 ]] && die "Leadsheet \"$filename\" already exists."
 
-  read -p "Overwrite existing \"$filename\" ? [y/n] [y]: " ans
+  read -p "Overwrite existing \"$filename\"? (y/n) [y]: " ans
   case $ans in
   n)
     read -p "Please specify another filename: " filename
