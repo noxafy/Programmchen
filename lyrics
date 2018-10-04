@@ -52,15 +52,11 @@ die() {
 
 # This is used to get the url for the lyrics
 function google {
-  if [[ -n $VERBOSE ]]; then
-    #add v for more information about headers
-    stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
-    if [[ ${#stream} -lt 2000 ]]; then
-      echo "Answer may indicate failing:" >&2
-      printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
-    fi
-  else
-    stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
+  #add v for more information about headers
+  stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
+  if [[ -n $VERBOSE && ${#stream} -lt 2000 ]]; then
+    echo "Answer may indicate failing:" >&2
+    printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
   fi
   #echo "link: ${GOOG_URL}?q=$*" >&2
   res=$(echo "$stream" | grep -o "result-url\" href=\"[^\"]*" | sed 's/result-url" href="//')
@@ -300,7 +296,7 @@ function preformat() {
 
 function findLyrics() {
   [[ -z "$TITLE" ]] && die "No title given (artist: \"$ARTIST\")!"
-  [[ -z "$QUIET" ]] && echo "Artist: $ARTIST
+  echo "Artist: $ARTIST
 Title: $TITLE
 " >&2
   
@@ -395,7 +391,7 @@ artistNoSpaces: $artistNoSpaces
           fi
           ((j++))
         done
-        printf "Is there anyone right? (1-${#ALL[@]} / c (continue) / q (= quit)) [c]: " >&2
+        printf "Is there anyone right? (1-${#ALL[@]} / c (continue) / q (quit)) [c]: " >&2
         read ans
         if [[ $ans =~ ^[0-9]+$ ]]; then
           if [[ $ans -le ${#ALL[@]} ]]; then
@@ -436,7 +432,7 @@ artistNoSpaces: $artistNoSpaces
         echo "$j: $resURL" >&2
         ((j++))
       done
-      printf "Is there anyone right? (1-${#OVERALL[@]} / q (= quit)) [q]: " >&2
+      printf "Is there anyone right? (1-${#OVERALL[@]} / q (quit)) [q]: " >&2
       read ans
       if [[ $ans =~ ^[0-9]+$ ]]; then
         if [[ $ans -le ${#OVERALL[@]} ]]; then
