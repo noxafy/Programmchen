@@ -175,13 +175,14 @@ content="{title: $title}
 {copyright: © $(date +%Y) $(git config --global user.name)}
 {meta: arr Arr.: $(git config --global user.name)}
 #{tempo: 120bpm}
+# transpose 0
 
 $lyrics"
 
 echo "$content" > "$filename"
 echo "Wrote ${#content} bytes to $PWD/$filename"
 
-mate -l 7 -- "$filename"
+mate -l 8 -- "$filename"
 
 [[ ! -t 0 ]] && exit 0
 [[ -z $(which chocomp) ]] && exit 0 #die "Chodrii compiler (chocomp) not found!"
