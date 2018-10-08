@@ -40,9 +40,6 @@ searchFor() {
     reslnnrs=$(echo "$res" | awk '{print $1}')
     othersDetected=1
     echo "Word in $(basename $1) detected: $reslen"
-    if [[ -n $openVocs ]]; then
-      openLine "$1" $reslnnrs
-    fi
     if [[ $reslen -gt 5 ]]; then
       echo "$res" | sed -n 1,5p
       printf "Do you want to see all $reslen results? (y/n) [n]: "
@@ -58,11 +55,15 @@ searchFor() {
     else
       echo "$res"
     fi
+    if [[ -n $openVocs ]]; then
+      openLine "$1" $reslnnrs
+    fi
   fi
 }
 
 openLine() {
   #TODO: let user choose which one to open
+  echo "Opening $1 at line $2"
   mate -l $2-$(($2+1)) "$1" 2> /dev/null || open "$1"
 }
 
