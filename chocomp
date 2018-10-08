@@ -39,7 +39,7 @@ compileToPdf() {
   # give file names
   choFile="$filename".cho
   if [[ $transpose -eq 0 ]]; then
-    pdfFile=pdf/"$filename".pdf
+    pdfFile="$filename".pdf
   else
     if [[ $transpose -gt 0 && $transpose != +* ]]; then
       strtranspose="+$transpose"
