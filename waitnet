@@ -13,7 +13,7 @@ $usage
 	\e[1m-d\e[0m	Debug output.
 	\e[1m-s\e[0m	No output on success without waiting (best for scripts).
 	\e[1m-q\e[0m	No console output, except errors.
-	\e[1m-n\e[0m	Send also a note message on connection found or timeout.
+	\e[1m-n\e[0m	Send also a note message on connection found.
 	\e[1m-t\e[0m	Specify a timeout in seconds (default: $timeout).
 "
 
@@ -133,7 +133,7 @@ while true; do
       log "Connection to $ssid_estabilshed lost."
       ssid_estabilshed=
     fi
-    if [[ $elapsedTime -ge $timeout ]]; then
+    if [[ -z $sendNote && $elapsedTime -ge $timeout ]]; then
       [[ -n "$ssid" && $output -ge 1 ]] && echo "airport -I: $ssid"
       fail "Timeout: Auto-connecting to a SSID"
     fi
@@ -149,7 +149,7 @@ while true; do
       ssid_estabilshed=$(echo "${ssid}" | xargs)
       log "Connected to $ssid_estabilshed"
     fi
-    if [[ $elapsedTime -ge $timeout ]]; then
+    if [[ -z $sendNote && $elapsedTime -ge $timeout ]]; then
       [[ -n "$netTest" && $output -ge 1 ]] && echo "$netTest" | tail -1
       fail "Timeout: Internet connection detection"
     fi
