@@ -1,0 +1,34 @@
+#!/bin/bash
+
+trise=7
+tset=20
+minute=5
+
+sleepAndSwitch() {
+  sleep $1
+  open $IT/Programmchen/SwitchDarkAndBright.app/
+  calcTimer
+}
+
+calcTimer() {
+  timeSunrise=$(date -v${trise}H -v${minute}M -v0S +%s)
+  dRise=$(echo "$timeSunrise - $(date +%s)" | bc)
+  timeSunset=$(date -v${tset}H -v${minute}M -v0S +%s)
+  dSet=$(echo "$timeSunset - $(date +%s)" | bc)
+
+  if [[ $dRise < 0 ]]; then
+    timeSunrise=$(date -v${trise}H -v${minute}M -v0S -v+1d +%s)
+    dRise=$(echo "$timeSunrise - $(date +%s)" | bc)
+    if [[ $dSet < 0 ]]; then
+      timeSunset=$(date -v${tset}H -v${minute}M -v0S +%s)
+      dSet=$(echo "$timeSunset - $(date +%s)" | bc)
+      sleep $dRise
+    else
+      sleep $dSet
+    fi
+  else
+    sleep $dRise
+  fi
+}
+
+calcTimer
