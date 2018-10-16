@@ -5,8 +5,12 @@ tset=20
 minute=5
 
 sleepAndSwitch() {
-  sleep $1
-  open /Applications/SwitchDarkAndBright.app/
+  if [[ $1 -gt 600 ]]; then
+    sleep 600 # sleep max 10 min and update timer (sleep halts on lid close)
+  else
+    sleep $1
+    open /Applications/SwitchDarkAndBright.app/
+  fi
   calcTimer
 }
 
@@ -22,12 +26,12 @@ calcTimer() {
     if [[ $dSet < 0 ]]; then
       timeSunset=$(date -v${tset}H -v${minute}M -v0S +%s)
       dSet=$(echo "$timeSunset - $(date +%s)" | bc)
-      sleep $dRise
+      sleepAndSwitch $dRise
     else
-      sleep $dSet
+      sleepAndSwitch $dSet
     fi
   else
-    sleep $dRise
+    sleepAndSwitch $dRise
   fi
 }
 
