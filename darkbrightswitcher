@@ -6,7 +6,7 @@ minute=5
 
 sleepAndSwitch() {
   sleep $1
-  open $IT/Programmchen/SwitchDarkAndBright.app/
+  open /Applications/SwitchDarkAndBright.app/
   calcTimer
 }
 
