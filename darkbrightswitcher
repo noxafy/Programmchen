@@ -4,35 +4,35 @@ trise=7
 tset=20
 minute=5
 
-sleepAndSwitch() {
-  if [[ $1 -gt 600 ]]; then
-    sleep 600 # sleep max 10 min and update timer (sleep halts on lid close)
-  else
-    sleep $1
-    open /Applications/SwitchDarkAndBright.app/
-  fi
-  calcTimer
-}
+timer=0
 
 calcTimer() {
   timeSunrise=$(date -v${trise}H -v${minute}M -v0S +%s)
   dRise=$(echo "$timeSunrise - $(date +%s)" | bc)
-  timeSunset=$(date -v${tset}H -v${minute}M -v0S +%s)
-  dSet=$(echo "$timeSunset - $(date +%s)" | bc)
-
-  if [[ $dRise < 0 ]]; then
-    timeSunrise=$(date -v${trise}H -v${minute}M -v0S -v+1d +%s)
-    dRise=$(echo "$timeSunrise - $(date +%s)" | bc)
-    if [[ $dSet < 0 ]]; then
-      timeSunset=$(date -v${tset}H -v${minute}M -v0S +%s)
-      dSet=$(echo "$timeSunset - $(date +%s)" | bc)
-      sleepAndSwitch $dRise
-    else
-      sleepAndSwitch $dSet
-    fi
+  if [[ $dRise -ge 0 ]]; then
+    timer=$dRise
   else
-    sleepAndSwitch $dRise
+    timeSunset=$(date -v${tset}H -v${minute}M -v0S +%s)
+    dSet=$(echo "$timeSunset - $(date +%s)" | bc)
+    if [[ $dSet -ge 0 ]]; then
+      timer=$dSet
+    else
+      # sunrise tomorrow, should be in future
+      timeSunrise=$(date -v${trise}H -v${minute}M -v0S -v+1d +%s)
+      dRise=$(echo "$timeSunrise - $(date +%s)" | bc)
+      timer=$dRise
+    fi
   fi
 }
 
-calcTimer
+while [[ true ]]; do
+  tmpTimer=$timer
+  calcTimer
+  echo "Corrected time by $((timer - tmpTimer))"
+  if [[ $timer -gt 600 ]]; then
+    sleep 600 # sleep max 10 min and update timer (sleep halts on lid close)
+  else
+    sleep $timer
+    open /Applications/SwitchDarkAndBright.app/
+  fi
+done
