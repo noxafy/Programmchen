@@ -77,9 +77,9 @@ if [[ $all == 2 && $verbose != 0 ]]; then
   echo "open https://www.dict.cc/?s=$key"
 fi
 if [[ $verbose != 0 ]]; then
-  echo "$CURL -s \"https://www.dict.cc/?s=$key\""
+  echo "$CURL -s \"https://www.dict.cc/?\" --data-urlencode \"s=$key\""
 fi
-srcf=$($CURL -s "https://www.dict.cc/?s=$key")
+srcf=$($CURL -s "https://www.dict.cc/?" --data-urlencode "s=$key")
 
 if [[ -z "$srcf" ]]; then
   echo "Failed to fetch content from $site"
@@ -88,9 +88,9 @@ if [[ -z "$srcf" ]]; then
   case $ans in
     y)
       if [[ $verbose != 0 ]]; then
-        echo "$CURL -Iv \"https://www.dict.cc/?s=$key\""
+        echo "$CURL -Iv \"https://www.dict.cc/?\" --data-urlencode \"s=$key\""
       fi
-      $CURL -Iv "https://www.dict.cc/?s=$key"
+      $CURL -Iv "https://www.dict.cc/?" --data-urlencode "s=$key"
       ;;
   esac
   exit 1
@@ -163,9 +163,9 @@ if [[ $all -eq 2 ]]; then
     var2+=${temp2:20:$(( ${#temp2} - 22))}
     ((cnt++))
     if [[ $verbose != 0 ]]; then
-      echo "$CURL -s \"https://www.dict.cc/?s=$key&pagenum=$cnt\""
+      echo "$CURL -s \"https://www.dict.cc/?\" --data-urlencode \"s=$key\" --data-urlencode \"pagenum=$cnt\""
     fi
-    srcf=$($CURL -s "https://www.dict.cc/?s=$key&pagenum=$cnt")
+    srcf=$($CURL -s "https://www.dict.cc/?" --data-urlencode "s=$key" --data-urlencode "pagenum=$cnt")
     # test on internet connection
     if [[ -z "$srcf" ]]; then
       echo "Internet connection on page $cnt failed. Printing all downloaded translations..."
@@ -182,7 +182,9 @@ else
   vars=$(echo $srcf | grep -o "var c1Arr.*; var c2Arr.*; var hlRows" | grep -o ".*;")
   var1=$(echo $vars | grep -o "c1Arr.*; var c2Arr" | grep -o ".*;")
   var2=$(echo $vars | grep -o "c2Arr.*")
-  #echo "srcf: $srcf"
+  if [[ $verbose != 0 && ${#srcf} -lt 500 ]]; then
+    echo "srcf: $srcf"
+  fi
   #echo "vars: $vars"
   #echo "var1: $var1"
   #echo "var2: $var2"
