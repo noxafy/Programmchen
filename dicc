@@ -29,7 +29,7 @@ while [ "$*" ]; do
   -a)
     all=1
     ;;
-  -o)
+  -o|-l)
     openDirect=1
     ;;
   -r)
