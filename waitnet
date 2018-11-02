@@ -113,7 +113,7 @@ if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
   networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
 else
   #for preformance, first test if internet connection is established
-  # time is 40ms more when not working, but 100ms less when working (and the letter is most of the times)
+  # performance: 40ms more when not working, but 100ms less when working (and the letter is most of the times)
   netTest=$(ping -t 3 -c 1 8.8.8.8 2>/dev/null)
   if [[ $? -eq 0 ]]; then
     if [[ $output -gt 1 ]]; then
