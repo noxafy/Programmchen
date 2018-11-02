@@ -22,8 +22,8 @@ $usage
 		third can be used for comments. Be aware of the required formatting shown below.
 		Default path is $file.
 	\e[1m-o\e[0m	Opens the vocabulary list ($vocs).
-        \e[1m-a\e[0m	Adds a new word to the vocabulary list.
-	\e[1m-s\e[0m	Searches a word in both, vocabulary list and vocabulary database.
+        \e[1m-a\e[0m	Adds a new word to the vocabulary list. Uses formatting compliant to \e[1mvoc\e[0m.
+	\e[1m-s\e[0m	Searches a word in both, vocabulary list and vocabulary database. Case-insensitive.
 
 Create the .csv in the following form:
  \"word\",\"meaning\",\"helping comment for memorizing or pronouncing\"
@@ -34,7 +34,7 @@ Create the .csv in the following form:
 #TODO forbid "," in word, translation or additional
 
 searchFor() {
-  res=$(cat -n "$1" | grep -- "$2")
+  res=$(cat -n "$1" | grep -i -- "$2")
   if [[ -n $res ]]; then
     declare -i reslen=$(echo "$res" | wc -l)
     reslnnrs=$(echo "$res" | awk '{print $1}')
