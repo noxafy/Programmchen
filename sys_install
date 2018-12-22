@@ -28,22 +28,27 @@ dashboard="$thisdir/Dashboard" # Dashboard widgets
 
 brews=(agedu
 aspell
+#automake
 bash
 bash-completion
 bash-snippets
 brightness
 #bro
+cheat
 #chordii
 #chromedriver
 cloc
+coreutils
 darksky-weather
 diff-pdf
 #exiftool
-#expect
+expect
 fd
-#ffmpeg #required by audacity?
+ffmpeg #required by audacity?
 fortune
 #freeling
+fswatch
+gcal
 #geoipupdate
 git
 go
@@ -63,22 +68,24 @@ nativefier
 #pass #already installed
 pdfgrep
 pick
-#plan9port
+plan9port
 pup
 recode
 shpotify
 #sic
 testdisk
+tldr
 wget
 wiki
 wine
 winetricks
+woff2
 you-get
 youtube-dl)
 
 brewcasks=(android-file-transfer
-android-sdk
-android-studio
+#android-sdk
+#android-studio
 anki
 #axure-rp
 #blender
@@ -104,6 +111,8 @@ notational-velocity
 #osxfuse
 qlimagesize
 qlstephen
+#sketch
+skype
 soundflower
 spotify
 telegram
