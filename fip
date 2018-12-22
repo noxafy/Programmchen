@@ -54,7 +54,7 @@ else
 fi
 
 for path in `echo $PATH | sed s/:/\ /g`; do
-  cd "$path" || continue
+  cd "$path" 2>/dev/null || continue
   case $verge in
   0)
     if [[ -n $(echo "$key" | grep "\w\w\w") ]]; then # match also origin paths of links
