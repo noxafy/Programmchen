@@ -58,7 +58,7 @@ runCmd brew update
 runCmd brew upgrade
 
 if [[ -n $extendedUpgrade ]]; then
-  runCmd brew cask upgrade --greedy
+  runCmd brew cask upgrade #--greedy
 #  runCmd brew cask cleanup
   runCmd brew cleanup
   runCmd brew doctor
