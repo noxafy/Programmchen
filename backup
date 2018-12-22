@@ -1,7 +1,7 @@
 #!/bin/bash
 
 target=
-usage="\e[1mpreinstall\e[0m -h | -t \e[4mdir\e[0m"
+usage="\e[1m$(basename $0)\e[0m -h | -t \e[4mdir\e[0m"
 help="An preparation script for the install script for computer reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
