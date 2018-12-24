@@ -94,7 +94,7 @@ disablemonitor
 #dropbox #already installed
 firefox
 flux
-freefilesync
+#freefilesync #currently bad checksum
 #freemind
 geogebra
 go2shell
@@ -109,7 +109,6 @@ mpv
 notational-velocity
 #openoffice
 #osxfuse
-qlimagesize
 qlstephen
 #sketch
 skype
@@ -760,13 +759,20 @@ echo
 
 #one time prefs, that need sudo
 bash4=/usr/local/bin/bash
-if [[ -f "$bash4" && -z $(cat /etc/shells | grep $bash4) ]]; then
+if [[ -f "$bash4" && "$SHELL" != "$bash4" ]]; then
   tell "Changing the login shell to $bash4 (bash4)"
-  sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
-  chsh -s "$bash4" || die "Changing users default shell failed."
-  waitUser "Please close this window now and start this script again."
-  echo "Now."
-  exit 0
+  if [[ -z $(grep "$bash4" /etc/shells) ]]; then
+    sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
+  fi
+  if type chsh >/dev/null 2>&1; then
+    chsh -s "$bash4" || die "Changing users default shell failed."
+    echo "Please close this window now and start this script again."
+    sleep 2
+    echo "Now."
+    exit 0
+  else
+    echo "Please manually change your default shell to ${bash4}!"
+  fi
 else
   echo "Skipped login shell change."
 fi
