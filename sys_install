@@ -260,8 +260,8 @@ pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 if [[ -z "$IT" ]]; then # $IT is required by script
   tell "Preferences installation"
 
-  # install .bash_profile as root
-  c -s .bash_profile
+  # install .profile's as root
+  c -s .bash_profile .profile .zsh_profile
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed!"
@@ -461,7 +461,7 @@ else
 fi
 
 # install dashboard apps
-if [[ -d "$dashboard" ]]; then
+if [ -d "$dashboard" ]; then
   tell "Dashboard app installation"
   c dashboard
   cd "dashboard"
@@ -473,6 +473,29 @@ if [[ -d "$dashboard" ]]; then
   rm -rf dashboard
 else
   echo "Skipped Dashboard apps (no \"dashboard\" directory available at $thisdir)"
+fi
+
+# bash4=/usr/local/bin/bash
+# if [[ -f "$bash4" && "$SHELL" != "$bash4" ]]; then
+if [ ! -d "$ZSH" ]; then
+  sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+  printf '. ~/.zsh_profile' >> ~/.zshrc
+
+  # tell "Changing the login shell to $bash4 (bash4)"
+#   if [[ -z $(grep "$bash4" /etc/shells) ]]; then
+#     sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
+#   fi
+#   if type chsh >/dev/null 2>&1; then
+#     chsh -s "$bash4" || die "Changing users default shell failed."
+#     echo "Please close this window now and start this script again."
+#     echo "Now."
+#     exit 0
+#   else
+#     echo "Please manually change your default shell to ${bash4}!"
+#   fi
+else
+  # echo "Skipped login shell change."
+  echo "Skipped Oh my zsh installation."
 fi
 
 # install homebrew
@@ -756,26 +779,6 @@ echo
 # In this part, the script is just instructing, at most helping out a bit
 tell "Manual part"
 echo
-
-#one time prefs, that need sudo
-bash4=/usr/local/bin/bash
-if [[ -f "$bash4" && "$SHELL" != "$bash4" ]]; then
-  tell "Changing the login shell to $bash4 (bash4)"
-  if [[ -z $(grep "$bash4" /etc/shells) ]]; then
-    sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
-  fi
-  if type chsh >/dev/null 2>&1; then
-    chsh -s "$bash4" || die "Changing users default shell failed."
-    echo "Please close this window now and start this script again."
-    sleep 2
-    echo "Now."
-    exit 0
-  else
-    echo "Please manually change your default shell to ${bash4}!"
-  fi
-else
-  echo "Skipped login shell change."
-fi
 
 # TODO Settings
 # - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, terminal, FileMerge
