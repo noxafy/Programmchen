@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# link regex does not work because (http:)// gets recognized as file path
 case $1 in
   fw)
     f w
