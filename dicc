@@ -4,7 +4,7 @@ all=0 #by default only exact results are shown
 verbose=0
 pagesconfirmfrom=4
 openDirect=
-CURL="curl -m 10 -A 'Mozilla/5.0' -H \"Accept-Language: de,en-US;q=0.7,en;q=0.3\""
+CURL=(curl -S -m 10 -A 'Mozilla/5.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 
 usage="Usage: \e[1mdicc\e[0m -h | [-o|-a|-r|-x] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
 help="Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
@@ -77,9 +77,10 @@ if [[ $all == 2 && $verbose != 0 ]]; then
   echo "open https://www.dict.cc/?s=$key"
 fi
 if [[ $verbose != 0 ]]; then
-  echo "$CURL -s \"https://www.dict.cc/?\" --data-urlencode \"s=$key\""
+  printf "%q " "${CURL[@]}"
+  echo "-s \"https://www.dict.cc/?\" --data-urlencode \"s=$key\""
 fi
-srcf=$($CURL -s "https://www.dict.cc/?" --data-urlencode "s=$key")
+srcf=$("${CURL[@]}" -s "https://www.dict.cc/?" --data-urlencode "s=$key")
 
 if [[ -z "$srcf" ]]; then
   echo "Failed to fetch content from $site"
@@ -87,10 +88,12 @@ if [[ -z "$srcf" ]]; then
   read ans
   case $ans in
     y)
+      data_encoded=$(node -e "console.log(encodeURIComponent(process.argv[1]))" "$key")
       if [[ $verbose != 0 ]]; then
-        echo "$CURL -Iv \"https://www.dict.cc/?\" --data-urlencode \"s=$key\""
+        printf "%q " "${CURL[@]}"
+        echo "-Iv \"https://www.dict.cc/?s=$data_encoded\""
       fi
-      $CURL -Iv "https://www.dict.cc/?" --data-urlencode "s=$key"
+      "${CURL[@]}" -Iv "https://www.dict.cc/?s=$data_encoded"
       ;;
   esac
   exit 1
@@ -163,9 +166,10 @@ if [[ $all -eq 2 ]]; then
     var2+=${temp2:20:$(( ${#temp2} - 22))}
     ((cnt++))
     if [[ $verbose != 0 ]]; then
-      echo "$CURL -s \"https://www.dict.cc/?\" --data-urlencode \"s=$key\" --data-urlencode \"pagenum=$cnt\""
+      printf "%q " "${CURL[@]}"
+      echo "-s \"https://www.dict.cc/?\" --data-urlencode \"s=$key\" --data-urlencode \"pagenum=$cnt\""
     fi
-    srcf=$($CURL -s "https://www.dict.cc/?" --data-urlencode "s=$key" --data-urlencode "pagenum=$cnt")
+    srcf=$("${CURL[@]}" -s "https://www.dict.cc/?" --data-urlencode "s=$key" --data-urlencode "pagenum=$cnt")
     # test on internet connection
     if [[ -z "$srcf" ]]; then
       echo "Internet connection on page $cnt failed. Printing all downloaded translations..."

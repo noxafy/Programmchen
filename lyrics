@@ -1,7 +1,6 @@
 #!/bin/bash
 
-header='Accept-Language: de,en-US;q=0.7,en;q=0.3'
-CURL="curl -s -A 'Mozilla/5.0'";
+CURL=(curl -sS -A 'Mozilla/5.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 sites="songtexte.com songlyrics.com musixmatch.com azlyrics.com genius.com plyrics.com"
 #Search with ecosia for (compatibility with special characters and) easier grep
 GOOG_URL='https://www.ecosia.org/search'
@@ -53,7 +52,7 @@ die() {
 # This is used to get the url for the lyrics
 function google {
   #add v for more information about headers
-  stream=$($CURL -GLm 10 -H "$header" ${GOOG_URL} --data-urlencode "q=$*")
+  stream=$("${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$*")
   if [[ -n $VERBOSE && ${#stream} -lt 2000 ]]; then
     echo "Answer may indicate failing:" >&2
     printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
@@ -80,10 +79,12 @@ function fetchResult() {
   
   #test if url exists, print http state
   if [[ -n $VERBOSE ]]; then
-    echo "
-Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
+    echo >&2
+    printf "Fetching header: " >&2
+    printf "%q " "${CURL[@]}" >&2
+    echo "-SI \"$1\"" >&2
   fi
-  testUrl=$($CURL -H "$header" -SI "$1" 2>&1)
+  testUrl=$("${CURL[@]}" -SI "$1" 2>&1)
   state=$(echo "$testUrl" | sed -n 1p)
   if [[ $state != *200* ]]; then
     if [[ $state == *301* ]]; then
@@ -95,13 +96,13 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
     printf "Error in fetching site: $state" >&2
     [[ ! -t 0 ]] && die
 
-    res=$($CURL -H "$header" "$1");
+    res=$("${CURL[@]}" "$1");
     printf "\nDo you want to see details? (${#testUrl}/${#res}) (y/n) [n]: " >&2
     read ans
     case $ans in
     y)
-      echo "Command: $CURL -H \"$header\" \"$1\"" >&2
-      echo "Command: $CURL -H \"$header\" \"$1\"
+      echo "Command: ${CURL[@]} \"$1\"" >&2
+      echo "Command: ${CURL[@]} \"$1\"
       
       Answer-Header (${#testUrl}):
       $testUrl
@@ -123,9 +124,11 @@ Fetching header: $CURL -H \"$header\" -SI \"$1\"" >&2
 
   #awk lyrics from site
   if [[ -n $VERBOSE ]]; then
-    echo "Fetching lyrics: $CURL -H \"$header\" \"$1\"" >&2
+    printf "Fetching lyrics: " >&2
+    printf "%q " "${CURL[@]}" >&2
+    echo "\"$1\"" >&2
   fi
-  res=$($CURL -H "$header" "$1" | awk "$2");
+  res=$("${CURL[@]}" "$1" | awk "$2");
   if [[ -n $VERBOSE ]]; then
     if [[ -n $res ]]; then
       echo "Lyrics in site found! (lenght: ${#res})" >&2

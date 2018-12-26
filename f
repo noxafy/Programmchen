@@ -126,12 +126,14 @@ fire() {
 }
 
 tryFirst() {
-  header='Accept-Language: de,en-US;q=0.7,en;q=0.3'
+  data_encoded=$(node -e "console.log(encodeURIComponent(process.argv[1]))" "$key")
+  CURL=(curl -sS -A 'Mozilla/5.0' -GLm 10 -H "Accept-Language: de,en-US;q=0.7,en;q=0.3" "$e$data_encoded")
   if [[ $DEBUG ]]; then
     echo "Searching for first website result."
-    echo "curl -s -A 'Mozilla/5.0' -GLm 10 -H \"$header\" https://www.ecosia.org/search --data-urlencode \"q=$1\""
+    printf "%q " "${CURL[@]}"
+    echo
   fi
-  stream=$(curl -s -A 'Mozilla/5.0' -GLm 10 -H "$header" https://www.ecosia.org/search --data-urlencode "q=$1")
+  stream=$("${CURL[@]}")
   res=$(echo "$stream" | grep -o -m 1 "result-url js-result-url\" href=\"[^\"]*" | sed 's/result-url js-result-url" href="//')
   if [[ $DEBUG ]]; then
     echo "Lengths: stream (${#stream}); res (${#res})"
@@ -270,44 +272,6 @@ case $1 in
   yt)
     site="$yt"
     shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$yt_def"
-    fi
-    ;;
-  am)
-    site="$am"
-    shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$am_def"
-    fi
-    ;;
-  i)
-    site="$idealo"
-    shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$idealo_def"
-    fi
-    ;;
-  mvn)
-    site="$mvn"
-    shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$mvn_def"
-    fi
-    ;;
-  npm)
-    site="$npm"
-    shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$npm_def"
-    fi
-    ;;
-  s)
-    site="$scholar"
-    shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$scholar_def"
-    fi
     ;;
   --)
     shift
