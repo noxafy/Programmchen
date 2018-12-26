@@ -12,7 +12,7 @@ wa="https://web.whatsapp.com/"
 
 psy="https://lexikon.stangl.eu/alphabetisches-inhaltsverzeichnis/"
 
-trading212="https://www.trading212.com"
+t212="https://www.trading212.com"
 #
 #
 #
@@ -32,16 +32,18 @@ mvn="https://mvnrepository.com/search?q="
 mvn_def="https://mvnrepository.com/"
 npm="https://www.npmjs.com/search?q="
 npm_def="https://www.npmjs.com/"
-scholar="https://scholar.google.de/scholar?q="
-scholar_def="https://scholar.google.de/"
-idealo="https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q="
-idealo_def="https://www.idealo.de/"
+s="https://scholar.google.de/scholar?q="
+s_def="https://scholar.google.de/"
+i="https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q="
+i_def="https://www.idealo.de/"
+def=$e
+def_def=$e_def
 
-site=default
-default_site=$e
+# here the actual used search engine is set
+site=def
 
 usage="Usage: \e[1mf\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [-g] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
-help="Open a site or search \e[4mkey\e[0m directly there or with Ecosia.
+help="Open a site or search \e[4mkey\e[0m directly there or with default search engine ($def_def).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-i\e[0m	Treat every given or piped argument (separated by \$IFS) as valid website.
@@ -208,69 +210,21 @@ if [[ -n $openLink ]]; then
   # test internet connection
   waitnet -s
 
-  # test if firefox started
-  startFireFox
+  if [[ -n $openLink ]]; then
+    # test if firefox started
+    startFireFox
+  fi
 fi
 
 case $1 in
-  w)
-    fire "$w"
+  w|sb|bib|wa|mensa|psy|mail)
+    fire "$1"
     ;;
-  sb)
-    fire "$sb"
+  212|t212|trading212)
+    fire "$t212"
     ;;
-  bib) 
-    fire "$bib"
-    ;;
-  wa)
-    fire "$wa"
-    ;;
-  mensa)
-    fire "$mensa"
-    ;;
-  psy)
-    fire "$psy"
-    ;;
-  mail|webmail)
-    fire "$mail"
-    ;;
-  t212)
-    fire "$trading212"
-    ;;
-#  wg)
-#    fire "$wg"
-#    ;;
-#  ww)
-#    fire "$ww"
-#    ;;
-#  mp)
-#    fire "$mp"
-#    ;;
-#  mpo)
-#    fire "$mpo"
-#    ;;
-#  immo24)
-#    fire "$immo24"
-#    ;;
-#  wiwue)
-#    fire "$wiwue"
-#    ;;
-  e)
-    site="$e"
-    shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$e_def"
-    fi
-    ;;
-  g)
-    site="$g"
-    shift
-    if [[ -z "$*" && -z "$key" ]]; then
-      fire "$g_def"
-    fi
-    ;;
-  yt)
-    site="$yt"
+  e|g|yt|am|i|mvn|npm|s)
+    site=$1
     shift
     ;;
   --)
@@ -279,50 +233,45 @@ case $1 in
 esac
 
 #read from arguments
-if [[ "$*" ]]; then 
-  key="$*"
-fi
-
-#url matching, if not 
-if [[ "$site" = "default" ]]; then
-  #guess a bit around
-  if [[ $key =~ ^[a-zA-Z0-9-]*\.?[a-zA-Z0-9-]*\.[a-zA-Z0-9/-]*$ ]]; then
-    tryFirst "$key"
-  fi
-  if [[ $key =~ ^www\..* ]]; then
-    if [[ $DEBUG ]]; then
-      echo "Add \"https://\" to $key"
-    fi
-    key="https://$key"
-  fi
-  if [[ $key =~ $regex ]]; then
-    if [[ $DEBUG ]]; then
-      echo "Matched website regex: $key"
-    fi
-    fire "$key"
-  elif [[ $DEBUG ]]; then
-    echo "Didn't match website regex: $key"
-  fi
-  #set site to default
-  site=$default_site
-fi
+key="$*"
 
 #preparing key
 if [[ -n $key ]]; then
+  #url matching, if not
+  if [[ "$site" = "def" ]]; then
+    #guess a bit around
+    if [[ $key =~ ^[a-zA-Z0-9-]*\.?[a-zA-Z0-9-]*\.[a-zA-Z0-9/-]*$ ]]; then
+      tryFirst "$key"
+    fi
+    if [[ $key =~ ^www\..* ]]; then
+      if [[ $DEBUG ]]; then
+        echo "Add \"https://\" to $key"
+      fi
+      key="https://$key"
+    fi
+    if [[ $key =~ $regex ]]; then
+      if [[ $DEBUG ]]; then
+        echo "Matched website regex: $key"
+      fi
+      fire "$key"
+    elif [[ $DEBUG ]]; then
+      echo "Didn't match website regex: $key"
+    fi
+  fi
+
   if [[ $DEBUG ]]; then
     echo "Key before uri escaping: $key"
   fi
-  if [[ "$key" == -* ]]; then
-    key=" $key"
-    key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/^%20//' | sed 's/%20/+/g')
-  else
-    key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' "$key" | sed 's/%20/+/g')
-  fi
+  key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' " $key" | sed 's/^%20//' | sed 's/%20/+/g')
   if [[ $DEBUG ]]; then
     echo "Key after uri escaping: $key"
   fi
-  fire "${site}$key"
+  # TODO: "feeling lucky" with google: &btnI=Auf+gut+Glück!
+  fire "$(eval echo \$$site)$key"
 else
+  if [[ -z $openLink ]]; then
+    fire "$(eval echo \$${site}_def)"
+  fi
   if [[ $DEBUG ]]; then
     echo "Just opening Firefox."
     exit 0
