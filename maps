@@ -22,5 +22,5 @@ ans=$(curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$ori
 if [[ $ans == '<!DOCTYPE html>'* ]]; then
   echo "$ans"
 else
-  node gm.js "$ans"
+  node maps.js "$ans"
 fi
