@@ -32,7 +32,7 @@ esac
 
 waitnet -s
 
-src=$(curl -s "$site")
+src=$(curl -sS "$site")
 if [[ -n $src ]]; then
   content=$(echo "$src" | pup --charset utf8 '.yt-lockup-content')
   linksHTML=$(echo "$content" | pup --charset utf8 "div h3 a" | grep "$obj")

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CURL="curl -sG -H 'User-Agent: Mozilla/5.0'";
+CURL="curl -sSG -H 'User-Agent: Mozilla/5.0'";
 sites="songtexte.com songlyrics.com genius.com azlyrics.com plyrics.com"
 #Search with ecosia for (compatibility with special characters and) easier grep
 GOOG_URL='https://www.ecosia.org/search'
@@ -34,7 +34,7 @@ function fetchResult() {
   echo "open $1" >&2
   
   #test if url exists
-  testUrl=$(curl -sI "$1" | sed -n 1p)
+  testUrl=$(curl -sSI "$1" | sed -n 1p)
   echo $testUrl >&2
 
   res=$($CURL "$1" | awk "$2" \

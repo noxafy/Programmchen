@@ -17,8 +17,8 @@ elif [[ -z $destination ]]; then
   exit 1
 fi
 
-#curl -s "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY"
-ans=$(curl -s "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY" || die "Fetching route failed.");
+#curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY"
+ans=$(curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY" || die "Fetching route failed.");
 if [[ $ans == '<!DOCTYPE html>'* ]]; then
   echo "$ans"
 else
