@@ -42,7 +42,7 @@ def_def=$e_def
 # here the actual used search engine is set
 site=def
 
-usage="Usage: \e[1mf\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [-g] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [-g] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
 help="Open a site or search \e[4mkey\e[0m directly there or with default search engine ($def_def).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

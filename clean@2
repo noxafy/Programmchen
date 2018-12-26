@@ -8,7 +8,7 @@ rec="active" #by default clean will clean recursively
 cleanedUp=0 #storage freed in bytes
 path="." #path as root for cleaning
 uselocate=0
-usage="Usage: \e[1mclean@2\e[0m -h | [-s|-v] [-l | [-t] [-a] [\e[4mpath\e[0m]]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s|-v] [-l | [-t] [-a] [\e[4mpath\e[0m]]"
 help="Cleans up the current (or given) directory recursively from ${evil[@]}.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="Usage: \e[1mclat\e[0m -h | \e[4mfiles\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | \e[4mfiles\e[0m \e[4m...\e[0m"
 help="Compiles one or multiple tex file multiple times, so bib and pdf is right.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

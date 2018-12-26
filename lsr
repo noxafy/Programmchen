@@ -5,7 +5,7 @@ rec=1 #for standard rec is on
 dirCnt=0
 fileCnt=0
 path=""
-usage="Usage: \e[1mlsr\e[0m -h | [-d|-f|-c] [-t] [-g \e[4mgrep\e[0m] [\e[4mpath\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d|-f|-c] [-t] [-g \e[4mgrep\e[0m] [\e[4mpath\e[0m]"
 help="Prints recursively all files with full path, current location by default.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

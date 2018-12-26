@@ -6,7 +6,7 @@ pagesconfirmfrom=4
 openDirect=
 CURL=(curl -S -m 10 -A 'Mozilla/5.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 
-usage="Usage: \e[1mdicc\e[0m -h | [-o|-a|-r|-x] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-o|-a|-r|-x] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
 help="Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

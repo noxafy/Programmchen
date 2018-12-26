@@ -4,7 +4,7 @@ verbose=1 # 0=verbose only resumee message 1=verbose skipped files too (default)
 filecnt=0
 dircnt=1 #startdir is first
 skipcnt=0
-usage="Usage: \e[1mwcr\e[0m -h | [-v|-s] [\e[4mpath\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-v|-s] [\e[4mpath\e[0m]"
 help="Summarizes recursively the exact number of bytes of all data in a directory using wc -c.
 $usage
 	\e[1m-h\e[0m	Displays this message and exit.

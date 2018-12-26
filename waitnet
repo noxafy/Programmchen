@@ -6,7 +6,7 @@ waitflag=
 wifiDevice=en0
 starttime=$(date "+%s")
 output=2 # 3=debug; 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
-usage="Usage: \e[1mwaitnet\e[0m -h | [-d|-s|-q] [-n] [-t \e[4mtimeout\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d|-s|-q] [-n] [-t \e[4mtimeout\e[0m]"
 help="Test for internet connection establishment.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

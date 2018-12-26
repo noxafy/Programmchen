@@ -2,7 +2,7 @@
 
 port=8080 #default port
 
-usage="Usage: \e[1mfp\e[0m [-h|\e[4mport\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m [-h|\e[4mport\e[0m]"
 help="Kills any process blocking the specified port.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

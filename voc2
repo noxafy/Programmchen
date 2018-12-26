@@ -12,7 +12,7 @@ translation=
 additional=
 openVocs=
 reslnnrs=
-usage="Usage: \e[1mvoc\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m [-o] | -s [-o] \e[4mword\e[0m [-o]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-n|-t] [\e[4mfile\e[0m] | -o | -a [-o] \e[4mword\e[0m [-o] | -s [-o] \e[4mword\e[0m [-o]"
 help="Reads vocabularies from an csv (does not write) and asks them randomly and two-way.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

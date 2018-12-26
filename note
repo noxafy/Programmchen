@@ -2,7 +2,7 @@
 starttime=$(date "+%s")
 desttime=0
 verbose=1 #1=show remaining time, 0=don't
-usage="Usage: \e[1mnote\e[0m -h | [-s] \e[4mtime\e[0m [ [-m] \e[4mmes\e[0m \e[4m...\e[0m] | [-m] \e[4mmes\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s] \e[4mtime\e[0m [ [-m] \e[4mmes\e[0m \e[4m...\e[0m] | [-m] \e[4mmes\e[0m \e[4m...\e[0m"
 help="Sends a notification to the system at given \e[4mtime\e[0m with given or default \e[4mmessage\e[0m and shows
 the remaining time in the shell. If no \e[4mtime\e[0m given, it sends the notification instantly.
 $usage

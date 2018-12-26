@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="Usage: \e[1mfertigtüte\e[0m [-h]"
+usage="Usage: \e[1m$(basename $0)\e[0m [-h]"
 help='Provides an interactive recipe for cooking a poket soup.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

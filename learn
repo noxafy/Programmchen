@@ -3,7 +3,7 @@
 sec=90 # amount of time in seconds for one page
 pages=1000 # amount of pages
 actPage=0 # actual page
-usage="Usage: \e[1mlearn\e[0m -h | [\e[4mactPage\e[0m] [\e[4mpages\e[0m] [-t \e[4mtimeout\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mactPage\e[0m] [\e[4mpages\e[0m] [-t \e[4mtimeout\e[0m]"
 help="Says every $sec seconds via notification (depends on \"note\") on which page you have to be.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

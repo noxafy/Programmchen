@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="Usage: \e[1mformat\e[0m [-h|-s|\e[4mnumber\e[0m|-a]"
+usage="Usage: \e[1m$(basename $0)\e[0m [-h|-s|\e[4mnumber\e[0m|-a]"
 help="Prints formatting codes in a table. With no argument it prints all formatting codes.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

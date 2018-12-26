@@ -10,7 +10,7 @@ medSpeed=15
 highSpeed=27
 extreme=42
 readspeed=$defaultSpeed #chars per second
-usage="Usage: \e[1mspam\e[0m -h | [-l \e[4mlength\e[0m] [-r \e[4mspeed\e[0m | [-r] \e[4mdefaultSpeed\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-l \e[4mlength\e[0m] [-r \e[4mspeed\e[0m | [-r] \e[4mdefaultSpeed\e[0m]"
 help="Gives an endless stream of sayings by fortune (including the offensives).
 $usage
 	\e[1m-h\e[0m		Displays this message and exits.

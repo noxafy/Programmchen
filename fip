@@ -2,7 +2,7 @@
 
 key=
 verge=0 # 0=both open; 1=left open; 2=right open; 3=both closed
-usage="Usage: \e[1mfip\e[0m -h | [-x] [\e[4mkey\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-x] [\e[4mkey\e[0m]"
 help="Looks in all directories defined by \$PATH for a file called like \e[4mkey\e[0m.
 $usage
         \e[1m-h\e[0m	Displays this message and exits.

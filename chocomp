@@ -6,7 +6,7 @@ transpose=
 long=0 # -1=short 1=medium 2=long
 files=0
 multipleFiles=
-usage="Usage: \e[1mchocomp\e[0m -h | [-s|-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s|-m|-l] [-t \e[4mN\e[0m] \e[4mchofile\e[0m \e[4m...\e[0m"
 help="Compiler from chordpro/chordii files to pdf. Give a \".cho\"-file as argument (\e[4mchofile\e[0m).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

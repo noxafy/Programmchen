@@ -3,7 +3,7 @@
 obj=""
 
 site="https://www.youtube.com/user/Gronkh/videos"
-usage="Usage: \e[1mgr\e[0m -h | -o | [\e[4mseries\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | -o | [\e[4mseries\e[0m]"
 help="Prints all recent Gronkh videos on YouTube.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.

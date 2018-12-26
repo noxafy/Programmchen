@@ -8,7 +8,7 @@ forceOverwriting=
 useLyrics=
 destination=$CHO
 debug=
-usage="Usage: \e[1mchoinit\e[0m -h | [-d] [-f] [\e[4mtitle\e[0m] [\e[4martist\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d] [-f] [\e[4mtitle\e[0m] [\e[4martist\e[0m]"
 help="Script for initiating an chordii file in interplay with \"lyrics\".
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

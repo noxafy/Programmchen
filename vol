@@ -1,7 +1,7 @@
 #!/bin/bash
 
 volume=
-usage="Usage: \e[1mvol\e[0m -h | [\e[4mvolume\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mvolume\e[0m]"
 help="Get or set the system output volume.
 $usage
         \e[1m-h\e[0m	Displays this help message and exists.
