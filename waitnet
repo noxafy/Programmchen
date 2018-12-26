@@ -134,7 +134,7 @@ while true; do
       ssid_estabilshed=
     fi
     if [[ -z $sendNote && $elapsedTime -ge $timeout ]]; then
-      [[ -n "$ssid" && $output -ge 1 ]] && echo "airport -I: $ssid"
+      [[ -n "$ssid" && $output -ge 2 ]] && echo "airport -I:" $ssid
       fail "Timeout: Auto-connecting to a SSID"
     fi
     waitflag=1
