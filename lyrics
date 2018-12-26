@@ -54,7 +54,7 @@ function google {
   #add v for more information about headers
   stream=$("${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$*")
   if [[ -n $VERBOSE && ${#stream} -lt 2000 ]]; then
-    echo "Answer may indicate failing:" >&2
+    echo "Response may indicate failing:" >&2
     printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
   fi
   #echo "link: ${GOOG_URL}?q=$*" >&2
@@ -93,7 +93,7 @@ function fetchResult() {
       fetchResult "$link" "$2"
       return;
     fi
-    printf "Error in fetching site: $state" >&2
+    printf "Error in fetching site: %s" "$state" >&2
     [[ ! -t 0 ]] && die
 
     res=$("${CURL[@]}" "$1");
@@ -104,19 +104,19 @@ function fetchResult() {
       echo "Command: ${CURL[@]} \"$1\"" >&2
       echo "Command: ${CURL[@]} \"$1\"
       
-      Answer-Header (${#testUrl}):
+      Response-Header (${#testUrl}):
       $testUrl
       
-      Answer (${#res}):
+      Response (${#res}):
       $res" | less
       return
       ;;
     esac
   fi
   if [[ -n $VERBOSE ]]; then
-    echo "******Answer-Header (START)******" >&2
+    echo "******Response-Header (START)******" >&2
     printf "%s" "$testUrl" >&2
-    echo "******Answer-Header (END)*********
+    echo "******Response-Header (END)********
 " >&2
   else
     [[ -z "$QUIET" ]] && echo "$state" >&2
