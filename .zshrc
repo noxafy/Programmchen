@@ -50,3 +50,11 @@ ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[yellow]%}*"
 ZSH_THEME_GIT_PROMPT_CLEAN=""
 PROMPT='%(?..%F{red})%*%f %c$(git_prompt_info)%(!.%F{red}.)$%f '
 # see http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
+
+command_not_found_handler() {
+  if type command_not_found >/dev/null 2>&1; then
+    command_not_found "$@"
+  else
+    echo "Sorry, did not found: $*"
+  fi
+}
