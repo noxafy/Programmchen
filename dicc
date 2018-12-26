@@ -56,15 +56,18 @@ done
 #prepare key word(s)
 key=${key// /+}
 
-#ensure internet connection
-waitnet -s
-
 if [[ -n "$key" ]]; then
   site="https://www.dict.cc/?s=$key"
 elif [[ -z $openDirect ]]; then
   echo "Please specify some key words to search for. See -h for more help."
   exit 1
 fi
+
+#ensure internet connection
+waitnet -s || {
+  "Try to manually open $site"
+  exit 1
+}
 
 #open website if desired
 if [[ -n $openDirect ]]; then

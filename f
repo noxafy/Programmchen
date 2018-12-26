@@ -208,7 +208,11 @@ done
 
 if [[ -n $openLink ]]; then
   # test internet connection
-  waitnet -s
+  waitnet -s || {
+    echo "Could not establish internet connection. Try to manually:"
+    printf "open "
+    openLink=
+  }
 
   if [[ -n $openLink ]]; then
     # test if firefox started

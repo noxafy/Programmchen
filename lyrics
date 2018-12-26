@@ -564,7 +564,7 @@ spotify)
   break;
   ;;
 *)
-  waitnet -s >&2
+  waitnet -s >&2 || die
   # If given an url, just browse it
   tryURL "urlonly" "$1"
   if [[ -n "$1" ]]; then
@@ -578,5 +578,5 @@ spotify)
   ;;
 esac
 
-waitnet -s >&2
+waitnet -s >&2 || die
 findLyrics

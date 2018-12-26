@@ -30,7 +30,10 @@ case "$1" in
     ;;
 esac
 
-waitnet -s
+waitnet -s || {
+  echo "Try to manually open $site"
+  exit 1
+}
 
 src=$(curl -sS "$site")
 if [[ -n $src ]]; then

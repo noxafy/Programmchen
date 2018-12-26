@@ -48,7 +48,7 @@ runCmd() {
 }
 
 #test internet connection
-waitnet -s
+waitnet -s || exit 1
 
 start
 if [[ -n $extendedupgrade ]]; then

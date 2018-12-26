@@ -39,7 +39,10 @@ if [[ -n "$*" ]]; then
     open "${site}$key"
   else
     # test on wifi connection
-    waitnet -s
+    waitnet -s || {
+      echo "Try manually to open ${site}$key"
+      exit 1
+    }
 
     srcf=$(curl -sS -m 2 "${site}$key")
     [[ -z $srcf ]] && echo "No internet connection available." && exit 1
