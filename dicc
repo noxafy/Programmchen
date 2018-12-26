@@ -186,12 +186,12 @@ else
   vars=$(echo $srcf | grep -o "var c1Arr.*; var c2Arr.*; var hlRows" | grep -o ".*;")
   var1=$(echo $vars | grep -o "c1Arr.*; var c2Arr" | grep -o ".*;")
   var2=$(echo $vars | grep -o "c2Arr.*")
-  if [[ $verbose != 0 && ${#srcf} -lt 500 ]]; then
-    echo "srcf: $srcf"
+  if [[ $verbose != 0 ]]; then
+    [[ ${#srcf} -lt 500 ]] && echo "srcf: $srcf"
+    #echo "vars: $vars"
+    echo "var1: $var1"
+    echo "var2: $var2"
   fi
-  #echo "vars: $vars"
-  #echo "var1: $var1"
-  #echo "var2: $var2"
 fi
 
 key=${key//+/ }
@@ -246,6 +246,10 @@ else if ($all) {
 	}
 } else {
 	listAll();
+}
+
+if (contains(c1Arr, "[ limited result set ]")) {
+  console.log("*** They caught you: limited result set ***");
 }
 
 function listAll() {
