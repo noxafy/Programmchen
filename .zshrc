@@ -27,6 +27,7 @@ export ZSH="~/.oh-my-zsh"
 
 plugins=(
   git
+  npm
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -41,9 +42,18 @@ source $ZSH/oh-my-zsh.sh
 
 ENABLE_CORRECTION="true"
 autoload -U +X bashcompinit && bashcompinit
-autoload -U +X compinit && compinit
+#autoload -U +X compinit && compinit
 . ~/.profile
 
+### completions
+# https://stackoverflow.com/questions/14307086/tab-completion-for-aliased-sub-commands-in-zsh-alias-gco-git-checkout
+compdef pc=pass
+compdef pe=pass
+compdef pm=pass
+compdef pu=pass
+compdef pi=pass
+
+### theme
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[red]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[yellow]%}*"
@@ -56,5 +66,13 @@ command_not_found_handler() {
     command_not_found "$@"
   else
     echo "Sorry, did not found: $*"
+  fi
+}
+
+help() {
+  if [[ $1 == "test" ]]; then
+    man -P "less -p'^CONDITIONAL EXPRESSIONS$'" zshall
+  else
+    man -P "less -p'^ {7}$@ '" zshall
   fi
 }
