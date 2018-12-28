@@ -48,6 +48,7 @@ ffmpeg #required by audacity?
 fortune
 #freeling
 fswatch
+fzf
 gcal
 #geoipupdate
 git
@@ -67,7 +68,6 @@ maven-completion
 nativefier
 #pass #already installed
 pdfgrep
-pick
 plan9port
 pup
 recode
