@@ -25,6 +25,8 @@ export ZSH="~/.oh-my-zsh"
 # see 'man strftime' for details.
 # HIST_STAMPS="mm/dd/yyyy"
 
+COMPLETION_WAITING_DOTS="true"
+
 plugins=(
   git
   npm
