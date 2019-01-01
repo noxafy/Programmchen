@@ -256,12 +256,12 @@ echo
 #go home first
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
-# check, if .bash_profile is installed
+# check if .profile has been executed
 if [[ -z "$IT" ]]; then # $IT is required by script
   tell "Preferences installation"
 
   # install .profile's as root
-  c -s .bash_profile .profile .zsh_profile
+  c -s .bash_profile .profile .zshrc
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed!"
@@ -479,7 +479,6 @@ fi
 # if [[ -f "$bash4" && "$SHELL" != "$bash4" ]]; then
 if [ ! -d "$ZSH" ]; then
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-  printf '. ~/.zsh_profile' >> ~/.zshrc
 
   # tell "Changing the login shell to $bash4 (bash4)"
 #   if [[ -z $(grep "$bash4" /etc/shells) ]]; then
@@ -811,6 +810,6 @@ echo
 # check if ffmpeg is required by audacity
 # install adobe, contains key
 # install microsoft programs, user gui login
-# set terminal shortcut https://appleinsider.com/articles/18/03/14/how-to-create-keyboard-shortcuts-to-launch-apps-in-macos-using-automator
+# set iTerm global shortcut key
 
 popd &> /dev/null
