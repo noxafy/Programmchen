@@ -101,7 +101,7 @@ compileToPdf() {
           fi
         fi
       else
-        echo "Failed to read metadata from pdf: mdls not found!"
+        die "Failed to read metadata from pdf: mdls not found!"
       fi
     fi
   # else try to use chordii
@@ -218,4 +218,4 @@ while [[ -n "$1" ]]; do
   shift
 done
 
-[[ $files -gt 1 ]] && echo "$files files done."
+[[ $files -le 1 ]] || echo "$files files done."
