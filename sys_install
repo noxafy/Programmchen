@@ -562,7 +562,8 @@ fi
 # install chordpro
 if [[ -z $(which chordpro) ]]; then
   tell "Chordpro installation"
-  sudo cpan chordpro
+  #sudo cpan chordpro
+  sudo cpan install JV/App-Music-ChordPro-0.94.tar.gz
 else
   echo "Skipped chordpro installation."
 fi
