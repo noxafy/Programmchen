@@ -273,7 +273,7 @@ if [[ -n $key ]]; then
   # TODO: "feeling lucky" with google: &btnI=Auf+gut+Glück!
   fire "$(eval echo \$$site)$key"
 else
-  if [[ -z $openLink ]]; then
+  if [[ -z $openLink || "$site" != "def" ]]; then
     fire "$(eval echo \$${site}_def)"
   fi
   if [[ $DEBUG ]]; then
