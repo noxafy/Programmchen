@@ -423,7 +423,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   echo "The computer will reboot now to apply the settings. After that, please start this script again."
   printf "\e[4mHint\e[0m: Just set your favourite terminal layout to default.\n"
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
-  printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. "
+  printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. (Maybe only after restart?)"
   waitUser "Press enter to restart ..."
   echo "sudo shutdown -r now ..."
   sudo shutdown -r now
@@ -784,20 +784,37 @@ tell "Manual part"
 echo
 
 # TODO Settings
-# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, iTerm, FileMerge, Trello
-# - notational velocity: ~/Dropbox/Org/Notational/
-# - spotify login
-# - one note login, ggf Excel, Word, PowerPoint
-# - import firefox bookmarks
-# - calender login google
-# - import newsflow opml
-# - wine installs (jardinains, siedler5, finale)
+### manual settings
+# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audacity, idea, lightshot, freefilesync, prefs, iTerm, FileMerge, Trello
 # - Go2Shell: cd %PATH%; printf "\e[F\e[K"
 # - install textmate bundles
 # - copy power point drafts uniwue from $D/Org/Studium/ # target was "$HOME/Library/Group Containers/UBF8T346G9.Office/User Content.localized/Templates.localized"
-# - check all prefs: open /Applications/System\ Preferences.app/
-# - check os shortcuts
-# - check dictionaries
+# - set all prefs are desired: open /Applications/System\ Preferences.app/
+# - load iTerm prefs and custom profile from $P/Prefs
+
+### manual installs
+# - install adobe, contains key
+# - install microsoft programs, user gui login
+
+### manual file load
+# - notational velocity: ~/Dropbox/Org/Notational/
+# - import firefox bookmarks
+# - import newsflow opml
+
+### logins
+# - spotify login
+# - one note login, ggf Excel, Word, PowerPoint
+# - calender login google
+
+### optional
+# - wine installs (jardinains, siedler5, finale)
+
+### Check if...
+# - ffmpeg is required by audacity
+# - global shortcut for iTerm is applied
+# - os shortcuts
+# - check all other system prefs: open /Applications/System\ Preferences.app/
+# - dictionaries are installed rightly
   # German - English.dictionary
   # Wikipedia.wikipediadictionary
   # Apple Dictionary.dictionary
@@ -811,9 +828,5 @@ echo
   # Spanish - English.dictionary
   # Italian - English.dictionary
   # Russian - English.dictionary
-# check if ffmpeg is required by audacity
-# install adobe, contains key
-# install microsoft programs, user gui login
-# set iTerm global shortcut key
 
 popd &> /dev/null
