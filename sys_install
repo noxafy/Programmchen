@@ -780,7 +780,7 @@ tell "Manual part"
 echo
 
 # TODO Settings
-# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, terminal, FileMerge
+# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audcity, idea, lightshot, prefs, iTerm, FileMerge, Trello
 # - notational velocity: ~/Dropbox/Org/Notational/
 # - spotify login
 # - one note login, ggf Excel, Word, PowerPoint
