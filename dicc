@@ -209,8 +209,10 @@ if ($verbose !== 0) {
   console.log("c2Arr.length: " + c2Arr.length)
 }
 
-if (!c1Arr || !c2Arr) console.log("No translation found.");
-else if ($all) {
+if (!c1Arr || !c2Arr) {
+  console.log("No translation found.");
+} else {  
+  if ($all) {
 	var logged = 0;
 	var skipped = 0;
 	for (var i = 1; i < c1Arr.length; i++) {
@@ -247,12 +249,13 @@ else if ($all) {
 		}
 		//}
 	}
-} else {
-	listAll();
-}
+  } else {
+    listAll();
+  }
 
-if (contains(c1Arr, "[ limited result set ]")) {
-  console.log("*** They caught you: limited result set ***");
+  if (contains(c1Arr, "[ limited result set ]")) {
+    console.log("*** They caught you: limited result set ***");
+  }
 }
 
 function listAll() {
