@@ -44,7 +44,7 @@ diff-pdf
 #exiftool
 expect
 fd
-ffmpeg #required by audacity?
+#ffmpeg #required by audacity?
 fortune
 #freeling
 fswatch
@@ -62,15 +62,17 @@ lorem
 #mas #already installed
 maven
 maven-completion
-#mplayer
+mplayer
 #mujs
 #mysql
+nano
 nativefier
 #pass #already installed
 pdfgrep
 plan9port
 pup
 recode
+rename
 shpotify
 #sic
 testdisk
@@ -94,17 +96,18 @@ disablemonitor
 #dropbox #already installed
 firefox
 flux
-#freefilesync #currently bad checksum
+freefilesync
 #freemind
 geogebra
 go2shell
 google-chrome
 google-earth-pro
 intellij-idea
-#iterm2
+iterm2
 java
 #jwzlyrics
 #mactex
+#mp3tag
 mpv
 notational-velocity
 #openoffice
