@@ -13,7 +13,7 @@ $usage
 	\e[1m-s\e[0m	Forces using configuration file for short lyrics (= default settings).
 	\e[1m-m\e[0m	Forces using configuration file for medium lyrics.
 	\e[1m-l\e[0m	Forces using configuration file for longer lyrics.
-	\e[1m-t\e[0m \e[4mN\e[0m	Transpose by \e[4mN\e[0m semi-tones (-11 to (+)11), mirrored in resulting name.
+	\e[1m-t\e[0m \e[4mN\e[0m	Transpose chords by \e[4mN\e[0m semi-tones (-11 to (+)11), mirrored in resulting name.
 If none of \e[1m-s\e[0m, \e[1m-m\e[0m or \e[1m-l\e[0m given, it tries automatically which is the best fitting.
 "
 
@@ -175,41 +175,42 @@ while [[ -n "$1" ]]; do
     exit 1
     ;;
   *)
-    if [[ -d "$1" ]]; then
-      echo "$1: not a file - Please give an existing and readable chordpro file to compile."
-      shift
-      continue
-    elif [[ ! -f "$1" ]]; then
-      echo "$1: file not found - Please give an existing and readable chordpro file to compile."
-      shift
-      continue
-    elif [[ ! -r "$1" ]]; then
-      echo "$1: file not readable - Please give an existing and readable chordpro file to compile."
-      shift
-      continue
-    fi
-    if [[ "$1" != *.cho ]]; then
-      printf "%s: Wrong file type! Please give a chordpro/chordii file to compile.\n" "$1"
-      shift
-      continue
-    fi
-    if [[ $files -gt 0 || -n $2 ]]; then
-      multipleFiles=true
-    fi
-    if [[ -z $transpose ]]; then
-      # detect transpose instructions
-      transposes=$(cat "$1" | grep "# transpose " | sed 's/# transpose //')
-      if [[ -n "$transposes" ]]; then
-        compileTransposes "${1%.*}" $transposes
-      else
-        transpose=0
-        compileToPdf "${1%.*}"
-      fi
-    else
-      compileToPdf "${1%.*}"
-    fi
+    break
     ;;
   esac
+  shift
+done
+
+while [[ -n "$1" ]]; do
+  if [[ -d "$1" ]]; then
+    echo "$1: not a file - Please give an existing and readable chordpro file to compile."
+    shift
+    continue
+  elif [[ ! -f "$1" ]]; then
+    echo "$1: file not found - Please give an existing and readable chordpro file to compile."
+    shift
+    continue
+  elif [[ ! -r "$1" ]]; then
+    echo "$1: file not readable - Please give an existing and readable chordpro file to compile."
+    shift
+    continue
+  fi
+  if [[ "$1" != *.cho ]]; then
+    printf "%s: Wrong file type! Please give a chordpro/chordii file to compile.\n" "$1"
+    shift
+    continue
+  fi
+  if [[ $files -gt 0 || -n $2 ]]; then
+    multipleFiles=true
+  fi
+  if [[ -z $transpose ]]; then
+    # detect transpose instructions
+    transposes=$(cat "$1" | grep "# transpose " | sed 's/# transpose //')
+    [[ -z "$transposes" ]] && transposes=0
+  else
+    transposes=$transpose
+  fi
+  compileTransposes "${1%.*}" $transposes
   shift
 done
 
