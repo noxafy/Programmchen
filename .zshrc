@@ -54,6 +54,7 @@ compdef pe=pass
 compdef pm=pass
 compdef pu=pass
 compdef pi=pass
+compdef _path_commands fip
 
 ### theme
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[red]%}"
