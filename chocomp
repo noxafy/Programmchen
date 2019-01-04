@@ -129,6 +129,8 @@ compileTransposes() {
   if [[ -n $1 && -n $2 ]]; then
     multipleFiles=true
   fi
+  long_tmp=$long
+  transpose_tmp=$transpose
   while [[ -n $1 ]]; do
     case $1 in
       [0-9]|[0-9][0-9]|+[0-9]|+[0-9][0-9]|-[0-9]|-[0-9][0-9])
@@ -136,11 +138,13 @@ compileTransposes() {
         compileToPdf "$file"
         ;;
       *)
-        echo "Invalid transpose argument: ${1}\nPlease specify a valid number of semi-tones. See -h for more help."
+        printf "Invalid transpose argument: %s\nPlease specify a valid number of semi-tones. See -h for more help.\n" "$1"
         ;;
     esac
     shift
   done
+  long=$long_tmp
+  transpose=$transpose_tmp
 }
 
 while [[ -n "$1" ]]; do
