@@ -5,6 +5,14 @@ case $1 in
   fw)
     f w
     ;;
+  o*)
+    exists=${1:1}
+    if [[ -e "$exists" ]]; then
+      open "$exists"
+    else
+      echo "Did you mean: open $exists"
+    fi
+    ;;
   *)
     echo "Sorry, did not found: $*"
     echo "Maybe you can add it to handle if it was a frequent misspelling."
