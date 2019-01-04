@@ -29,7 +29,7 @@ useConfig() {
 
 getPageNumber() {
   open -g "$1" && sleep 1 # wait until metadata is updated
-  mdls -name kMDItemNumberOfPages "$1" | cut -d " " -f 3
+  mdls -name kMDItemNumberOfPages "$1" | cut -d " " -f 3 || die "Failed to get page number ($2) for: $1"
 }
 
 compileToPdf() {
@@ -77,18 +77,15 @@ compileToPdf() {
     else # $long -eq 0
       chordpro -x $transpose -o "$pdfFile" "$choFile" || die "Failed to print pdf from $choFile."
       if [[ -n $(which mdls) ]]; then
-        pagenumber=$(getPageNumber "$pdfFile")
-        [[ -z $pagenumber ]] && die "Failed to get page number (1) for: $pdfFile"
+        pagenumber=$(getPageNumber "$pdfFile" 1)
         if [[ $pagenumber -ge 2 ]]; then
           echo "Well, that lyrics seems to be a little longer. Let's try the json for long lyrics."
           useConfig "$chordlong" "$pdfFile" "$choFile"
-          lpagenumber=$(getPageNumber "$pdfFile")
-          [[ -z $lpagenumber ]] && die "Failed to get page number (2) for: $pdfFile"
+          lpagenumber=$(getPageNumber "$pdfFile" 2)
           if [[ $lpagenumber -lt $pagenumber ]]; then
             echo "Okay, there is an improvement. But let's see if the json for medium lyrics fits even better."
             useConfig "$chordmedium" "$pdfFile" "$choFile"
-            mpagenumber=$(getPageNumber "$pdfFile")
-            [[ -z $mpagenumber ]] && die "Failed to get page number (3) for: $pdfFile"
+            mpagenumber=$(getPageNumber "$pdfFile" 3)
             if [[ $mpagenumber -gt $lpagenumber ]]; then
               echo "That didn't work. Lyrics seem to fit better in long lyrics settings."
               useConfig "$chordlong" "$pdfFile" "$choFile"
