@@ -81,6 +81,10 @@ $usage
 	No argument will just open Firefox. (Therefrom its name..)
 "
 
+################################
+### Functions
+################################
+
 die() {
   mes=$1
   shift
@@ -150,6 +154,10 @@ tryFirst() {
     echo "Invalid tryFirst result: $res"
   fi
 }
+
+################################
+### Args parsing
+################################
 
 case $1 in
   -h|--help)
@@ -236,8 +244,14 @@ case $1 in
     ;;
 esac
 
-#read from arguments
-key="$*"
+#read from arguments, if not read
+if [[ -n $key ]]; then
+  if [[ -n "$*" ]]; then
+    echo "Warning: link or query piped, but also in argument given. Arguments will be ignored."
+  fi
+else
+  key="$*"
+fi
 
 #preparing key
 if [[ -n $key ]]; then
