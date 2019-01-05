@@ -36,6 +36,8 @@ s="https://scholar.google.de/scholar?q="
 s_def="https://scholar.google.de/"
 i="https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q="
 i_def="https://www.idealo.de/"
+ch="https://www.chefkoch.de/suche.php?wo=2&suche="
+ch_def="https://www.chefkoch.de/"
 def=$e
 def_def=$e_def
 
@@ -70,10 +72,11 @@ $usage
 	    g		$g\$key
 	    yt		$yt\$key
 	    am		$am\$key
-	    i		$idealo\$key
+	    i		$i\$key
 	    mvn		$mvn\$key
 	    npm 	$npm\$key
-	    s		$scholar\$key
+	    s		$s\$key
+	    ch		$ch\$key
 
 	  Any other first word will be interpreted as part of the query phrase and searched by 
 	  default search engine. Use -- for separating options from query.
@@ -235,7 +238,7 @@ case $1 in
   212|t212|trading212)
     fire "$t212"
     ;;
-  e|g|yt|am|i|mvn|npm|s)
+  e|g|yt|am|i|mvn|npm|s|ch)
     site=$1
     shift
     ;;
