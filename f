@@ -12,7 +12,7 @@ wa="https://web.whatsapp.com/"
 
 psy="https://lexikon.stangl.eu/alphabetisches-inhaltsverzeichnis/"
 
-t212="https://www.trading212.com"
+
 #
 #
 #
@@ -63,7 +63,7 @@ $usage
 	    mensa	$mensa
 	    psy		$psy
 	    mail	$mail
-	    t212	$trading212
+	    t212	$t212
 
 	  Option type 2 processes directly a search with given keywords on a particular site.
 	  Without any other argument the related home page will be opened.
