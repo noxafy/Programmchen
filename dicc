@@ -4,7 +4,8 @@ all=0 #by default only exact results are shown
 verbose=0
 pagesconfirmfrom=4
 openDirect=
-CURL=(curl -S -m 10 -A 'Mozilla/5.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
+# try with -A 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+CURL=(curl -S -m 10 -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-o|-a|-r|-x] [-v] \e[4mkey\e[0m \e[4m...\e[0m"
 help="Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints them here.
@@ -194,6 +195,11 @@ else
     #echo "vars: $vars"
     echo "var1: $var1"
     echo "var2: $var2"
+  fi
+  if [[ -z "$var1" || -z "$var2" ]]; then
+    echo "Could not fetch translations from:"
+    echo "$srcf"
+    exit 2
   fi
 fi
 
