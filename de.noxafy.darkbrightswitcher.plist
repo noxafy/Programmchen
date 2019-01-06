@@ -6,8 +6,9 @@
 		<string>de.noxafy.darkbrightswitcher</string>
 		<key>ProgramArguments</key>
 		<array>
-			<string>open</string>
-			<string>/Applications/SwitchDarkAndBright.app</string>
+			<string>osascript</string>
+			<string>-e</string>
+			<string>tell application "System Events" to tell appearance preferences to set dark mode to not dark mode</string>
 		</array>
 		<key>StartCalendarInterval</key>
 		<array>
