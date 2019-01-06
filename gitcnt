@@ -15,7 +15,7 @@ if [[ "$2" ]]; then
 fi
 
 f_gitcnt() {
-  git log --shortstat --author "$1" | grep "files\? changed" | awk '{files+=$1; inserted+=$4; deleted+=$6} END {print "Files changed:", files, "\t Lines inserted:", inserted, "\t Lines deleted:", deleted}'
+  git log --shortstat --author "$1" | grep "files\? changed" | awk '{inserted+=$4; deleted+=$6} END {print "Lines inserted:", inserted, "\t Lines deleted:", deleted}'
 }
 
 while [[ "$@" ]]; do
