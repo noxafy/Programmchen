@@ -18,7 +18,7 @@ PS1='\t \W\$ '
 #trap 'printf ""' 2; printf "\033[8m"; while true; do printf "\r\033[K"; done #nasty
 ***REMOVED***
 
-command_not_found_handle() {
+function command_not_found_handle() {
   if type command_not_found >/dev/null 2>&1; then
     command_not_found "$@"
   else

@@ -64,7 +64,7 @@ ZSH_THEME_GIT_PROMPT_CLEAN=""
 PROMPT='%(?..%F{red})%*%f %c$(git_prompt_info)%(!.%F{red}.)$%f '
 # see http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
 
-command_not_found_handler() {
+function command_not_found_handler() {
   if type command_not_found >/dev/null 2>&1; then
     command_not_found "$@"
   else
@@ -72,7 +72,7 @@ command_not_found_handler() {
   fi
 }
 
-help() {
+function help() {
   if [[ $1 == "test" ]]; then
     man -P "less -p'^CONDITIONAL EXPRESSIONS$'" zshall
   else
