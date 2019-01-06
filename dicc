@@ -191,15 +191,20 @@ else
   var1=$(echo $vars | grep -o "c1Arr.*; var c2Arr" | grep -o ".*;")
   var2=$(echo $vars | grep -o "c2Arr.*")
   if [[ $verbose != 0 ]]; then
-    [[ ${#srcf} -lt 500 ]] && echo "srcf: $srcf"
+    echo "srcf: $srcf"
     #echo "vars: $vars"
     echo "var1: $var1"
     echo "var2: $var2"
   fi
-  if [[ -z "$var1" || -z "$var2" ]]; then
-    echo "Could not fetch translations from:"
-    echo "$srcf"
-    exit 2
+  if [[ -z "$vars" ]]; then
+    if [[ -n $(echo "$srcf" | grep -o "Leider keine &Uuml;bersetzungen gefunden!") ]]; then
+      echo "No translation found."
+      exit 0
+    else
+      echo "Couldn't fetch translations."
+      [[ 0 = "$verbose" && ${#srcf} -lt 500 ]] && printf "%s\n" "$srcf"
+      exit 2
+    fi
   fi
 fi
 
@@ -210,14 +215,15 @@ var c1Arr;
 var c2Arr;
 $var1
 $var2
-if ($verbose !== 0) {
-  console.log("c1Arr.length: " + c1Arr.length)
-  console.log("c2Arr.length: " + c2Arr.length)
-}
 
 if (!c1Arr || !c2Arr) {
   console.log("No translation found.");
-} else {  
+} else {
+  if ($verbose !== 0) {
+    console.log("c1Arr.length: " + c1Arr.length)
+    console.log("c2Arr.length: " + c2Arr.length)
+  }
+
   if ($all) {
 	var logged = 0;
 	var skipped = 0;
