@@ -233,7 +233,7 @@ fi
 
 case $1 in
   w|sb|bib|wa|mensa|psy|mail)
-    fire "$1"
+    fire "$(eval echo \$$1)"
     ;;
   212|t212|trading212)
     fire "$t212"
