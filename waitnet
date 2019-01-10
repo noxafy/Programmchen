@@ -101,6 +101,12 @@ setShouldOutput() {
  # echo "shouldOutput: $shouldOutput"
 }
 
+function turnWifiOn() {
+  [[ $output -ge 3 ]] && echo "Wi-Fi ($wifiDevice) \"Off\" detected!"
+  log "Toggling Wi-Fi ($wifiDevice) on ..."
+  networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
+}
+
 #toggle wifi on
 wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice")
 if [[ $? -ne 0 ]]; then
@@ -108,9 +114,7 @@ if [[ $? -ne 0 ]]; then
   wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice")
 fi
 if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
-  [[ $output -ge 3 ]] && echo "Wi-Fi ($wifiDevice) \"Off\" detected!"
-  log "Toggling Wi-Fi ($wifiDevice) on ..."
-  networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
+  turnWifiOn
 else
   #for preformance, first test if internet connection is established
   # performance: 40ms more when not working, but 100ms less when working (and the letter is most of the times)
@@ -128,7 +132,15 @@ ssid_estabilshed=
 while true; do
   #test on ssid connected
   ssid=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
-  if [[ ${#ssid} -lt 19 ]]; then
+  if [[ -z "$ssid" ]]; then
+    if [[ -n $(networksetup -getairportpower "$wifiDevice" | grep Off) ]]; then
+      log "Wifi turned off."
+      turnWifiOn
+    else
+      log "WTF-Error: Unknown state: airport reports no ssid result, but networksetup tells wiki device ($wifiDevice) is not Off."
+      exit 1
+    fi
+  elif [[ ${#ssid} -lt 19 ]]; then
     if [[ -n "$ssid_estabilshed" ]]; then
       log "Connection to $ssid_estabilshed lost."
       ssid_estabilshed=
