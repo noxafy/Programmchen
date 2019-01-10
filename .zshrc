@@ -73,9 +73,15 @@ function command_not_found_handler() {
 }
 
 function help() {
-  if [[ $1 == "test" ]]; then
+  case $1 in
+  test)
     man -P "less -p'^CONDITIONAL EXPRESSIONS$'" zshall
-  else
+    ;;
+  "")
+    man zshall
+    ;;
+  *)
     man -P "less -p'^ {7}$@ '" zshall
-  fi
+    ;;
+  esac
 }
