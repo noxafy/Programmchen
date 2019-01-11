@@ -32,6 +32,7 @@ aspell
 bash
 bash-completion
 bash-snippets
+bfg
 brightness
 #bro
 cheat
@@ -47,7 +48,7 @@ fd
 #ffmpeg #required by audacity?
 fortune
 #freeling
-fswatch
+#fswatch
 fzf
 gcal
 #geoipupdate
@@ -57,8 +58,10 @@ go
 googler
 hexedit
 howdoi
+#launch4j
 lf
 lorem
+lsd
 #mas #already installed
 maven
 maven-completion
@@ -96,6 +99,7 @@ disablemonitor
 #dropbox #already installed
 firefox
 flux
+font-hack-nerd-font
 freefilesync
 #freemind
 geogebra
@@ -504,8 +508,9 @@ fi
 if [[ -z $(which brew) ]]; then
   echo "Installing Homebrew ..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed."
-  echo "Tapping caskroom ..."
+  echo "Tapping caskrooms ..."
   brew tap caskroom/cask || die "brew tap caskroom/cask failed."
+  brew tap caskroom/fonts || die "brew tap caskroom/fonts failed"
 else
   echo "Skipped brew installation."
 fi
