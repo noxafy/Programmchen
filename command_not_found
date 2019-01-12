@@ -13,6 +13,10 @@ case $1 in
       echo "Did you mean: open $exists"
     fi
     ;;
+  greo)
+    shift
+    grep --color=always "$@"
+    ;;
   *)
     echo "Sorry, did not found: $*"
     echo "Maybe you can add it to handle if it was a frequent misspelling."
