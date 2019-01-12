@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 cmd=
 # link regex does not work because (http:)// gets recognized as file path
@@ -46,8 +46,12 @@ case $1 in
 esac
 
 if [[ -n "$cmd" ]]; then
-  shopt -s expand_aliases
-  . ~/.profile
-  $cmd "$arg"
+  args=($@)
+  args[1]=$arg
+  if read -q "?Did you mean: $cmd ${args[*]} ? (y/n) [n]: "; then
+    echo
+    . ~/.profile  # index aliases
+    $cmd "${args[@]}"
+  fi
 fi
 
