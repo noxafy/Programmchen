@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cmd=
 # link regex does not work because (http:)// gets recognized as file path
 case $1 in
   fw)
@@ -17,8 +18,36 @@ case $1 in
     shift
     grep --color=always "$@"
     ;;
+  e*)
+    arg=${1:1}
+    cmd=e
+    ;;
+  n*)
+    arg=${1:1}
+    cmd=n
+    ;;
+  sn*)
+    arg=$(1:2)
+    cmd=sn
+    ;;
+  m*)
+    arg=${1:1}
+    echo "Rby: m \"$arg\""
+    cmd=m
+    ;;
+  sm*)
+    arg=$(1:2)
+    cmd=sm
+    ;;
   *)
     echo "Sorry, did not found: $*"
     echo "Maybe you can add it to handle if it was a frequent misspelling."
     ;;
 esac
+
+if [[ -n "$cmd" ]]; then
+  shopt -s expand_aliases
+  . ~/.profile
+  $cmd "$arg"
+fi
+
