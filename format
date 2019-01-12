@@ -7,7 +7,8 @@ $usage
 	\e[1m-s\e[0m	Prints only the non-color options.
 	\e[4mnumber\e[0m	Prints all numbers to there (1-999).
 	\e[1m-a\e[0m	Prints all numbers to 108 (last one).
-More infomation: https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_codes
+More infomation: https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+http://ascii-table.com/ansi-escape-sequences.php
 "
 
 formatted="0 1 2 4 5 7 8 $(seq 30 37) $(seq 40 47) $(seq 90 97) $(seq 100 107)"
