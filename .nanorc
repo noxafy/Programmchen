@@ -1,0 +1,4 @@
+set smooth
+set softwrap
+set nowrap
+include /usr/local/share/nano/*
