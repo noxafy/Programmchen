@@ -114,7 +114,7 @@ if [[ ! -e "$target/.m2" ]]; then
 fi
 
 rm -rf .gnupg/S.gpg-agent* #remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
-ctt .bash_profile .profile .zshrc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+ctt .bashrc .profile .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 ctt IdeaProjects Documents Pictures Music Dropbox
 
 cd "Library" || die "cd to $HOME/Library failed"

@@ -268,12 +268,12 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   tell "Preferences installation"
 
   # install .profile's as root
-  c -s .bash_profile .profile .zshrc
+  c -s .bashrc .profile .zshrc
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed!"
   fi
-  c .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+  c .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 
   #install terminal layouts
   open "$thisdir/*.terminal"
