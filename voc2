@@ -68,6 +68,7 @@ openLine() {
 }
 
 searchForInAll() {
+  # TOOD better use fzf
   searchFor "$file" "$1"
   searchFor "$vocs" "$1"
   searchFor "$unknowns" "$1"
@@ -96,7 +97,7 @@ addInteractive() {
     read word
     ((cnt++))
   done
-  
+
   cnt=0
   while [[ ( $cnt -eq 0 || $(basename $appendToFile) != unknowns ) && ( -z "$translation" || "$translation" == - ) ]]; do
     if [[ $cnt -gt 0 ]]; then
@@ -127,7 +128,7 @@ addEntry() {
   else
     printf "\n%s\n" "$entry" >> "$appendToFile" && echo "Successfully added to $(basename $appendToFile) $entry"
   fi
-  
+
   if [[ -n $openVocs ]]; then
     if [[ -n $word ]]; then
       vocslength=$(wc -l "$appendToFile" | awk '{print $1}')
