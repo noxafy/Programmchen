@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 cmd=
 # link regex does not work because (http:)// gets recognized as file path
@@ -7,12 +7,8 @@ case $1 in
     f w
     ;;
   o*)
-    exists=${1:1}
-    if [[ -e "$exists" ]]; then
-      open "$exists"
-    else
-      echo "Did you mean: open $exists"
-    fi
+    arg=${1:1}
+    cmd=o
     ;;
   greo)
     shift
@@ -32,7 +28,6 @@ case $1 in
     ;;
   m*)
     arg=${1:1}
-    echo "Rby: m \"$arg\""
     cmd=m
     ;;
   sm*)
@@ -47,11 +42,11 @@ esac
 
 if [[ -n "$cmd" ]]; then
   args=($@)
-  args[1]=$arg
-  if read -q "?Did you mean: $cmd ${args[*]} ? (y/n) [n]: "; then
-    echo
+  args[0]=$arg
+  read -n 1 -p "Did you mean: $cmd ${args[*]} ? (y/n) [y]: " ans
+  if [[ $ans != n ]]; then
     . ~/.profile  # index aliases
-    $cmd "${args[@]}"
+    "$cmd" "${args[@]}"
   fi
 fi
 
