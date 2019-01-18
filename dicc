@@ -157,7 +157,7 @@ fi
 
 #go through all sites or else only the first and create translation list
 if [[ $all -eq 2 ]]; then
-  echo "Generating $pagemax sites ..."    
+  echo "Generating $pagemax sites ..."
   var1="var c1Arr = new Array(\"\""
   var2="var c2Arr = new Array(\"\""
   cnt=1

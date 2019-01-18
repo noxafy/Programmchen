@@ -76,7 +76,7 @@ function google {
 # get resulting text from website
 function fetchResult() {
   [[ -z "$QUIET" ]] && echo "open $1" >&2
-  
+
   #test if url exists, print http state
   if [[ -n $VERBOSE ]]; then
     echo >&2
@@ -103,12 +103,12 @@ function fetchResult() {
     y)
       echo "Command: ${CURL[@]} \"$1\"" >&2
       echo "Command: ${CURL[@]} \"$1\"
-      
-      Response-Header (${#testUrl}):
-      $testUrl
-      
-      Response (${#res}):
-      $res" | less
+
+Response-Header (${#testUrl}):
+$testUrl
+
+Response (${#res}):
+$res" | less
       return
       ;;
     esac
@@ -137,12 +137,12 @@ function fetchResult() {
       return;
     fi
   fi
-  
+
   #reove site-specific non-lyrics line-contents
   if [[ -n $(echo "$1" | grep "musixmatch\.com") ]]; then
     res=$(echo "$res" | sed 's/.*<p class="mxm-lyrics__content ">//'| sed 's/<\/p>.*//')
   fi
-  
+
   #further beautifying
   res=$(echo "$res" | node -e 'process.stdin.resume(); process.stdin.setEncoding("utf8");
        var content = "";
@@ -193,7 +193,7 @@ function fetchResult() {
 #      | sed 's/…/.../g' \
 #      | sed 's/[fF][uU][cC][kK]/[32mF***[39m/g' \
 #      | sed 's/[sS][hH][iI][tT]/[32mS***[39m/g' \
-  
+
   if [[ -z $res ]]; then
     echo "There might be missing some lyrics..." >&2
   fi
@@ -262,7 +262,7 @@ function tryURL() {
       fi
     fi
   done
-  
+
   if [[ -n $urlonly && "$1" =~ '^https?://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$' ]]; then
     die "Sorry, that site is not supported. Maybe you can add it. See in docs."
   fi
@@ -302,7 +302,7 @@ function findLyrics() {
   echo "Artist: $ARTIST
 Title: $TITLE
 " >&2
-  
+
   tileInUrl=$(preformat $TITLE | sed 's/ - [Ll]ive.*//g')
   titleWithHyphen=$(withHyphen $tileInUrl)
   titleWithHyphen2=$(withHyphen2 $tileInUrl)
@@ -314,7 +314,7 @@ Title: $TITLE
   artistWithHyphen2=$(withHyphen2 $artistInUrl)
   artistWithHyphen3=$(withHyphen3 $artistInUrl)
   artistNoSpaces=$(noSpaces $artistInUrl)
-  
+
   if [[ -n $VERBOSE ]]; then
     echo "******Debug matching title and artist******
 titleInUrl: $tileInUrl
@@ -330,17 +330,17 @@ artistWithHyphen3: $artistWithHyphen3
 artistNoSpaces: $artistNoSpaces
 ********************************************" >&2
   fi
-  
+
   # Tell if artist conversion failed
   if [[ -n "$ARTIST" && -z "$artistWithHyphen" && -z "$artistWithHyphen2" && -z "$artistNoSpaces" ]]; then
     echo "Couldn't convert artist name to ascii. Please give it in latin characters." >&2
   fi
-  
+
   # Title must not be empty
   if [[ -z "$titleWithHyphen" && -z "$titleWithHyphen2" && -z "$titleWithHyphen3" && -z "$titleNoSpaces" ]]; then
     die "Couldn't convert title to ascii. Please give it in latin characters. It must not be empty, so exiting now." >&2
   fi
-  
+
   OVERALL=()
   for site in $sites; do
     printf "Looking for lyrics at %s: " "$site" >&2
@@ -353,7 +353,7 @@ artistNoSpaces: $artistNoSpaces
       echo "No results. Lets try another..." >&2
       continue;
     fi
-    
+
     if [[ -n "$AUTOSELECT" || ! -t 0 ]]; then
       # try to validate self
       # only title is required (grep would pass everything trough if both empty)
@@ -376,7 +376,7 @@ artistNoSpaces: $artistNoSpaces
         fi
       done
       echo "No matching site found. Lets try another site..." >&2
-      
+
       #add ALL to OVERALL and try to find in next site
       OVERALL+=("${ALL[@]}")
     else
@@ -421,11 +421,11 @@ artistNoSpaces: $artistNoSpaces
       done
     fi
   done
-  
+
   if [[ -n "$AUTOSELECT" ]]; then
     printf "No matching site found in all sites. " >&2
   fi
-  
+
   # implicit if autoselect==true
   if [[ -t 0 && -n ${OVERALL[@]} ]]; then
     echo "Anyway, some sites where found:" >&2
@@ -460,15 +460,15 @@ artistNoSpaces: $artistNoSpaces
       fi
     done
   fi
-  
+
   [[ -z "$QUIET" ]] && echo "Ooops, no site left. " >&2
-  
+
   #if [[ -e /usr/local/opt/bash-snippets/bin/lyrics && -n "$ARTIST" ]]; then
   #  echo "Last chance: lyrics from bash-snippets" >&2
   #  /usr/local/opt/bash-snippets/bin/lyrics -a "$ARTIST" -s "$TITLE" && exit 0
   #fi
   echo "Givin' up now :(" >&2
-  
+
   #Get searching site for copy & paste
   #Replace &, " and space
   if [[ -n "$ARTIST" ]]; then
@@ -520,7 +520,7 @@ function lookupSpotifyInfo() {
 function lookupRhythmboxInfo() {
   [[ -z "$QUIET" ]] && echo "Looking up title by Rhythmbox artist and title..." >&2
   ARTIST="$(rhythmbox-client --print-playing-format %ta)";
-  TITLE="$(rhythmbox-client --print-playing-format %tt)";   
+  TITLE="$(rhythmbox-client --print-playing-format %tt)";
 }
 
 ################################################################################
