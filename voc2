@@ -43,13 +43,16 @@ searchFor() {
     if [[ $reslen -gt 5 ]]; then
       echo "$res" | sed -n 1,5p
       printf "Do you want to see all $reslen results? (y/n) [n]: "
-      read ans
+      read -n 1 ans
       case $ans in
-        y|Y|yes|Yes|YES|ja|Ja|JA|jo|Jo|JO|jap|Jap)
+        y|Y)
           printf "\e[A\r\e[K"
           echo "$res" | sed -n '6,$p'
           ;;
+        "")
+          ;;
         *)
+          echo
           ;;
       esac
     else
@@ -74,9 +77,10 @@ searchForInAll() {
   searchFor "$unknowns" "$1"
   if [[ $justPrint -eq 0 && $othersDetected -ne 0 ]]; then
     printf "Do you want to continue adding anyway? (y/n) [n]: "
-    read ans
+    read -n 1 ans
     case $ans in
-      y|Y|yes|Yes|YES|ja|Ja|JA|jo|Jo|JO|jap|Jap)
+      y|Y)
+        echo
         ;;
       *)
         echo "Nothing added."

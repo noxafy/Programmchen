@@ -159,13 +159,19 @@ filename="$(toFilename $title)-$(toFilename $artist).cho"
 if [[ -e "$filename" && ! -n $forceOverwriting ]]; then
   [[ ! -t 0 ]] && die "Leadsheet \"$filename\" already exists."
 
-  read -p "Overwrite existing \"$filename\"? (y/n) [y]: " ans
+  read -n 1 -p "Overwrite existing \"$filename\"? (y/n) [y]: " ans
   case $ans in
   n)
+    echo
     read -p "Please specify another filename: " filename
     [[ -z "$filename" ]] && die "The filename cannot be empty."
     if [[ "$filename" != *.cho ]]; then filename="$filename.cho"; fi
     [[ -e "$filename " ]] && die "This file (\"$filename\") also exists."
+    ;;
+  "")
+    ;;
+  *)
+    echo
     ;;
   esac
 fi
