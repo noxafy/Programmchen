@@ -40,13 +40,13 @@ searchFor() {
     reslnnrs=$(echo "$res" | awk '{print $1}')
     othersDetected=1
     echo "Word in $(basename $1) detected: $reslen"
-    if [[ $reslen -gt 5 ]]; then
+    if [[ $reslen -gt 10 ]]; then
       echo "$res" | sed -n 1,5p
       printf "Do you want to see all $reslen results? (y/n) [n]: "
       read -n 1 ans
       case $ans in
         y|Y)
-          printf "\e[A\r\e[K"
+          printf "\r\e[K"
           echo "$res" | sed -n '6,$p'
           ;;
         "")
