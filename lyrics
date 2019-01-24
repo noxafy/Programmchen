@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CURL=(curl -sS -A 'Mozilla/5.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
+CURL=(curl -sS -A 'Firefox/64.0' -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 sites="songtexte.com songlyrics.com musixmatch.com azlyrics.com genius.com plyrics.com"
 #Search with ecosia for (compatibility with special characters and) easier grep
 GOOG_URL='https://www.ecosia.org/search'
@@ -51,14 +51,23 @@ die() {
 
 # This is used to get the url for the lyrics
 function google {
+  local site=$1
+  shift
+  local query="$* site:${site}"
+
   #add v for more information about headers
-  stream=$("${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$*")
-  if [[ -n $VERBOSE && ${#stream} -lt 2000 ]]; then
-    echo "Response may indicate failing:" >&2
-    printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
+  stream=$("${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$query")
+  if [[ -n $VERBOSE ]]; then
+    if [[ ${#stream} -lt 2000 ]]; then
+      echo "Response may indicate failing:" >&2
+      printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
+    fi
+    printf "\"%s\" " "${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$query" >&2
+    echo
   fi
-  #echo "link: ${GOOG_URL}?q=$*" >&2
-  res=$(echo "$stream" | grep -o "result-url\" href=\"[^\"]*" | sed 's/result-url" href="//')
+  stream2=$(echo "$stream" | grep -A 2 "result-url")
+  #echo "$stream2" >&2
+  res=$(echo "$stream2" | grep -o "href=\"https\?://\(www.\)\?${site}[^\"]*" | sed 's/href="//')
   if [[ -n $(echo "$res" | grep "songtexte\.com") ]]; then
     res=$(echo "$res" | grep "/songtext/")
   elif [[ -n $(echo "$res" | grep "azlyrics\.com") ]]; then
@@ -347,7 +356,7 @@ artistNoSpaces: $artistNoSpaces
     if [[ -n $VERBOSE ]]; then
       [[ -z "$QUIET" ]] && echo >&2
     fi
-    ALL=($(google "$ARTIST $TITLE lyrics site:$site"));
+    ALL=($(google "$site" "$ARTIST $TITLE lyrics"));
     #skip if no results found
     if [[ -z ${ALL[@]} ]]; then
       echo "No results. Lets try another..." >&2
