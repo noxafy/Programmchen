@@ -389,7 +389,6 @@ artistNoSpaces: $artistNoSpaces
       #add ALL to OVERALL and try to find in next site
       OVERALL+=("${ALL[@]}")
     else
-      echo "${#ALL[@]} results found."
       while [[ -n "${ALL[@]}" ]]; do
         j=1
         for resURL in ${ALL[@]}; do
@@ -404,7 +403,7 @@ artistNoSpaces: $artistNoSpaces
               ${site%.*} $resURL
 
               if [[ -n $res ]]; then
-               finishIt
+                finishIt
               else
                 echo "Well, that URL sucked. Lets try another..." >&2
               fi
@@ -416,6 +415,7 @@ artistNoSpaces: $artistNoSpaces
           fi
           ((j++))
         done
+        echo "${#ALL[@]} results found."
         printf "Is there any link right? (1-${#ALL[@]} / c (continue) / q (quit)) [c]: " >&2
         read ans
         if [[ $ans =~ ^[0-9]+$ ]]; then
