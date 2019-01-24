@@ -8,7 +8,7 @@ ARTIST=
 TITLE=
 VERBOSE=
 QUIET=
-AUTOSELECT=true
+AUTOSELECT=2 # 0 = ask always, 1 = ask if no match found, 2 = ask if no match found in all sites
 help="$(basename $0) - Find out the song lyrics for a currently playing song.
 
 This script is capable of finding out the Artist and Title of the currently
@@ -18,7 +18,7 @@ Do it like this:
   $(basename $0) <title> <artist>       - To look up lyrics for a song (you can omit artist if unknown)
   $(basename $0) spotify                - To look up info for the currently playing song in Spotify
   $(basename $0) rhythmbox|rbox         - To look up info for the currently playing song in Rhythmbox
-Also, you can give an url for extracting directly: 
+Also, you can give an url for extracting directly:
   $(basename $0) <songtexte.com url>    - To display the lyrics from a given songtexte.com url
   $(basename $0) <songlyrics.com url>   - To display the lyrics from a given songlyrics.com url
   $(basename $0) <genius.com url>       - To display the lyrics from a given genius.com url
@@ -363,17 +363,17 @@ artistNoSpaces: $artistNoSpaces
       continue;
     fi
 
-    if [[ -n "$AUTOSELECT" || ! -t 0 ]]; then
+    if [[ "$AUTOSELECT" -gt 1 || ! -t 0 ]]; then
       # try to validate self
       # only title is required (grep would pass everything trough if both empty)
-      for i in "${ALL[@]}"; do
-        if [[ ( -n "$titleWithHyphen" && -n $(echo "$i" | grep -i -e "$titleWithHyphen" | grep -i -e "$artistWithHyphen") )
-          || ( -n "$titleNoSpaces" && -n $(echo "$i" | grep -i -e "$titleNoSpaces" | grep -i -e "$artistNoSpaces") )
-          || ( -n "$titleWithHyphen2" && -n $(echo "$i" | grep -i -e "$titleWithHyphen2" | grep -i -e "$artistWithHyphen2") )
-          || ( -n "$titleWithHyphen3" && -n $(echo "$i" | grep -i -e "$titleWithHyphen3" | grep -i -e "$artistWithHyphen3") ) ]]; then
+      for resURL in "${ALL[@]}"; do
+        if [[ ( -n "$titleWithHyphen" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen" | grep -i -e "$artistWithHyphen") )
+          || ( -n "$titleNoSpaces" && -n $(echo "$resURL" | grep -i -e "$titleNoSpaces" | grep -i -e "$artistNoSpaces") )
+          || ( -n "$titleWithHyphen2" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen2" | grep -i -e "$artistWithHyphen2") )
+          || ( -n "$titleWithHyphen3" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen3" | grep -i -e "$artistWithHyphen3") ) ]]; then
           echo "Lyrics found!" >&2
 
-          ${site%.*} $i
+          ${site%.*} $resURL
 
           if [[ -n $res ]]; then
             finishIt
@@ -381,7 +381,7 @@ artistNoSpaces: $artistNoSpaces
             echo "Well, that URL sucked. Lets try another..." >&2
           fi
         elif [[ -n $VERBOSE ]]; then
-          echo "URL not matching: $i" >&2
+          echo "URL not matching: $resURL" >&2
         fi
       done
       echo "No matching site found. Lets try another site..." >&2
@@ -397,13 +397,26 @@ artistNoSpaces: $artistNoSpaces
             || ( -n "$titleNoSpaces" && -n $(echo "$resURL" | grep -i -e "$titleNoSpaces" | grep -i -e "$artistNoSpaces") )
             || ( -n "$titleWithHyphen2" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen2" | grep -i -e "$artistWithHyphen2") )
             || ( -n "$titleWithHyphen3" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen3" | grep -i -e "$artistWithHyphen3") ) ]]; then
-            echo "$j: $resURL (!)" >&2
+
+            if [[ "$AUTOSELECT" -gt 0 ]]; then
+              echo "Lyrics found!" >&2
+
+              ${site%.*} $resURL
+
+              if [[ -n $res ]]; then
+               finishIt
+              else
+                echo "Well, that URL sucked. Lets try another..." >&2
+              fi
+            else
+              echo "$j: $resURL (!)" >&2
+            fi
           else
             echo "$j: $resURL" >&2
           fi
           ((j++))
         done
-        printf "Is there anyone right? (1-${#ALL[@]} / c (continue) / q (quit)) [c]: " >&2
+        printf "Is there any link right? (1-${#ALL[@]} / c (continue) / q (quit)) [c]: " >&2
         read ans
         if [[ $ans =~ ^[0-9]+$ ]]; then
           if [[ $ans -le ${#ALL[@]} ]]; then
@@ -431,11 +444,11 @@ artistNoSpaces: $artistNoSpaces
     fi
   done
 
-  if [[ -n "$AUTOSELECT" ]]; then
+  if [[ "$AUTOSELECT" -gt 0 ]]; then
     printf "No matching site found in all sites. " >&2
   fi
 
-  # implicit if autoselect==true
+  # implicit if autoselect -gt 0
   if [[ -t 0 && -n ${OVERALL[@]} ]]; then
     echo "Anyway, some sites where found:" >&2
     while [[ -n "${OVERALL[@]}" ]]; do
@@ -444,7 +457,7 @@ artistNoSpaces: $artistNoSpaces
         echo "$j: $resURL" >&2
         ((j++))
       done
-      printf "Is there anyone right? (1-${#OVERALL[@]} / q (quit)) [q]: " >&2
+      printf "Is there any link right? (1-${#OVERALL[@]} / q (quit)) [q]: " >&2
       read ans
       if [[ $ans =~ ^[0-9]+$ ]]; then
         if [[ $ans -le ${#OVERALL[@]} ]]; then
@@ -550,7 +563,7 @@ while [[ -n $1 ]]; do
     shift
     ;;
   -a|--ask)
-    AUTOSELECT=""
+    AUTOSELECT=0
     shift
     ;;
   -*)
@@ -579,6 +592,7 @@ spotify)
   if [[ -n "$1" ]]; then
     TITLE=$1
     ARTIST=$2
+    AUTOSELECT=1
   else
     lookupSpotifyInfo
     #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information."
