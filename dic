@@ -1,4 +1,5 @@
 #!/bin/bash
+
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mkey\e[0m \e[4m...\e[0m]"
 help="Sends \e[4mkey\e[0m as search request to Dictionary.app. No argument will nevertheless open it.
 $usage

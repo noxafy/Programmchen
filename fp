@@ -40,7 +40,7 @@ esac
 runningProcessID=$(lsof -i :$port | grep -o "[0-9]\+"| head -1)
 if [[ -n $runningProcessID ]]; then
   echo "Killing running process $runningProcessID";
-  kill $runningProcessID; 
-else 
+  kill $runningProcessID;
+else
   echo "No process blocking port $port found :)"
 fi

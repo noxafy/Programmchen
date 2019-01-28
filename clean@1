@@ -1,6 +1,6 @@
 #!/bin/bash
-# Version 1
 
+# Version 1
 evil=('.DS_Store') #things to be deleted
 removed=0 #counter for removed things
 foldersVisited=0 #counter for visited dirs
@@ -110,7 +110,7 @@ clean() {
         fi
 #     else
 #       echo "$file does not match $1$ev"
-      fi 
+      fi
     done
     #go recursive
     if [[ $rec ]] && test -d "$file" && ! (test -L "$file"); then
@@ -141,7 +141,7 @@ resumee() {
         printf "in $foldersVisited directories "
       fi
     fi
-  
+
     printf "removed"
 
     if [[ $removed -gt 0 ]]; then

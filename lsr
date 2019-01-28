@@ -164,7 +164,7 @@ listFilesWithGrep() {
   fi
 }
 
-resumee() {		
+resumee() {
   if [ $echoFiles -ne 1 ] ; then
     if [ $fileCnt -eq 0 ]; then
       printf "No file "
@@ -183,7 +183,7 @@ resumee() {
       ((dirCnt++))
     fi
   fi
-  
+
   if [ $echoFiles -ne 2 ]; then
     if [ $dirCnt == 1 ]; then
       printf "1 directory "

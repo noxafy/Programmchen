@@ -12,5 +12,5 @@ switch (ans.status) {
     break;
   default:
     console.log("Unknown status code: " + ans.status);
-    console.log(ans)    
+    console.log(ans)
 }

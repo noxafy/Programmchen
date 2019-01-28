@@ -50,7 +50,7 @@ while [[ -n $1 ]]; do
 done
 
 [[ -z $depth ]] && depth=1
-#if [[ -z $depth ]]; then 
+#if [[ -z $depth ]]; then
 #  echo "Please give a number 1-5."
 #  exit 1
 #fi

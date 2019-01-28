@@ -1,4 +1,5 @@
 #!/bin/bash
+
 path=""
 verbose=1 # 0=verbose only resumee message 1=verbose skipped files too (default) 2=verbose all files
 filecnt=0
@@ -88,9 +89,9 @@ wcr() {
       ((skipcnt++))
       echo "Symlink skipped: $file"
       continue;
-    fi    
+    fi
     if [ ! -d "$file" ]; then
-      ((filecnt++)) 
+      ((filecnt++))
       size=$(wc -c "$file" | grep -o -e "\d\+" | sed -n 1p)
       ((res+=size))
     else
@@ -162,7 +163,7 @@ resumee() {
 if [ $verbose -eq 2 ]; then
   wcrv "$path"
 elif [ $verbose -eq 1 ]; then
-  wcr "$path" 
+  wcr "$path"
 else
   wcrs "$path"
 fi

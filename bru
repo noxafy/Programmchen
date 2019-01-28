@@ -7,7 +7,7 @@ help="An updater script for homebrew.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-a\e[0m	Extended processing (brew cleanups, mas upgrade).
-Executes the commands: ${cmds[*]} 
+Executes the commands: ${cmds[*]}
 Logs the results to $dest.
 "
 
@@ -36,7 +36,7 @@ end() {
   printf "END on $(date)\n%s\n" >> $dest "******************************************"
 }
 
-start() { 
+start() {
   printf "START on $(date)\n" >> $dest
 }
 

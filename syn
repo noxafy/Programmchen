@@ -1,8 +1,9 @@
 #!/bin/bash
+
 site="https://www.openthesaurus.de/synonyme/"
 openlink=""
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-l] [\e[4mkey\e[0m \e[4m...\e[0m]"
-help="Searchs and prints german synonyms for \e[4mkey\e[0m from http://openthesaurus.de. 
+help="Searchs and prints german synonyms for \e[4mkey\e[0m from http://openthesaurus.de.
 No argument opens the website.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.

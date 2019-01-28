@@ -12,7 +12,7 @@ $usage
 		notifications.
 	\e[1m-t\e[0m	Specify a custom timeout between 1 and 999 seconds until the next
 		notification rises (default: 90).
-		
+
 	Note: Order [\e[4mactPage\e[0m] and then [\e[4mpages\e[0m] is important.
 "
 

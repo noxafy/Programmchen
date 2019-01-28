@@ -78,7 +78,7 @@ $usage
 	    s		$s\$key
 	    ch		$ch\$key
 
-	  Any other first word will be interpreted as part of the query phrase and searched by 
+	  Any other first word will be interpreted as part of the query phrase and searched by
 	  default search engine. Use -- for separating options from query.
 	When no key given, but something piped, it will read the first non-empty line and search it as specified.
 	No argument will just open Firefox. (Therefrom its name..)
@@ -98,7 +98,7 @@ die() {
 startFireFox() {
   if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
     printf "Firefox not started yet!\nStarting Firefox"
-    open $openCommands /Applications/Firefox.app  
+    open $openCommands /Applications/Firefox.app
     printf "."
     sleep 1
     printf "."
@@ -115,7 +115,7 @@ fire() {
   if [[ -z $1 ]]; then
     die "Error: No link given!"
   fi
-  
+
   if [[ $openLink ]]; then
     if [[ $DEBUG ]]; then
       echo "Open link: $1"

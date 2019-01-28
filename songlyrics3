@@ -32,7 +32,7 @@ function google {
 # get resulting text from website
 function fetchResult() {
   echo "open $1" >&2
-  
+
   #test if url exists
   testUrl=$(curl -sSI "$1" | sed -n 1p)
   echo $testUrl >&2
@@ -124,7 +124,7 @@ function findLyrics() {
   echo "Artist: $1"
   echo "Title: $2"
   echo
-  
+
   for site in $sites; do
     printf "Looking for lyrics at %s: " "$site"
     ALL=($(google "$1 $2 lyrics site:$site"));
@@ -175,7 +175,7 @@ function findLyrics() {
     else
       printf "Lyrics found!\n"
     fi
-    
+
     ${site%.*} $URL
 
     if [[ -n $res ]]; then
@@ -185,7 +185,7 @@ function findLyrics() {
     fi
   done
   echo "Ooops, no site left. Givin' up now :("
-  
+
   #Get searching site for copy & paste
   #Replace &, " and space
   Q="$1 $2 lyrics"
@@ -243,7 +243,7 @@ function lookupRhythmboxInfo() {
   # Get the Artist out of the dbus call
   ARTIST="$(echo  "$ALL" | grep artist -A 1  | grep variant | cut -d ' ' -f 15- | sed 's/"//g')";
   # Get the Title out of the dbus call
-  TITLE="$(echo "$ALL" | grep title -A 1  | grep variant | cut -d ' ' -f 15- | sed 's/"//g')";    
+  TITLE="$(echo "$ALL" | grep title -A 1  | grep variant | cut -d ' ' -f 15- | sed 's/"//g')";
 }
 
 ################################################################################
@@ -302,7 +302,7 @@ case $1 in
     if [[ -n "$1" && -n "$2" ]]; then
       findLyrics "$1" "$2";
     else
-      usage 
+      usage
     fi
     ;;
 esac

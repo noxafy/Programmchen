@@ -48,7 +48,7 @@ case $1 in
   *)
     printf "Please specify a number in percent. See -h for more help.\n"
     exit 1
-    ;;    
+    ;;
 esac
 
 value=$(echo "scale=4;$value/100" | bc)

@@ -1,6 +1,6 @@
 #!/bin/bash
-# version 2
 
+# Version 2
 evil=('.DS_Store') #things to be deleted
 removed=0 #counter for removed things
 verbose=1 #0=be silent, 1=only say when sth has been removed, 2=verbose everything
@@ -91,7 +91,7 @@ clean() {
     if [[ $verbose -ge 1 && -n $ausg ]]; then
       echo $ausg
     fi
-  else 
+  else
     if [[ $verbose -ge 1 ]]; then
       printf "$1 removed (%s)\n" "$(sizeFormat $storage)"
     fi
@@ -108,7 +108,7 @@ if [[ $verbose -gt 0 ]]; then
     printf "1 file "
   else
     printf "$removed files "
-  fi  
+  fi
   printf "removed"
 
   if [[ $removed -gt 0 ]]; then

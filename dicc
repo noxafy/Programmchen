@@ -12,7 +12,7 @@ help="Reads out translations GER-ENG and ENG-GER from https://dict.cc and prints
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-o\e[0m	Opens the site directly in your default browser.
-	\e[1m-a\e[0m	Show all translations from the first page. Will be shown automatically 
+	\e[1m-a\e[0m	Show all translations from the first page. Will be shown automatically
 		if there are no exact results available.
 	\e[1m-r\e[0m	Show all entries of all pages. This may take a while.
 	\e[1m-x\e[0m	Show exact matching results only. This is the default.
@@ -115,7 +115,7 @@ if [[ $verbose != 0 ]]; then
   printf "$pagemax pages found for \"%s\"\n" "$key"
 fi
 
-#unset -r if only one page available and 
+#unset -r if only one page available and
 #ask for confirmation if number of pages is greater than $pagesconfirmfrom
 if [[ $all == 2 ]]; then
   if [[ $pagemax == 1 ]]; then
