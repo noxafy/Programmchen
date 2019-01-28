@@ -3,7 +3,7 @@
 DEBUG=""
 youtube="https://www.youtube.com/"
 site=""
-usage="Usage: \e[1m$(basename $0)\e[0m -h | \e[4msite\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | \e[4msite\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m \e[4m...\e[0m"
 help="Commandline interaction with YouTube.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
@@ -97,5 +97,5 @@ if [[ "$1" = ${youtube}* ]]; then
     [[ -z $DEBUG ]] && f -i "$1" || echo "f -i $1"
   fi
 else
-  [[ -z $DEBUG ]] && f yt "$1" || echo "f yt $1"
+  [[ -z $DEBUG ]] && f yt "$*" || echo "f yt $*"
 fi
