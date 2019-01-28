@@ -18,7 +18,7 @@ $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-n\e[0m	Opens a new window and tests you from there in training mode.
 	\e[1m-t\e[0m	Starts training mode in this window (not recommended, use \e[1m-n\e[0m).
-	\e[4mfile\e[0m	Reads the specified vokabulary csv. First and second arguments are meanings, 
+	\e[4mfile\e[0m	Reads the specified vokabulary csv. First and second arguments are meanings,
 		third can be used for comments. Be aware of the required formatting shown below.
 		Default path is $file.
 	\e[1m-o\e[0m	Opens the vocabulary list ($vocs).
@@ -126,6 +126,7 @@ addEntry() {
   if [[ -n $additional && ${additional:0:1} == "[" && ${additional:${#additional}-1} != "]" ]]; then
     additional=${additional}]
   fi
+  # TODO: try to use EPOCHREALTIME if bash version > 5
   entry="\"$word\",\"$translation\",\"$additional\",\"$(date '+%s')000\""
   if [[ $(tail -c 1 "$vocs") == "" ]]; then
     echo "$entry" >> "$appendToFile" && echo "Successfully added to $(basename $appendToFile) $entry"
