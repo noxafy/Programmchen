@@ -4,7 +4,7 @@ DEBUG=""
 youtube="https://www.youtube.com/"
 site=""
 query=""
-usage="Usage: \e[1m$(basename $0)\e[0m -h | \e[4msite\e[0m [\e[4mseries\e[0m] | -u \e[4muser\e[0m | \e[4mquery\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | \e[4msite\e[0m [\e[4mseries\e[0m] | -u \e[4muser\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m \e[4m...\e[0m"
 help="Commandline interaction with YouTube.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
@@ -30,6 +30,8 @@ while [[ -n $1 ]]; do
       exit 1
     }
     site="${youtube}user/${1}/videos"
+    shift
+    query="$*"
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -67,9 +69,23 @@ function fetchVideos() {
       exit 1
     fi
 
-    linksHTML=$(echo "$content" | pup --charset utf8 "div h3 a" | grep "$2")
-    titles=$(echo "$linksHTML" | pup --charset utf8 'a attr{title}' | perl -MHTML::Entities -pe 'decode_entities($_);')
-    links=$(echo "$linksHTML" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/')
+    links=$(echo "$content" | pup --charset utf8 "div h3 a[title*=$2]" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/')
+    #echo "$links"
+    json=$(echo "$content" | pup '.yt-lockup-content json{}')
+    titles=$(node -e "const json = JSON.parse(process.argv[1]);
+for (let el of json) {
+  const title = el.children[0].children;
+  if (\"$2\" && title[0].text.indexOf(\"$2\") === -1) continue;
+  //console.error(title[0].text)
+  const info = el.children[1].children[0].children;
+  console.log(title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m')
+}" "$json")
+    if [[ $(echo "$titles" | wc -l) != $(echo "$links" | wc -l) ]]; then
+      printf "WTF-Error: %d titles, but %d links!\n" $(echo "$titles" | wc -l) $(echo "$links" | wc -l)
+      echo "titles: $titles"
+      echo "$links: $links"
+      exit 1
+    fi
 
     cnt=0
     IFS=$'\n'
