@@ -122,8 +122,9 @@ for (let el of json) {
         ;;
       esac
     else
-      printf "Which one do you want to open? (1-${cnt}/q) [q]: "
+      printf "Which one do you want to open? (1-${cnt}) [1]: "
       read ans
+      [[ -z "$ans" ]] && ans=1
       if [[ $ans =~ ^[0-9]+$ ]]; then
         if [[ $ans -gt 0 && $ans -le $cnt ]]; then
           result=$(echo "$links" | sed -n "${ans}p")
@@ -132,14 +133,7 @@ for (let el of json) {
           echo "Wrong answer. Integer is zero or too high: $ans."
         fi
       else
-        case $ans in
-          q|"")
-            echo "Nothing opened."
-          ;;
-          *)
-            echo "Wrong answer. No integer: $ans"
-          ;;
-        esac
+        echo "Nothing opened."
       fi
     fi
   else
