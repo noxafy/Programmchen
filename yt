@@ -20,7 +20,7 @@ while [[ -n $1 ]]; do
   -h)
     printf "$help"
     exit 0
-  ;;
+    ;;
   -d)
     DEBUG=true
     ;;
@@ -47,13 +47,13 @@ while [[ -n $1 ]]; do
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
-  ;;
+    ;;
   *)
     site=$1
     shift
     query="$*"
     break;
-  ;;
+    ;;
   esac
   shift
 done
@@ -82,7 +82,7 @@ function fetchVideos() {
 
     links=$(echo "$content" | pup --charset utf8 "div h3 a[title*=$2]" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/')
     #echo "$links"
-    json=$(echo "$content" | pup '.yt-lockup-content json{}')
+    json=$(echo "$content" | pup --charset utf8 '.yt-lockup-content json{}')
     titles=$(node -e "const json = JSON.parse(process.argv[1]);
 for (let el of json) {
   const title = el.children[0].children;
@@ -90,7 +90,7 @@ for (let el of json) {
   //console.error(title[0].text)
   const info = el.children[1].children[0].children;
   console.log(title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m')
-}" "$json")
+}" "$json" | perl -MHTML::Entities -pe 'decode_entities($_);')
     if [[ $(echo "$titles" | wc -l) != $(echo "$links" | wc -l) ]]; then
       printf "WTF-Error: %d titles, but %d links!\n" $(echo "$titles" | wc -l) $(echo "$links" | wc -l)
       echo "titles: $titles"
