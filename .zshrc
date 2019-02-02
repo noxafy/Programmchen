@@ -1,5 +1,6 @@
 # Path to your oh-my-zsh installation.
 export ZSH="~/.oh-my-zsh"
+export ZDOTDIR=$ZSH
 
 # disable marking untracked files under VCS as dirty
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
