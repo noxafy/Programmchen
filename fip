@@ -17,7 +17,8 @@ case $1 in
     ;;
   -x)
     shift
-    key="^${1}$"
+    key=$1
+    key=^${key}$
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -57,20 +58,20 @@ for path in `echo $PATH | sed s/:/\ /g`; do
   cd "$path" 2>/dev/null || continue
   case $verge in
   0)
-    if [[ -n $(echo "$key" | grep "\w\w\w") ]]; then # match also origin paths of links
-      res=$(ls -l | grep "$key")
+    if [[ -n $(echo $key | grep "\w\w\w") ]]; then # match also origin paths of links
+      res=$(ls -l | grep $key)
     else
-      res=$(ls -l *"$key"* 2> /dev/null)
+      res=$(ls -l *$key* 2> /dev/null)
     fi
     ;;
   1)
-    res=$(ls -l *"$key" 2> /dev/null)
+    res=$(ls -l *$key 2> /dev/null)
     ;;
   2)
-    res=$(ls -l "$key"* 2> /dev/null)
+    res=$(ls -l $key* 2> /dev/null)
     ;;
   3)
-    res=$(ls -l "$key" 2> /dev/null)
+    res=$(ls -l $key 2> /dev/null)
     ;;
   esac
 
