@@ -30,7 +30,7 @@ source $ZSH/oh-my-zsh.sh
 ENABLE_CORRECTION="true"
 autoload -U +X bashcompinit && bashcompinit
 #autoload -U +X compinit && compinit
-. ~/.profile
+source ~/.profile
 
 ### completions
 # https://stackoverflow.com/questions/14307086/tab-completion-for-aliased-sub-commands-in-zsh-alias-gco-git-checkout
@@ -40,6 +40,10 @@ compdef pm=pass
 compdef pu=pass
 compdef pi=pass
 compdef _path_commands fip
+compdef _functions fif
+compdef _aliases fia
+function _tex_files() { _arguments "1: :($(echo *.tex))"; }
+compdef _tex_files clat
 
 ### theme
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[red]%}"
