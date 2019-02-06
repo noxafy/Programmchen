@@ -389,6 +389,7 @@ artistNoSpaces: $artistNoSpaces
       #add ALL to OVERALL and try to find in next site
       OVERALL+=("${ALL[@]}")
     else
+      echo "${#ALL[@]} results found."
       while [[ -n "${ALL[@]}" ]]; do
         j=1
         for resURL in ${ALL[@]}; do
@@ -415,7 +416,6 @@ artistNoSpaces: $artistNoSpaces
           fi
           ((j++))
         done
-        echo "${#ALL[@]} results found."
         printf "Is there any link right? (1-${#ALL[@]} / c (continue) / q (quit)) [c]: " >&2
         read ans
         if [[ $ans =~ ^[0-9]+$ ]]; then
@@ -592,7 +592,7 @@ spotify)
   if [[ -n "$1" ]]; then
     TITLE=$1
     ARTIST=$2
-    AUTOSELECT=1
+    [[ $AUTOSELECT != 0 ]] && AUTOSELECT=1
   else
     lookupSpotifyInfo
     #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information."
