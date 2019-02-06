@@ -32,19 +32,19 @@ tellTimer() {
   ((cnt++))
   printf "\e[F\e[K"
   echo "${cnt}. $2"
-  mplayer -really-quiet ~/IdeaProjects/denkbares/ServiceMatePlatform/ServiceMate/src/main/webapp/resources/audio/ctu24_ring.mp3
 }
 
 echo ""
 tell "Finde einen Topf mit min. 2 Liter Volumen."
-tell "Fülle 500ml hinein."
+tell "Fülle 500ml warmes Wasser hinein."
 tell "Herdplatte auf max, darauf den mit etwas Wasser gefüllten Topf stellen."
+tell "Finde einen Kochlöffel."
 tell "Tüteninhalt einschütten und einrühren."
 tell "Aufkochen lassen."
 tell "Herdplatte auf mittlere Hitze stellen." "Starten des Timers"
 printf "\e[F"
-tellTimer 120 'umrühren und auf 6 stellen' #2
-tellTimer 120 'umrühren! Kocht es noch? (ggf. auf 7)' #4
+tellTimer 120 'umrühren und auf halb stellen' #2
+tellTimer 120 'umrühren! Kocht es noch? (ggf. etwas hochstellen)' #4
 tellTimer 150 'umrühren!' #6,5
 tellTimer 90 'umrühren!' #8
 tellTimer 60 'fertig!' #9
