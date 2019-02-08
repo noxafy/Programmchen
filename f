@@ -143,18 +143,39 @@ tryFirst() {
     echo
   fi
   stream=$("${CURL[@]}")
-  res=$(echo "$stream" | grep -o -m 1 "result-url js-result-url\" href=\"[^\"]*" | sed 's/result-url js-result-url" href="//')
+  res=$(echo "$stream" | grep -A 2 "result-url js-result-url\"" | grep -o "href=\"https\?://\(www.\)\?[^\"]*" | sed 's/href="//')
+  matching_res=$(echo "$res" | grep -m 1 -e "$key")
+
   if [[ $DEBUG ]]; then
-    echo "Lengths: stream (${#stream}); res (${#res})"
+    echo "Lengths: stream (${#stream}); res (${#res}); matching_res (${#matching_res})"
   fi
-  if [[ $res =~ $regex ]]; then
-    if [[ $DEBUG ]]; then
-      echo "Matched website regex: $res"
+  [[ -z "$res" ]] && {
+    echo "Unable to find search results. Try yourself."
+    return;
+  }
+
+  if [[ -z "$matching_res" ]]; then
+    echo "$res"
+    res_len=$(echo "$res" | wc -l)
+    printf "Is there any link right? (1-${res_len}) [1]: " >&2
+    read ans
+    [[ -z $ans ]] && ans=1
+    if [[ $ans =~ ^[0-9]+$ && $ans -gt 0 && $ans -le $res_len ]]; then
+      matching_res=$(echo "$res" | sed -n "${ans}p")
+    else
+      echo "Invalid answer: $ans"
+      exit 1
     fi
-    fire $res
+  fi
+
+  if [[ $matching_res =~ $regex ]]; then
+    if [[ $DEBUG ]]; then
+      echo "Matched website regex: $matching_res"
+    fi
+    fire $matching_res
     exit 0
   else
-    echo "Invalid tryFirst result: $res"
+    echo "Invalid tryFirst result: $matching_res"
   fi
 }
 
