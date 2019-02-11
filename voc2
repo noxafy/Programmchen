@@ -83,7 +83,7 @@ searchForInAll() {
         echo
         ;;
       *)
-        echo "Nothing added."
+        printf "\nNothing added.\n"
         exit 0
         ;;
     esac
