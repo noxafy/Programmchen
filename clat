@@ -29,6 +29,8 @@ elif [[ -n $1 ]]; then
    latex -interaction=batchmode "$file"
    pdflatex -interaction=batchmode "$file"
  done
+elif [[ -r "$PWD/pdflatexmkrc" ]]; then
+  latexmk -pdf -r pdflatexmkrc
 else
  echo "Please give a file. See -h for more help."
  exit 1
