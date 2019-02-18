@@ -1,4 +1,5 @@
 set smooth
 set softwrap
 set nowrap
+set nohelp
 include /usr/local/share/nano/*
