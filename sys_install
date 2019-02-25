@@ -330,6 +330,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
 
   # Dictionary
   echo "Dictionary settings."
+  # TODO: Add OpenThesaurus dic from https://tekl.de/OpenThesaurusDeutsch to ~/Library/Dictionaries
   defaults write com.apple.Dictionary "last available dictionaries" "(
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
     \"~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
