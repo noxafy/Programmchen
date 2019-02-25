@@ -157,7 +157,7 @@ tryFirst() {
   if [[ -z "$matching_res" ]]; then
     echo "$res"
     res_len=$(echo "$res" | wc -l)
-    printf "Is there any link right? (1-${res_len}) [1]: " >&2
+    printf "Is there any link right? (1-%d) [1]: " "$res_len" >&2
     read ans
     [[ -z $ans ]] && ans=1
     if [[ $ans =~ ^[0-9]+$ && $ans -gt 0 && $ans -le $res_len ]]; then
