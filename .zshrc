@@ -1,5 +1,5 @@
 # Path to your oh-my-zsh installation.
-export ZSH="~/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 export ZDOTDIR=$ZSH
 
 # disable marking untracked files under VCS as dirty
@@ -17,7 +17,7 @@ plugins=(
   npm
 )
 
-source $ZSH/oh-my-zsh.sh
+source "$ZSH/oh-my-zsh.sh"
 
 # User configuration
 
