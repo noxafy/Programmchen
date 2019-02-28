@@ -1,8 +1,12 @@
 #!/bin/bash
 
-file="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/Englisch.csv"
-vocs="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/vocs"
-unknowns="$HOME/Dropbox/Sonstiges/Sprachen/Vokabeln/unknowns"
+[[ ! $VOCDATABASE || ! $VOCDATADIR ]] && {
+  echo "Please set both VOCDATABASE and VOCDATADIR variable."
+}
+
+file="$VOCDATABASE"
+vocs="$VOCDATADIR/vocs"
+unknowns="$VOCDATADIR/unknowns"
 appendToFile=$vocs
 training=0
 othersDetected=0
