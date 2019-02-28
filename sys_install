@@ -803,7 +803,7 @@ echo
 # - install microsoft programs, user gui login
 
 ### manual file load
-# - notational velocity: ~/Dropbox/Org/Notational/
+# - notational velocity: $D/Org/Notational/
 # - import firefox bookmarks
 # - import newsflow opml
 
