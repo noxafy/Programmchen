@@ -102,8 +102,7 @@ setShouldOutput() {
 }
 
 function turnWifiOn() {
-  [[ $output -ge 3 ]] && echo "Wi-Fi ($wifiDevice) \"Off\" detected!"
-  log "Toggling Wi-Fi ($wifiDevice) on ..."
+  log "Toggling Wi-Fi ($wifiDevice) on"
   networksetup -setairportpower "$wifiDevice" on || fail "Toggling Wi-Fi on"
 }
 
@@ -113,11 +112,13 @@ if [[ $? -ne 0 ]]; then
   wifiDevice=$(networksetup -listallhardwareports | grep -A 2 "Wi-Fi" | grep "Device" | awk '{print $2}')
   wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice")
 fi
+[[ $output -ge 3 ]] && echo "Wi-Fi status: $wifiDeviceStatus"
 if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
   turnWifiOn
 else
   #for preformance, first test if internet connection is established
   # performance: 40ms more when not working, but 100ms less when working (and the letter is most of the times)
+  [[ $output -ge 3 ]] && echo "ping 8.8.8.8 if internet is available"
   netTest=$(ping -t 3 -c 1 8.8.8.8 2>/dev/null)
   if [[ $? -eq 0 ]]; then
     if [[ $output -gt 1 ]]; then
@@ -133,9 +134,11 @@ while true; do
   #test on ssid connected
   ssid=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I | sed -n 13p)
   if [[ -z "$ssid" ]]; then
-    if [[ -n $(networksetup -getairportpower "$wifiDevice" | grep Off) ]]; then
+    wifiDeviceStatus=$(networksetup -getairportpower "$wifiDevice")
+    if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
       log "Wifi turned off."
       turnWifiOn
+      sleep 2
     else
       log "WTF-Error: Unknown state: airport reports no ssid result, but networksetup tells wiki device ($wifiDevice) is not Off."
       exit 1
