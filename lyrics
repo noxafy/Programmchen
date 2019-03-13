@@ -63,7 +63,7 @@ function google {
       printf "%s" "$stream" | xargs -L 1 printf "\t%s" >&2
     fi
     printf "\"%s\" " "${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$query" >&2
-    echo
+    echo >&2
   fi
   stream2=$(echo "$stream" | grep -A 2 "result-url")
   #echo "$stream2" >&2
@@ -140,14 +140,14 @@ $res" | less
   res=$("${CURL[@]}" "$1" | awk "$2");
   if [[ -n $VERBOSE ]]; then
     if [[ -n $res ]]; then
-      echo "Lyrics in site found! (lenght: ${#res})" >&2
+      echo "Lyrics in site found! (length: ${#res})" >&2
     else
       echo "Extracting lyrics failed on awk (or curl))!" >&2
       return;
     fi
   fi
 
-  #reove site-specific non-lyrics line-contents
+  #remove site-specific non-lyrics line-contents
   if [[ -n $(echo "$1" | grep "musixmatch\.com") ]]; then
     res=$(echo "$res" | sed 's/.*<p class="mxm-lyrics__content ">//'| sed 's/<\/p>.*//')
   fi
@@ -209,7 +209,7 @@ $res" | less
 }
 
 function songtexte() {
-  fetchResult "$1" '/<div id=\"lyrics\">/, /<div class=\"mobileShare\">/'
+  fetchResult "$1" '/<div id=\"lyrics\">/, /<div class=\"mobileShare/'
 }
 
 function songlyrics() {
