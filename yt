@@ -6,10 +6,11 @@ site=""
 query=""
 RESULTS=""
 RESULTSLEN=0
-usage="Usage: \e[1m$(basename $0)\e[0m -h | \e[4msite\e[0m [\e[4mseries\e[0m] | -u \e[4muser\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m \e[4m...\e[0m"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | -l | \e[4msite\e[0m [\e[4mseries\e[0m] | -u \e[4muser\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m \e[4m...\e[0m"
 help="Commandline interaction with YouTube.
 $usage
 	\e[1m-h\e[0m		Displays this message and exists.
+	\e[1m-l\e[0m		Print all aliases associated with this script.
 	\e[1m-d\e[0m		Debug mode: Don't open any link, but print it out.
 	\e[4msite\e[0m		Videos site (from user or channel) to grep videos from.
 	\e[4mseries\e[0m		Filters for special series containing \e[4mseries\e[0m (case insensitive).
@@ -21,6 +22,11 @@ while [[ -n $1 ]]; do
   case "$1" in
   -h)
     printf "$help"
+    exit 0
+    ;;
+  -l)
+    [[ -r ~/.alias ]] && source ~/.alias || source ~/.bashrc
+    alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'
     exit 0
     ;;
   -d)
