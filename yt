@@ -25,7 +25,7 @@ while [[ -n $1 ]]; do
     exit 0
     ;;
   -l)
-    [[ -r ~/.alias ]] && source ~/.alias || source ~/.bashrc
+    [[ -r ~/.aliases ]] && source ~/.aliases || source ~/.bashrc
     alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'
     exit 0
     ;;
