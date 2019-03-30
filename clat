@@ -24,7 +24,11 @@ elif [[ -n $1 ]]; then
  for file in $@; do
    echo "$file:"
    latex -interaction=batchmode "$file"
-   bibtex "${file:0:$((${#file}-3))}aux"
+   if cat "$file" | grep '^\\printbibliography$' >/dev/null; then
+     biber "${file:0:$((${#file}-4))}"
+   else
+     bibtex "${file:0:$((${#file}-3))}aux"
+   fi
    latex -interaction=batchmode "$file"
    latex -interaction=batchmode "$file"
    pdflatex -interaction=batchmode "$file"
