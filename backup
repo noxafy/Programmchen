@@ -1,6 +1,9 @@
 #!/bin/bash
 
 target=
+default_target="" # TODO: use an user settings file
+warningFlag=
+rsync --version | grep "version [210]\." && rsync_option="" || rsync_option="--info=progress2"
 usage="\e[1m$(basename $0)\e[0m -h | -t \e[4mdir\e[0m"
 help="An preparation script for the install script for computer reset.
 $usage
@@ -12,6 +15,11 @@ $usage
 die() {
   echo "ERROR: $*" >&2
   exit 1
+}
+
+warn() {
+  echo "WARNING: $*" >&2
+  warningFlag=true
 }
 
 ####################################################
@@ -84,7 +92,11 @@ case $1 in
     ;;
 esac
 
-if [[ -z $target ]]; then
+if [[ -d "$default_target" ]]; then
+  target="$default_target"
+fi
+
+if [[ -z "$target" ]]; then
   printf "Please give a target folder. See -h for more help.\n"
   exit 1
 fi
@@ -93,17 +105,45 @@ fi
 ### Preparation
 ####################################################
 
+if [[ -d "$target" ]]; then
+  size=$(du -sh "$target" | awk '{print $1}')
+  backup_dir="$HOME/Desktop/backup$RANDOM"
+  echo "Backing up current backup ($size) to $backup_dir ..."
+  [[ -d "$backup_dir" ]] && rm -rf "$backup_file"
+  mkdir "$backup_dir" || die "Creating backup dir for backing up the current backup failed!"
+  rsync -a $rsync_option "$target/" "$backup_dir" || die "Backing up current backup failed!"
+fi
+
+####################################################
+### Backup
+####################################################
+
 #copy to target
 ctt() {
-  while [[ -n $1 ]]; do
-    printf "Copying $PWD/$1 "
-    printf "($(du -sh "$1" | awk '{print $1}')) ...\n"
-    if [[ -d "$1" ]]; then
-      rsync --size-only --delete -a "$1/" "$target/$1" || die "Copying folder $1 to $target failed"
-    else
-      rsync --size-only --delete -a "$1" "$target/$1" || die "Copying file $1 to $target failed"
-    fi
+  while [[ -n "$1" ]]; do
+    source_name="$1"
     shift
+    echo "Backing up $PWD/$source_name"
+    size=$(du -sh "$source_name") || {
+      warn "Failed to backup: $PWD/$source_name"
+      continue;
+    }
+    size=$(echo "$size" | awk '{print $1}')
+    printf "\033[A\rBacking up $PWD/$source_name (%s) ...\n" "${size:-??}"
+    if [[ -d "$source_name" ]]; then
+      rsync $rsync_option --size-only --delete -a "$source_name/" "$target/$source_name" || {
+        warn "Backing up folder $source_name to $target failed"
+        continue;
+      }
+    elif [[ -f "$source_name" ]]; then
+      rsync $rsync_option --size-only --delete -a "$source_name" "$target/$source_name" || {
+        warn "Backing up file $source_name to $target failed"
+        continue;
+      }
+    else
+      warn "Invalid backup task: $source_name"
+      continue;
+    fi
   done
 }
 
@@ -115,7 +155,17 @@ fi
 
 rm -rf .gnupg/S.gpg-agent* #remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
 ctt .bashrc .profile .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
-ctt IdeaProjects Documents Pictures Music Dropbox
+
+# read -p "Do you want to continue backup with the time consuming folders? (y/n) [y]: " ans
+# case $ans in
+# n)
+#   exit 0
+#   ;;
+# *)
+#   ;;
+# esac
+
+ctt Dropbox IdeaProjects Downloads Documents Pictures Music
 
 cd "Library" || die "cd to $HOME/Library failed"
 if [[ ! -e "$target/Thunderbird" ]]; then
@@ -133,6 +183,13 @@ cd /Applications || die "cd to /Applications failed"
 ctt Minecraft
 
 popd &> /dev/null
+
+if [[ -z $warningFlag ]]; then
+  echo "Deleting dated backup."
+  rm -rf "$backup_dir" || die "Deleting dated backup failed!"
+else
+  echo "There was an error. Backed up backup is being preserved ($backup_dir)."
+fi
 
 ####################################################
 ### Manual
