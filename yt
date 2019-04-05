@@ -39,8 +39,6 @@ while [[ -n $1 ]]; do
       exit 1
     }
     site="${youtube}user/${1}/videos"
-    shift
-    query="$*"
     ;;
   -c)
     shift
@@ -49,16 +47,16 @@ while [[ -n $1 ]]; do
       exit 1
     }
     site="${youtube}channel/${1}/videos"
-    shift
-    query="$*"
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
     ;;
   *)
-    site=$1
-    shift
+    [[ -z "$site" ]] && {
+      site=$1
+      shift
+    }
     query="$*"
     break;
     ;;
