@@ -5,7 +5,7 @@ youtube="https://www.youtube.com/"
 site=""
 query=""
 RESULTS=""
-RESULTSLEN=0
+RESULTSCNT=0
 usage="Usage: \e[1m$(basename $0)\e[0m -h | -l | \e[4msite\e[0m [\e[4mseries\e[0m] | -u \e[4muser\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m \e[4m...\e[0m"
 help="Commandline interaction with YouTube.
 $usage
@@ -67,13 +67,13 @@ done
 # write videos from youtube site $1, filtered by optional query $2, into global variable $RESULTS
 function fetchVideos() {
   waitnet -s || exit 1
-  src=$(curl -sS "$1")
+  local src=$(curl -sS "$1")
   if [[ -n $src ]]; then
-    content=$(echo "$src" | pup --charset utf8 '.yt-lockup-content')
+    local content=$(echo "$src" | pup --charset utf8 '.yt-lockup-content')
 
     # trouble shooting
     if [[ -z "$content" ]]; then
-      channel_empty=$(echo "$src" | pup '.channel-empty-message')
+      local channel_empty=$(echo "$src" | pup '.channel-empty-message')
       [[ -n "$channel_empty" ]] && {
         if [[ $1 = */user/* ]]; then
           printf "Bad username: %s\n" $(echo "$1" | sed -e 's/.*\/user\///' -e 's/\/videos//')
@@ -82,14 +82,14 @@ function fetchVideos() {
         fi
         exit 1
       }
-      title=$(echo "$src" | pup --charset utf8 'title text{}')
+      local title=$(echo "$src" | pup --charset utf8 'title text{}')
       echo "No content found: $title: $1"
       exit 1
     fi
 
-    links=$(echo "$content" | pup --charset utf8 "div h3 a[title*=$2]" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/')
+    local links=$(echo "$content" | pup --charset utf8 "div h3 a[title*=$2]" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/')
     #echo "$links"
-    json=$(echo "$content" | pup --charset utf8 '.yt-lockup-content json{}')
+    local json=$(echo "$content" | pup --charset utf8 '.yt-lockup-content json{}')
     RESULTS=$(node -e "
       const json = JSON.parse(process.argv[1]);
       for (let el of json) {
@@ -101,22 +101,26 @@ function fetchVideos() {
       }" "$json" \
       | perl -MHTML::Entities -pe 'decode_entities($_);')
 
-    RESULTSLEN=$(echo "$RESULTS" | wc -l)
-    if [[ $RESULTSLEN != $(echo "$links" | wc -l) ]]; then
-      printf "WTF-Error: %d titles, but %d links!\n" $RESULTSLEN $(echo "$links" | wc -l)
+    RESULTSCNT=$(printf "%s" "$RESULTS" | wc -l)
+    local LINKSCNT=$(printf "%s" "$links" | wc -l)
+    if [[ $RESULTSCNT != $LINKSCNT ]]; then
+      printf "WTF-Error: %d titles, but %d links!\n" $RESULTSCNT $LINKSCNT
       echo "RESULTS: $RESULTS"
       echo "$links: $links"
       exit 1
-    elif [[ $RESULTSLEN -eq 0 ]]; then
+    elif [[ $RESULTSCNT -eq 0 ]]; then
       if [[ -n $2 ]]; then
         echo "No results found for \"$2\". Try another."
+        exit 1
       else
         echo "No results found. Probably a script failure."
+        exit 1
       fi
     fi
 
   else
     echo "Fetching from $1 failed."
+    exit 1
   fi
 }
 
@@ -134,7 +138,7 @@ askForChoose() {
     printResults
   fi
 
-  if [[ $RESULTSLEN -eq 1 ]]; then
+  if [[ $RESULTSCNT -eq 1 ]]; then
     printf "Only one result found. Do you want to open it? (y/n) [y]: "
     read ans
     case $ans in
@@ -150,11 +154,11 @@ askForChoose() {
     esac
     exit 0
   else
-    printf "Which one do you want to open? (1-%d) [1]: " $RESULTSLEN
+    printf "Which one do you want to open? (1-%d) [1]: " $RESULTSCNT
     read ans
     [[ -z "$ans" ]] && ans=1
     if [[ $ans =~ ^[0-9]+$ ]]; then
-      if [[ $ans -gt 0 && $ans -le $RESULTSLEN ]]; then
+      if [[ $ans -gt 0 && $ans -le $RESULTSCNT ]]; then
         result=$(echo "$links" | sed -n "${ans}p")
         if [[ -z $DEBUG ]]; then
           f "$result"
