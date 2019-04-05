@@ -1,4 +1,3 @@
-#!/bin/bash
 
 cmd=
 # link regex does not work because (http:)// gets recognized as file path
@@ -43,10 +42,14 @@ esac
 if [[ -n "$cmd" ]]; then
   args=($@)
   args[0]=$arg
-  read -n 1 -p "Did you mean: $cmd ${args[*]} ? (y/n) [y]: " ans
-  if [[ $ans != n ]]; then
-    . ~/.profile  # index aliases
-    "$cmd" "${args[@]}"
-  fi
+  printf "Did you mean: $cmd ${args[*]} ? (y/n) [y]: "
+  read ans
+  case "$ans" in
+    n)
+      ;;
+    *)
+      . ~/.profile  # index aliases
+      "$cmd" "${args[@]}"
+  esac
 fi
 
