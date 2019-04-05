@@ -146,7 +146,7 @@ function printDescriptions() {
   cnt=0
   IFS=$'\n'
   for idx in "${!DESCRIPTIONS[@]}"; do
-    printf "%s: %s\n" "$idx" "${DESCRIPTIONS[$idx]}"
+    printf "%s: %s\n" "$((idx+1))" "${DESCRIPTIONS[$idx]}" # increment for zero-based to one-based conversion
   done
 }
 
@@ -176,13 +176,14 @@ function askForChoose() {
     [[ -z "$ans" ]] && ans=1
     if [[ $ans =~ ^[0-9]+$ ]]; then
       if [[ $ans -gt 0 && $ans -le ${#DESCRIPTIONS[@]} ]]; then
+        ((ans--)) # decrement to convert from one-based to zero based
         local link=${LINKS[${ans}]}
         if [[ -z $DEBUG ]]; then
           f "$link"
         else
           echo "f $link"
         fi
-        [[ $ans -eq 1 ]] && exit 0
+        [[ $ans -eq 0 ]] && exit 0
       else
         echo "Wrong answer. Integer is zero or too high: $ans."
         exit 1
