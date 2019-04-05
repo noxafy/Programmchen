@@ -5,7 +5,7 @@ youtube="https://www.youtube.com"
 site=""
 query=""
 declare -a LINKS
-declare -a RESULTS
+declare -a DESCRIPTIONS
 usage="Usage: \e[1m$(basename $0)\e[0m -h | -l | \e[4msite\e[0m [\e[4mseries\e[0m] | -u \e[4muser\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m \e[4m...\e[0m"
 help="Commandline interaction with YouTube.
 $usage
@@ -64,21 +64,6 @@ while [[ -n $1 ]]; do
   shift
 done
 
-function parseLinks0() {
-  echo "$1" | pup --charset utf8 "div h3 a[title*=${2}I]" | grep -o 'href="/watch?v=[^"]*' | sed 's/href="/https:\/\/www.youtube.com/'
-}
-
-function parseLinks() {
-  # https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors
-  local tmp_links=$(parseLinks0 "$1" "$2")
-  if [[ -n $DEBUG ]]; then
-    local all_links=$(parseLinks0 "$1" "")
-    printf "All links:\n%s\n" "$all_links"
-    printf "Filtered links:\n%s\n" "$LINKS"
-  fi
-  LINKS=(${tmp_links})
-}
-
 function parseResults0() {
   local json=$(echo "$1" | pup --charset utf8 '.yt-lockup-content json{}')
   node -e "
@@ -95,19 +80,19 @@ function parseResults0() {
 }
 
 function parseResults() {
-  local tmp_parsed=$(parseResults0 "$1" "$2")
-  local tmp_results=$(echo "$tmp_parsed" | sed -n 'p;n')
-  IFS=$'\n' RESULTS=(${tmp_results})
-  local tmp_links=$(echo "$tmp_parsed" | sed -n '1d;p;n')
+  local tmp_results=$(parseResults0 "$1" "$2")
+  local tmp_descriptions=$(echo "$tmp_results" | sed -n 'p;n')
+  IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
+  local tmp_links=$(echo "$tmp_results" | sed -n '1d;p;n')
   IFS=$'\n' LINKS=(${tmp_links})
 
   if [[ -n $DEBUG ]]; then
     local all_results=$(parseResults0 "$1")
     printf "All results:\n%s\n" "$all_results"
-    printf "Filtered results:\n%s\n" "$tmp_parsed"
+    printf "Filtered results:\n%s\n" "$tmp_results"
   fi
 
-  if [[ ${#RESULTS[@]} -eq 0 ]]; then
+  if [[ ${#DESCRIPTIONS[@]} -eq 0 ]]; then
     if [[ -n $2 ]]; then
       echo "No results found for \"$2\". Try another."
       exit 1
@@ -141,13 +126,12 @@ function fetchVideos() {
       exit 1
     fi
 
-#    parseLinks "$content" "$2"
     parseResults "$content" "$2"
 
-    if [[ ${#RESULTS[@]} != ${#LINKS[@]} ]]; then
-      printf "WTF-Error: %d titles, but %d links!\n" ${#RESULTS[@]} ${#LINKS[@]}
-      echo "RESULTS:"
-      printf '%s\n' "${RESULTS[@]}"
+    if [[ ${#DESCRIPTIONS[@]} != ${#LINKS[@]} ]]; then
+      printf "WTF-Error: %d descriptions, but %d links!\n" ${#DESCRIPTIONS[@]} ${#LINKS[@]}
+      echo "DESCRIPTIONS:"
+      printf '%s\n' "${DESCRIPTIONS[@]}"
       echo "LINKS:"
       printf '%s\n' "${LINKS[@]}"
       exit 1
@@ -158,20 +142,20 @@ function fetchVideos() {
   fi
 }
 
-function printResults() {
+function printDescriptions() {
   cnt=0
   IFS=$'\n'
-  for idx in "${!RESULTS[@]}"; do
-    printf "%s: %s\n" "$idx" "${RESULTS[$idx]}"
+  for idx in "${!DESCRIPTIONS[@]}"; do
+    printf "%s: %s\n" "$idx" "${DESCRIPTIONS[$idx]}"
   done
 }
 
 function askForChoose() {
   if [[ $1 = true ]]; then
-    printResults
+    printDescriptions
   fi
 
-  if [[ ${#RESULTS[@]} -eq 1 ]]; then
+  if [[ ${#DESCRIPTIONS[@]} -eq 1 ]]; then
     printf "Only one result found. Do you want to open it? (y/n) [y]: "
     read ans
     case $ans in
@@ -187,16 +171,16 @@ function askForChoose() {
     esac
     exit 0
   else
-    printf "Which one do you want to open? (1-%d) [1]: " ${#RESULTS[@]}
+    printf "Which one do you want to open? (1-%d) [1]: " ${#DESCRIPTIONS[@]}
     read ans
     [[ -z "$ans" ]] && ans=1
     if [[ $ans =~ ^[0-9]+$ ]]; then
-      if [[ $ans -gt 0 && $ans -le ${#RESULTS[@]} ]]; then
-        result=${LINKS[${ans}]}
+      if [[ $ans -gt 0 && $ans -le ${#DESCRIPTIONS[@]} ]]; then
+        local link=${LINKS[${ans}]}
         if [[ -z $DEBUG ]]; then
-          f "$result"
+          f "$link"
         else
-          echo "f $result"
+          echo "f $link"
         fi
         [[ $ans -eq 1 ]] && exit 0
       else
