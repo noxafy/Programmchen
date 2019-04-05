@@ -18,6 +18,13 @@ $usage
 	\e[1m-c\e[0m \e[4mchannel\e[0m	Give a \e[4mchannel\e[0m to grep videos from.
 	\e[4mquery\e[0m		Search a specified query on YouTube.
 "
+die() {
+  mes=$1
+  shift
+  [[ -n "$mes" ]] && printf "$mes\n" "$*"
+  exit 1
+}
+
 while [[ -n $1 ]]; do
   case "$1" in
   -h)
@@ -34,23 +41,16 @@ while [[ -n $1 ]]; do
     ;;
   -u)
     shift
-    [[ -z "$1" ]] && {
-      echo "Please give a user name with option -u. See -h for more help."
-      exit 1
-    }
+    [[ -z "$1" ]] && die "Please give a user name with option -u. See -h for more help."
     site="${youtube}/user/${1}/videos"
     ;;
   -c)
     shift
-    [[ -z "$1" ]] && {
-      echo "Please give a channel with option -c. See -h for more help."
-      exit 1
-    }
+    [[ -z "$1" ]] && die "Please give a channel with option -c. See -h for more help."
     site="${youtube}/channel/${1}/videos"
     ;;
   -*)
-    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-    exit 1
+    die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
     ;;
   *)
     [[ -z "$site" ]] && {
@@ -94,11 +94,9 @@ function parseResults() {
 
   if [[ ${#DESCRIPTIONS[@]} -eq 0 ]]; then
     if [[ -n $2 ]]; then
-      echo "No results found for \"$2\". Try another."
-      exit 1
+      die "No results found for \"$2\". Try another."
     else
-      echo "No results found. Probably a script failure."
-      exit 1
+      die "No results found. Probably a script failure."
     fi
   fi
 }
@@ -115,15 +113,13 @@ function fetchVideos() {
       local channel_empty=$(echo "$src" | pup '.channel-empty-message')
       [[ -n "$channel_empty" ]] && {
         if [[ $1 = */user/* ]]; then
-          printf "Bad username: %s\n" $(echo "$1" | sed -e 's/.*\/user\///' -e 's/\/videos//')
+          die "Bad username: %s\n" $(echo "$1" | sed -e 's/.*\/user\///' -e 's/\/videos//')
         else
-          echo "Channel does not exist: $1"
+          die "Channel does not exist: $1"
         fi
-        exit 1
       }
       local title=$(echo "$src" | pup --charset utf8 'title text{}')
-      echo "No content found: $title: $1"
-      exit 1
+      die "No content found: $title: $1"
     fi
 
     parseResults "$content" "$2"
@@ -134,11 +130,10 @@ function fetchVideos() {
       printf '%s\n' "${DESCRIPTIONS[@]}"
       echo "LINKS:"
       printf '%s\n' "${LINKS[@]}"
-      exit 1
+      die
     fi
   else
-    echo "Fetching from $1 failed."
-    exit 1
+    die "Fetching from $1 failed."
   fi
 }
 
@@ -185,8 +180,7 @@ function askForChoose() {
         fi
         [[ $ans -eq 0 ]] && exit 0
       else
-        echo "Wrong answer. Integer is zero or too high: $ans."
-        exit 1
+        die "Wrong answer. Integer is zero or too high: $ans."
       fi
     else
       echo "Nothing opened."
