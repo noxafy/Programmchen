@@ -141,7 +141,11 @@ askForChoose() {
     read ans
     case $ans in
       ""|j|y|J|Y|Yes)
-        [[ -z $DEBUG ]] && f -i "$links" || echo "f -i $links"
+        if [[ -z $DEBUG ]]; then
+          f -i "$links"
+        else
+          echo "f -i $links"
+        fi
       ;;
       *)
       ;;
@@ -154,7 +158,11 @@ askForChoose() {
     if [[ $ans =~ ^[0-9]+$ ]]; then
       if [[ $ans -gt 0 && $ans -le $RESULTSLEN ]]; then
         result=$(echo "$links" | sed -n "${ans}p")
-        [[ -z $DEBUG ]] && f "$result" || echo "f $result"
+        if [[ -z $DEBUG ]]; then
+          f "$result"
+        else
+          echo "f $result"
+        fi
         [[ $ans -eq 1 ]] && exit 0
       else
         echo "Wrong answer. Integer is zero or too high: $ans."
@@ -176,8 +184,16 @@ if [[ "$site" = ${youtube}* ]]; then
     done
   else
     [[ -n "$query" ]] && echo "Warning: query [${query}] will be ignored"
-    [[ -z $DEBUG ]] && f -i "$site" || echo "f -i $site"
+    if [[ -z $DEBUG ]]; then
+      f -i "$site"
+    else
+      echo "f -i $site"
+    fi
   fi
 else
-  [[ -z $DEBUG ]] && f yt "$site $query" || echo "f yt $site $query"
+  if [[ -z $DEBUG ]]; then
+    f yt "$site $query"
+  else
+    echo "f yt $site $query"
+  fi
 fi
