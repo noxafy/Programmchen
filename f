@@ -91,7 +91,7 @@ $usage
 die() {
   mes=$1
   shift
-  printf "$mes" "$*"
+  printf "$mes\n" "$*"
   exit 1
 }
 
@@ -195,7 +195,7 @@ case $1 in
       shift
       keys="$*"
     fi
-    [[ -z $keys ]] && die "Give some sites with argument -i."
+    [[ -z $keys ]] && die "Please give a valid link with argument -i. See -h for more help."
     startFireFox
     #guarantee an open window
     open /Applications/Firefox.app/
@@ -216,7 +216,7 @@ while [[ $1 == -* ]]; do
     -y)
       openLink=""
       if [[ ( -z "$2" || ( "$2" == -- && -z "$3" ) ) && -z "$key" ]]; then
-        die "Cannot copy empty link request. See -h for more information.\n"
+        die "Cannot copy empty link request. See -h for more information."
       fi
       ;;
     -d)
@@ -227,12 +227,12 @@ while [[ $1 == -* ]]; do
       ;;
     --)
       if [[ -z "$2" && -z "$key" ]]; then
-        die "Argument -- must follow query key words. See -h for more information.\n"
+        die "Argument -- must be followed by query key words. See -h for more information."
       fi
       break;
       ;;
     -*)
-      die "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+      die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
       ;;
   esac
   shift
