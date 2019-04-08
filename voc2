@@ -86,8 +86,13 @@ searchForInAll() {
       y|Y)
         echo
         ;;
+      "")
+        echo "Nothing added."
+        exit 0
+        ;;
       *)
-        printf "\nNothing added.\n"
+        echo
+        echo "Nothing added."
         exit 0
         ;;
     esac
