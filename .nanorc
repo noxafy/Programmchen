@@ -3,3 +3,5 @@ set softwrap
 set nowrap
 set nohelp
 include /usr/local/share/nano/*
+
+bind   ^]           cutwordleft         main
