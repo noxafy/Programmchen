@@ -43,13 +43,21 @@ if [[ -n "$cmd" ]]; then
   args=($@)
   args[0]=$arg
   printf "Did you mean: $cmd ${args[*]} ? (y/n) [y]: "
-  read ans
+  [[ -n "$ZSH_VERSION" ]] && readoption="-k" || readoption="-n"
+  read $readoption 1 ans
   case "$ans" in
     n)
+      echo
+      exit 0
+      ;;
+    "")
       ;;
     *)
-      . ~/.profile  # index aliases
-      "$cmd" "${args[@]}"
+      echo
+      ;;
   esac
+
+  . ~/.profile  # index aliases
+  "$cmd" "${args[@]}"
 fi
 
