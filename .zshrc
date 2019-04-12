@@ -39,6 +39,7 @@ compdef pe=pass
 compdef pm=pass
 compdef pu=pass
 compdef pi=pass
+compdef po=pass
 compdef _path_commands fip
 compdef _functions fif
 compdef _aliases fia
