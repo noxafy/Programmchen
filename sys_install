@@ -26,8 +26,9 @@ trading_icon="$IT/trading212.icns" # icon for Trading212.app
 trading_script="$IT/Programmchen/212listener.js" # listener for Trading212.app
 dashboard="$thisdir/Dashboard" # Dashboard widgets
 
-brews=(agedu
-aspell
+brews=(
+#agedu
+#aspell
 #automake
 bash
 bash-completion
@@ -35,6 +36,7 @@ bash-snippets
 bfg
 brightness
 #bro
+#chafa # Versatile and fast Unicode/ASCII/ANSI graphics renderer
 cheat
 #chordii
 #chromedriver
@@ -67,25 +69,29 @@ maven
 maven-completion
 mplayer
 #mujs
-#mysql
+mysql
 nano
 nativefier
 #pass #already installed
 pdfgrep
 plan9port
 pup
+#python@2
 recode
 rename
+ripgrep
+rsync
 shpotify
 #sic
 testdisk
 tldr
+trash
 wget
 wiki
-wine
-winetricks
+#wine
+#winetricks
 woff2
-you-get
+#you-get
 youtube-dl)
 
 brewcasks=(android-file-transfer
@@ -93,6 +99,7 @@ brewcasks=(android-file-transfer
 #android-studio
 anki
 #axure-rp
+bibdesk
 #blender
 calibre
 disablemonitor
@@ -110,10 +117,12 @@ intellij-idea
 iterm2
 java
 #jwzlyrics
-#mactex
+mactex
 #mp3tag
 mpv
-notational-velocity
+#notational-velocity
+nvalt
+#onedrive
 #openoffice
 #osxfuse
 qlstephen
@@ -134,12 +143,14 @@ masinstalls=(
 890805912 # Newsflow
 595191960 # CopyClip
 526298438 # Lightshot Screenshot
-404010395 # TextWrangler
+#404010395 # TextWrangler
 1278508951 # Trello
 1061963639 # VirtualDJ 8
+692867256 # Simplenote
+410628904 # Wunderlist
 
 ### Apple
-#497799835 # XCode, required by mas
+#497799835 # XCode, already required by mas
 408981434 # iMovie
 409183694 # Keynote
 409201541 # Pages
