@@ -195,13 +195,6 @@ $res" | less
       | grep -v "Laden des Songtextes wird vorbereitet ..." \
       | perl -pe 's/^[ \t]+//' \
       | sed '/^$/N;/^\n$/D');
-#      | sed 's/’//g' \
-#      | sed 's/‘//g' \
-#      | sed 's/”/"/g' \
-#      | sed 's/“/"/g' \
-#      | sed 's/…/.../g' \
-#      | sed 's/[fF][uU][cC][kK]/[32mF***[39m/g' \
-#      | sed 's/[sS][hH][iI][tT]/[32mS***[39m/g' \
 
   if [[ -z $res ]]; then
     echo "There might be missing some lyrics..." >&2
