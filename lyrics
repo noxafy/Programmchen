@@ -141,6 +141,7 @@ $res" | less
   if [[ -n $VERBOSE ]]; then
     if [[ -n $res ]]; then
       echo "Lyrics in site found! (length: ${#res})" >&2
+      # printf "%s\n" "$res" >&2
     else
       echo "Extracting lyrics failed on awk (or curl))!" >&2
       return;
@@ -185,7 +186,6 @@ $res" | less
          }
          console.log(result)
        });' \
-      | perl -pe 's/^[ \t]+//' \
       | recode html..latin1 \
       | grep -v "Zur deutschen Übersetzung" \
       | grep -v "Noch keine Übersetzung vorhanden." \
@@ -193,7 +193,7 @@ $res" | less
       | grep -v "Leider kein Songtext vorhanden." \
       | grep -v "Jetzt Songtext hinzufügen" \
       | grep -v "Laden des Songtextes wird vorbereitet ..." \
-      | sed 's/^ *//g' \
+      | perl -pe 's/^[ \t]+//' \
       | sed '/^$/N;/^\n$/D');
 #      | sed 's/’//g' \
 #      | sed 's/‘//g' \
@@ -569,7 +569,7 @@ while [[ -n $1 ]]; do
   -*)
     printf "Unknown Argument: %s\n$usage -- " "$1"
     die "See -h for more help."
-   ;;
+    ;;
   *)
     break
     ;;
