@@ -26,7 +26,7 @@ Also, you can give an url for extracting directly:
   $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
   $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
 
-Dependency to \"recode\". Parameter -v produces debugging output, --ask disables autoselection, -q suppresses most messages.
+Dependency to \"recode\". Parameter --verbose (-v) produces debugging output, --ask (-a) disables autoselection, --quiet (-q) suppresses most messages.
 "
 #TODO: improve help message
 
@@ -302,8 +302,8 @@ function preformat() {
 function findLyrics() {
   [[ -z "$TITLE" ]] && die "No title given (artist: \"$ARTIST\")!"
   echo "Artist: $ARTIST
-Title: $TITLE
-" >&2
+Title: $TITLE" >&2
+  [[ -z "$QUIET" ]] && echo
 
   tileInUrl=$(preformat $TITLE | sed 's/ - [Ll]ive.*//g')
   titleWithHyphen=$(withHyphen $tileInUrl)
@@ -345,44 +345,45 @@ artistNoSpaces: $artistNoSpaces
 
   OVERALL=()
   for site in $sites; do
-    printf "Looking for lyrics at %s: " "$site" >&2
-    if [[ -n $VERBOSE ]]; then
-      [[ -z "$QUIET" ]] && echo >&2
+    if [[ -z "$QUIET" ]]; then
+      printf "Looking for lyrics at %s: " "$site" >&2
+      [[ -n $VERBOSE ]] && echo >&2
     fi
+
     ALL=($(google "$site" "$ARTIST $TITLE lyrics"));
     #skip if no results found
     if [[ -z ${ALL[@]} ]]; then
-      echo "No results. Lets try another..." >&2
+      [[ -z "$QUIET" ]] && echo "No results. Lets try another..." >&2
       continue;
     fi
 
     if [[ "$AUTOSELECT" -gt 1 || ! -t 0 ]]; then
       # try to validate self
-      # only title is required (grep would pass everything trough if both empty)
+      # only title is required (grep would pass everything through if both empty)
       for resURL in "${ALL[@]}"; do
         if [[ ( -n "$titleWithHyphen" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen" | grep -i -e "$artistWithHyphen") )
           || ( -n "$titleNoSpaces" && -n $(echo "$resURL" | grep -i -e "$titleNoSpaces" | grep -i -e "$artistNoSpaces") )
           || ( -n "$titleWithHyphen2" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen2" | grep -i -e "$artistWithHyphen2") )
           || ( -n "$titleWithHyphen3" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen3" | grep -i -e "$artistWithHyphen3") ) ]]; then
-          echo "Lyrics found!" >&2
+          [[ -z "$QUIET" ]] && echo "Lyrics found!" >&2
 
           ${site%.*} $resURL
 
           if [[ -n $res ]]; then
             finishIt
           else
-            echo "Well, that URL sucked. Lets try another..." >&2
+            [[ -z "$QUIET" ]] && echo "Well, that URL sucked. Lets try another..." >&2
           fi
         elif [[ -n $VERBOSE ]]; then
           echo "URL not matching: $resURL" >&2
         fi
       done
-      echo "No matching site found. Lets try another site..." >&2
+      [[ -z "$QUIET" ]] && echo "No matching site found. Lets try another site..." >&2
 
       #add ALL to OVERALL and try to find in next site
       OVERALL+=("${ALL[@]}")
     else
-      echo "${#ALL[@]} results found."
+      [[ -z "$QUIET" ]] && echo "${#ALL[@]} results found."
       while [[ -n "${ALL[@]}" ]]; do
         j=1
         for resURL in ${ALL[@]}; do
@@ -392,7 +393,7 @@ artistNoSpaces: $artistNoSpaces
             || ( -n "$titleWithHyphen3" && -n $(echo "$resURL" | grep -i -e "$titleWithHyphen3" | grep -i -e "$artistWithHyphen3") ) ]]; then
 
             if [[ "$AUTOSELECT" -gt 0 ]]; then
-              echo "Lyrics found!" >&2
+              [[ -z "$QUIET" ]] && echo "Lyrics found!" >&2
 
               ${site%.*} $resURL
 
