@@ -26,7 +26,7 @@ die() {
 
 if type mplayer && type lame; then
   for f in "$@" ; do
-    mplayer -vo null -vc dummy -af resample=44100 -ao pcm -ao pcm:waveheader "$f" || die "Conversion to wav failed: $f"
+    mplayer -novideo -ao pcm:fast "$f" || die "Conversion to wav failed: $f"
     filename=$(basename "$f")
     echo "filename: $filename"
     filename=${filename%.*}
