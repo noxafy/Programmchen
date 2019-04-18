@@ -4,9 +4,9 @@ usage="Usage: \e[1m$(basename $0)\e[0m -h | [[+|-]\e[4mbrightness\e[0m]"
 help="Adjusting the brightness of macs display. Depends on \"brightness\" (https://github.com/nriley/brightness).
 $usage
 	\e[1m-h\e[0m		Displays this message and exits.
-	\e[4mbrightness\e[0m	The percentage of display brightness. Give a number in format [x]x[.x[x]] 
-			(or 100) between 0 and 100). If the number is signed, \"-\" will cause 
-			display dimming at that percentage, \"+\" will brighten. 
+	\e[4mbrightness\e[0m	The percentage of display brightness. Give a number in format [x]x[.x[x]]
+			(or 100) between 0 and 100). If the number is signed, \"-\" will cause
+			display dimming at that percentage, \"+\" will brighten.
 	If no argument given, it prints the actual percentage of display brightness.
 "
 
@@ -52,4 +52,7 @@ case $1 in
 esac
 
 value=$(echo "scale=4;$value/100" | bc)
+
+echo "brightness is currently not working. See: https://github.com/nriley/brightness/issues/21"
+exit 1
 brightness $value
