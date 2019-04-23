@@ -5,6 +5,7 @@ usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mvolume\e[0m]"
 help="Get or set the system output volume.
 $usage
         \e[1m-h\e[0m	Displays this help message and exists.
+        \e[1m-m\e[0m	Print out if audio output is muted.
         \e[4mvolume\e[0m	The value the output volume to set to (0-100).
 If no argument given, it prints the current volume.
 "
@@ -43,10 +44,5 @@ if [[ -n $volume ]]; then
   osascript -e "Set volume output volume $volume"
 else
   volume=$(osascript -e 'output volume of (get volume settings)')
-  muted=$(osascript -e 'output muted of (get volume settings)')
-  if ($muted); then
-    echo "$volume (muted)"
-  else
-    echo "$volume"
-  fi
+  echo "$volume"
 fi
