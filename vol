@@ -1,18 +1,15 @@
 #!/bin/bash
 
-volume=
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mvolume\e[0m]"
+aimed_volume=
+current_volume=
+usage="Usage: \e[1m$(basename $0)\e[0m -h | -m [true|false] | [[+|-]\e[4mvolume\e[0m]"
 help="Get or set the system output volume.
 $usage
         \e[1m-h\e[0m	Displays this help message and exists.
-        \e[1m-m\e[0m	Print out if audio output is muted.
-        \e[4mvolume\e[0m	The value the output volume to set to (0-100).
+        \e[1m-m\e[0m	Set muted state of audio output or just print out the current state.
+        \e[4mvolume\e[0m	The value the output volume to set to (0-100). Sign with - or + for a relative change.
 If no argument given, it prints the current volume.
 "
-
-getNumber() {
-  echo "$*" | grep '^\(\d\+\(\.\d\+\)\?\|\.\d\+\)$'
-}
 
 case $1 in
 -h)
@@ -27,22 +24,42 @@ case $1 in
   fi
   exit 0
   ;;
+esac
+
+current_volume=$(osascript -e 'output volume of (get volume settings)')
+#echo "current_volume: $current_volume"
+
+case $1 in
+[0-9]|[0-9][0-9])
+  aimed_volume=$1
+  ;;
+-[0-9]|-[0-9][0-9])
+  aimed_volume=$(echo "$current_volume$1" | bc)
+  if [[ $(echo "$aimed_volume < 0" | bc) -eq 1 ]]; then
+    aimed_volume=0
+  fi
+  ;;
++[0-9]|+[0-9][0-9])
+  aimed_volume=$(echo "$current_volume$1" | bc)
+  if [[ $(echo "$aimed_volume > 100" | bc) -eq 1 ]]; then
+    aimed_volume=100
+  fi
+  ;;
 -*)
   printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
   exit 1
   ;;
+"")
+  printf "%d %%\n" $current_volume
+  exit 0
+  ;;
 *)
-  volume=$(getNumber "$*")
-  if [[ -z $volume && -n $1 ]]; then
+  if [[ -z $aimed_volume && -n $1 ]]; then
     printf "Bad volume value: %s\n$usage -- See -h for more help.\n" "$1"
     exit 1
   fi
   ;;
 esac
 
-if [[ -n $volume ]]; then
-  osascript -e "Set volume output volume $volume"
-else
-  volume=$(osascript -e 'output volume of (get volume settings)')
-  echo "$volume"
-fi
+#echo "aimed_volume: $aimed_volume"
+osascript -e "Set volume output volume $aimed_volume"
