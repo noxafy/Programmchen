@@ -1,7 +1,7 @@
 #!/bin/bash
 
 target=
-default_target="" # TODO: use an user settings file
+default_target="$(git config --global custom.backup)"
 warningFlag=
 rsync --version | grep "version [210]\." && rsync_option="" || rsync_option="--info=progress2"
 usage="\e[1m$(basename $0)\e[0m -h | -t \e[4mdir\e[0m"
