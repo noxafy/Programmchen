@@ -64,7 +64,7 @@ case $1 in
     drop=$(du -s Dropbox/ | awk '{print $1}')
     thund=$(du -s Library/Thunderbird/Profiles | awk '{print $1}')
     dicts=$(du -s Library/Dictionaries | awk '{print $1}')
-    intelli=$(du -s Library/Application\ Support/IntelliJIdea* | awk '{print $1}' | xargs -n 1 printf "%d + ")
+    intelli=$(du -s Library/Preferences/IntelliJIdea* | awk '{print $1}' | xargs -n 1 printf "%d + ")
     intelli=$(echo "$intelli 0" | bc)
     all=$(echo "($idea + $docs + $pics + $mus + $drop + $thund + $dicts + $intelli) * 512" | bc)
     echo "You will need about $(sizeFormat $all)."
@@ -180,8 +180,21 @@ ctt Thunderbird/Profiles # - Thunderbird folder
 ctt "Keyboard Layouts" # - keyboard layout
 ctt "Dictionaries" # Databases for Dictionary.app
 
-cd "Application Support" || die "cd to $HOME/Library/Application\ Support failed"
-ctt IntelliJIdea* # IntelliJ config folder
+ctt Preferences/IntelliJIdea* # IntelliJ config folder
+ctt Preferences/com.googlecode.iterm2
+ctt Preferences/com.zipzapmac.Go2Shell.plist
+
+# firefox bookmark backup
+if firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
+  cd "$firefox_profile" || die "cd to $firefox_profile failed"
+  recent_backup=$(ls -t | head -1)
+  mkdir files
+  cp "$recent_backup" "files/firefox_bookmark.jsonlz4"
+  ctt "files/firefox_bookmark.jsonlz4"
+  rm -rf files || die "Removing tmp dir failed: $firefox_profile/files"
+else
+  warn "Could not backup firefox bookmark! Folder does not exist: $firefox_profile"
+fi
 
 # - minecraft launcher
 cd /Applications || die "cd to /Applications failed"
@@ -203,14 +216,15 @@ fi
 ####################################################
 
 #export:
-[[ ! -d manual ]] && mkdir manual
+[[ ! -d files ]] && mkdir files
 
-echo "Export and save to $target/manual:"
-echo " - Newsflow OPML" # - Newsflow OPML
-echo " - Firefox bookmarks" # - firefox bookmarks
-open manual
+echo "Save to $target/files:"
+echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")" # - Newsflow OPML
+open files
 
 #ensure:
+echo "Ensure existence in $target/files"
+echo " - Firefox bookmarks (as \"firefox_bookmark.jsonlz4\")"
 [[ ! -d dashboard ]] && mkdir dashboard
 echo "Ensure existence in $target/dashboard" # - Dashboard apps
 echo " - eCalc_Scientific.wdgt"

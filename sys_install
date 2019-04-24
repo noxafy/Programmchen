@@ -4,6 +4,7 @@ thisdir=$(dirname "$PWD/$BASH_SOURCE")
 if [[ ! -e $thisdir ]]; then
   thisdir=$(dirname "$BASH_SOURCE")
 fi
+skipauto=
 usage="\e[1msys_install\e[0m -h | [-s]"
 help="An install script for mac reset.
 $usage
@@ -14,14 +15,34 @@ Fast internet connection recommended.
 Warning: Leave in place!
 "
 
-#prefs
-skipauto=
-def_ssid=
-def_password=
-wlan_device=en0
+# dirs
+nv_directory="$D/Apps/NV"
+studium="$D/Org/Studium"
+# resources
+trading_icon="$IT/212/trading212.icns" # icon for Trading212.app
+trading_script="$IT/212/212listener.js" # listener for Trading212.app
+firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
+newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
+iterm_settings="$P/Prefs/com.googlecode.iterm2.plist"
 
-#resource paths
-dashboard="$thisdir/Dashboard" # Dashboard widgets
+dockitems='nvALT
+Wunderlist
+Simplenote
+Thunderbird
+Firefox
+Spotify
+"Microsoft OneNote"
+Newsflow
+Audacity
+"IntelliJ IDEA"
+FreeFileSync
+"System\\U00adeinstellungen"
+iTerm
+FileMerge
+Trello
+Anki
+BibDesk
+FileZilla'
 
 brews=(
 #agedu		# Unix utility for tracking down wasted disk space
@@ -57,7 +78,7 @@ go
 googler
 hexedit
 howdoi
-#launch4j # Cross-platform Java executable wrapper
+#launch4j   # Cross-platform Java executable wrapper
 lf
 lorem
 lsd
@@ -122,7 +143,7 @@ mpv
 nvalt
 #onedrive
 #openoffice
-#osxfuse
+#osxfuse #maybe needed for plugging the external drive?
 qlstephen
 #sketch
 skype
@@ -163,6 +184,11 @@ masinstalls=(
 434290957 # Motion
 424390742 # Compressor
 )
+
+#variables
+def_ssid=
+def_password=
+wlan_device=en0
 
 ########################################################################################################
 ##### Args parsing
@@ -225,15 +251,16 @@ installWifi() {
   ssid=$1
   passwd=$2
   while [[ -z "$ssid" ]]; do
-    echo "Available networks (WPA2 only):"
     networks=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s)
+    echo "Available networks (WPA2 only):"
     echo "$networks" | sed -n 1p
     echo "$networks" | grep "WPA2"
-    read -p "Please enter a SSID to connect to (WPA2 only; s = search again all available): " ssid
-    if [[ "$ssid" = s ]]; then
+    read -p "Please enter a SSID to connect to (s = search again all available): " ssid
+    if [[ -z "$ssid" ]]; then
+      echo "The SSID must not empty to connect to the internet."
+    elif [[ "$ssid" = s ]]; then
       ssid=
-    fi
-    if [[ -z $(echo "$networks"  | awk '{print $1}' | grep -- "^${ssid}\$") ]]; then
+    elif [[ -z $(echo "$networks"  | awk '{print $1}' | grep -- "^${ssid}\$") ]]; then
       echo "Network \"$ssid\" is not available."
       ssid=
     fi
@@ -248,18 +275,35 @@ installWifi() {
   networksetup -addpreferredwirelessnetworkatindex "$wlan_device" "$ssid" 1000 WPA2 "$passwd"
 }
 
-waitUser() {
+letRead() {
   if [[ -n "$*" ]]; then
     echo "$*"
-    sleep 2
+     sleep $(echo "scale=3;${#1}/40+0.36" | bc)
   fi
-  read -p "Press [Enter] to continue: " trash
+}
+
+pressEnterTo() {
+  local message;
+  if [[ -n "$1" ]]; then
+    message=$1
+  else
+    message="continue"
+  fi
+  read -p "Please press [Enter] to ${message}: " trash
   #printf "\e[A\r\e[K"
 }
 
-tell() {
+section() {
+  echo "#########################"
+  echo "### $*"
+  echo "#########################"
+}
+
+supersection() {
+  echo "####################################################"
   echo "####################################################"
   echo "### $*"
+  echo "####################################################"
   echo "####################################################"
 }
 
@@ -267,7 +311,7 @@ tell() {
 ##### Partly automatic part
 ########################################################################################################
 # In this part, the script can do mostly on its own, but needs hands-on from time to time
-tell "Partly automatic part"
+supersection "Partly automatic part"
 echo
 
 #go home first
@@ -275,7 +319,7 @@ pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
 # check if .profile has been executed
 if [[ -z "$IT" ]]; then # $IT is required by script
-  tell "Preferences installation"
+  section "Preferences installation"
 
   # install .profile's as root
   c -s .bashrc .profile .profile_public .zshrc
@@ -302,7 +346,16 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   #defaults write com.apple.Siri StatusMenuVisible 0 #use siri in status bar as reminder of deactivating it
 
   #print all defaults, major unreadable values filtered out
-  #defaults read | grep -v "AppleIDAgentMetaInfo" | grep -v "AppleIDAccount" | grep -v 'FZPersonPictureData' | grep -v 'pref:200:Machine Preferences' | grep -v 'FZPersonSmallPictureData' | grep -v 'FZPersonPictureData' | grep -v "iTunes Location" | grep -v 'ProcessViewerColumns' | grep -v '\\Ud83c' | grep -v 'FFNamingPresets' | grep -v 'FFMediaImportOrganizerFilmListView' | grep -v 'timeFormatLK' | grep -v 'FFShareDestinationsKey' | grep -v 'folderActions' | grep -v 'LibraryBookmark' | grep -v 'IPXDefaultLibraryURLBookmark' | grep -v 'IPXDefaultWorkspace' | grep -v 'Data =' | grep -v 'WebKitUserStyleSheetLocationPreferenceKey' | grep -v 'TTInspectorProcesses' | grep -v 'TextBoldColor' | grep -v 'BackgroundColor' | grep -v 'CursorColor' | grep -v 'SelectionColor' | grep -v 'TextColor' | grep -v 'book =' | grep -v 'DVTRecentColors' | grep -v CacheBag | grep -v 'file-bookmark' | grep -v 'TSWPInvisiblesColor' | grep -v 'FFMediaImportOrganizerFilmListView' | grep -v 'pref:130:Preferences' | grep -v 'eqps:129:EQPreset' | grep -v 'services =' | grep -v 'GarageBand' | grep -v 'weather =' | grep -v 'UserCrossfade' | grep -v 'BookmarkData' | grep -v 'kBookmarkDataKey' | grep -v 'FFShareDestinationsKey' | grep -v 'KeyBingingTable' | grep -v 'MacAppStoreReceiptData_11.0' | grep -v 'LoginItemsColumn2' | grep -v ' req = ' | grep -v 'LogicBinaryPreferences' | grep -v 'CachedBag'
+  #defaults read | grep -v "AppleIDAgentMetaInfo" | grep -v "AppleIDAccount" | grep -v 'FZPersonPictureData' | grep -v 'pref:200:Machine Preferences' \
+  # | grep -v 'FZPersonSmallPictureData' | grep -v 'FZPersonPictureData' | grep -v "iTunes Location" | grep -v 'ProcessViewerColumns' | grep -v '\\Ud83c' \
+  # | grep -v 'FFNamingPresets' | grep -v 'FFMediaImportOrganizerFilmListView' | grep -v 'timeFormatLK' | grep -v 'FFShareDestinationsKey' \
+  # | grep -v 'folderActions' | grep -v 'LibraryBookmark' | grep -v 'IPXDefaultLibraryURLBookmark' | grep -v 'IPXDefaultWorkspace' \
+  # | grep -v 'Data =' | grep -v 'WebKitUserStyleSheetLocationPreferenceKey' | grep -v 'TTInspectorProcesses' | grep -v 'TextBoldColor' \
+  # | grep -v 'BackgroundColor' | grep -v 'CursorColor' | grep -v 'SelectionColor' | grep -v 'TextColor' | grep -v 'book =' | grep -v 'DVTRecentColors' \
+  # | grep -v CacheBag | grep -v 'file-bookmark' | grep -v 'TSWPInvisiblesColor' | grep -v 'FFMediaImportOrganizerFilmListView' \
+  # | grep -v 'pref:130:Preferences' | grep -v 'eqps:129:EQPreset' | grep -v 'services =' | grep -v 'GarageBand' | grep -v 'weather =' \
+  # | grep -v 'UserCrossfade' | grep -v 'BookmarkData' | grep -v 'kBookmarkDataKey' | grep -v 'FFShareDestinationsKey' | grep -v 'KeyBingingTable' \
+  # | grep -v 'MacAppStoreReceiptData_11.0' | grep -v 'LoginItemsColumn2' | grep -v ' req = ' | grep -v 'LogicBinaryPreferences' | grep -v 'CachedBag'
   # parse output to command
   # sed 's/= //g;s/;//g;s/"/defaults -currentHost write -g /;s/"//'
   # sed 's/= //g;s/;//g;s/ *"*/defaults write /;s/"//'
@@ -340,7 +393,6 @@ if [[ -z "$IT" ]]; then # $IT is required by script
 
   # Dictionary
   echo "Dictionary settings."
-  # TODO: Add OpenThesaurus dic from https://tekl.de/OpenThesaurusDeutsch to ~/Library/Dictionaries
   defaults write com.apple.Dictionary "last available dictionaries" "(
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
@@ -380,25 +432,28 @@ if [[ -z "$IT" ]]; then # $IT is required by script
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/60f594992693ff3f88af3f505da1451dc5af9c8c.asset/AssetData/Russian - English.dictionary\",
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/0c32ebe1de94a069aca537b10f718806c5ad50c1.asset/AssetData/Spanish - English.dictionary\"
   )"
-  defaults write com.apple.DictionaryServices DCSActiveDictionaries '(
-    "/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary",
-    "$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary",
-    "$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary",
-    "com.apple.dictionary.AppleDictionary",
-    "com.apple.dictionary.OAWT",
-    "com.apple.dictionary.NOAD",
-    "com.apple.dictionary.OTE",
-    "com.apple.dictionary.de.DDDSI",
-    "com.apple.dictionary.OxfordGerman",
-    "com.apple.dictionary.OxfordFrench",
-    "com.apple.dictionary.OxfordItalian",
-    "com.apple.dictionary.OxfordSpanish",
-    "com.apple.dictionary.OxfordRussian"
-  )'
+  defaults write com.apple.DictionaryServices DCSActiveDictionaries "(
+    \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
+    \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
+    \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
+    \"com.apple.dictionary.AppleDictionary\",
+    \"com.apple.dictionary.OAWT\",
+    \"com.apple.dictionary.NOAD\",
+    \"com.apple.dictionary.OTE\",
+    \"com.apple.dictionary.de.DDDSI\",
+    \"com.apple.dictionary.OxfordGerman\",
+    \"com.apple.dictionary.OxfordFrench\",
+    \"com.apple.dictionary.OxfordItalian\",
+    \"com.apple.dictionary.OxfordSpanish\",
+    \"com.apple.dictionary.OxfordRussian\"
+  )"
 
   echo "Shortcuts settings."
-  defaults write com.apple.Terminal NSUserKeyEquivalents '{ "Standardgr\\U00f6\\U00dfe wiederherstellen" = "@$r"; }'
+  # defaults read | grep -A 5 NSUserKeyEquivalents
   defaults write com.apple.Preview NSUserKeyEquivalents '{ "Text hervorheben" = "@h"; }'
+  defaults write com.apple.Terminal NSUserKeyEquivalents '{ "Standardgr\\U00f6\\U00dfe wiederherstellen" = "@$r"; }'
+  defaults write com.apple.TextEdit NSUserKeyEquivalents '{ Einsetzen = "@v";
+        "Einsetzen und Stil anpassen" = "@~^v";  }'
   defaults write com.microsoft.onenote.mac NSUserKeyEquivalents '{ "Einf\\U00fcgen" = "@$v";
         "Einf\\U00fcgen und an Formatierung anpassen" = "@v";
         "Sprache f\\U00fcr Korrekturhilfen festlegen..." = "@l"; }'
@@ -439,8 +494,8 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   printf "\e[4mHint\e[0m: Just set your favourite terminal layout to default.\n"
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
   printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. (Maybe only after restart?)"
-  waitUser "Press enter to restart ..."
-  echo "sudo shutdown -r now ..."
+  pressEnterTo restart
+  letRead "sudo shutdown -r now ..."
   sudo shutdown -r now
   exit 0
 else
@@ -451,7 +506,7 @@ fi
 ping -t 3 -c 1 8.8.8.8 >& /dev/null
 if [[ $? -ne 0 ]]; then # no internet connection
   if [[ $(networksetup -listpreferredwirelessnetworks "$wlan_device" | wc -l) -le 1 ]]; then #first time; no internet installed
-    tell "Internet connection installation"
+    section "Internet connection installation"
     networksetup -setairportpower "$wlan_device" on
     #wlan login
     installWifi "$def_ssid" "$def_password" #pass not installed yet, so paste password in prefs section (at top) before running
@@ -479,18 +534,19 @@ else
 fi
 
 # install dashboard apps
-if [[ -d "$dashboard" ]]; then
-  tell "Dashboard app installation"
+if [[ -d "$thisdir/dashboard" ]]; then
+  section "Dashboard app installation"
   c dashboard
   cd "dashboard"
   for wgt in *; do
+    letRead "Please install: $wgt"
     open "$wgt"
-    waitUser "Install: $wgt"
+    pressEnterTo
   done
   cd ".."
   rm -rf dashboard
 else
-  echo "Skipped Dashboard apps (no \"dashboard\" directory available at $thisdir)"
+  echo "Skipped Dashboard apps (no directory \"dashboard\" available at $thisdir)"
 fi
 
 # bash4=/usr/local/bin/bash
@@ -498,7 +554,7 @@ fi
 if [[ ! -d "$ZSH" ]]; then
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
-  # tell "Changing the login shell to $bash4 (bash4)"
+  # section "Changing the login shell to $bash4 (bash4)"
 #   if [[ -z $(grep -e "$bash4" /etc/shells) ]]; then
 #     sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
 #   fi
@@ -516,7 +572,7 @@ else
 fi
 
 # install homebrew
-if [[ -z $(which brew) ]]; then
+if ! hash brew &>/dev/null; then
   echo "Installing Homebrew ..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed."
   echo "Tapping caskrooms ..."
@@ -526,8 +582,8 @@ else
   echo "Skipped brew installation."
 fi
 
-if [[ -z $(which pass) ]]; then
-  tell "pass installation"
+if ! hash pass &>/dev/null; then
+  section "pass installation"
   brew install pass || die "brew install pass failed."
 else
   echo "Skipped pass installation."
@@ -535,7 +591,7 @@ fi
 
 # copy .gitconfig and .profile_private from pass
 if [[ ! -e ~/.profile_private || ! -e ~/.gitconfig ]]; then
-  tell "Copying .gitconfig and .profile_private from pass"
+  section "Copying .gitconfig and .profile_private from pass"
   pass .gitconfig > ~/.gitconfig
   pass .profile_private > ~/.profile_private
 else
@@ -551,28 +607,30 @@ fi
 # install dropbox
 if [[ ! -e /Applications/Dropbox.app/ ]]; then
   #brew install dropbox
-  tell "Dropbox installation"
+  section "Dropbox installation"
   brew cask install dropbox || die "brew cask install dropbox failed!"
   #log in dropbox
+  letRead "Please log in to Dropbox."
   open -g /Applications/Dropbox.app/
   pc dropbox
-  waitUser "Please log in to dropbox!" #deps in Programmchen now available
+  pressEnterTo
 else
-  echo "Skipped dropbox installation."
+  echo "Skipped Dropbox installation."
 fi
 
 # TODO
 # install xcode
-# - install from app store (required by mas, sign in by the way)
+# - install from app store
 # - sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-# - sudo xcodebuild -license
+# - sudo xcodebuild -license^
 
-if [[ -z $(which mas) ]]; then
-  tell "mas installation"
+if ! hash mas &>/dev/null; then
+  section "mas installation"
   brew install mas || die "brew install mas failed."
   while [[ -z $(mas account) ]]; do
+    letRead "Please sign in to App Store."
     open /Applications/App\ Store.app/
-    waitUser "Please sign in to App Store"
+    pressEnterTo
   done
   echo "mas account: $(mas account)"
 else
@@ -580,8 +638,8 @@ else
 fi
 
 # install chordpro
-if [[ -z $(which chordpro) ]]; then
-  tell "Chordpro installation"
+if ! hash chordpro &>/dev/null; then
+  section "Chordpro installation"
   #sudo cpan chordpro
   sudo cpan install JV/App-Music-ChordPro-0.94.tar.gz
 else
@@ -593,8 +651,8 @@ echo
 ##### Full automatic part (place as much as possible here)
 ########################################################################################################
 # In this part, there is *no* need for user intervention at all
-# no use of waitUser function, die only in severe error cases
-tell "Full automatic part"
+# no use of pressEnterTo function, die only in severe error cases
+supersection "Full automatic part"
 echo
 
 if [[ -z $skipauto ]]; then
@@ -614,13 +672,11 @@ else
   echo "Skipped copying of Thunderbird to $HOME/Library/"
 fi
 
-
-### place at ~/Library/Application\ Support
-cd "Application Support" || die "cd to $HOME/Library/Application\ Support/ failed!"
+### place at ~/Library/Preferences
 if [[ ! -n $(ls IntelliJIdea* 2> /dev/null) ]]; then
-  c IntelliJIdea*
+  c Preferences/
 else
-  echo "Skipped copying of IntelliJIdea config folder to $HOME/LibraryApplication\ Support/."
+  echo "Skipped copying of Preferences to $HOME/Library/Preferences/."
 fi
 
 ### place at /Applications
@@ -714,8 +770,6 @@ else
 fi
 echo
 
-trading_icon="$IT/212/trading212.icns" # icon for Trading212.app
-trading_script="$IT/212/212listener.js" # listener for Trading212.app
 # ensure required dropbox content synced
 while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
   printf "Please wait until required dropbox data is syncing "
@@ -733,7 +787,7 @@ echo
 
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
-  tell "Whatsapp Web.app installation"
+  section "Whatsapp Web.app installation"
   echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
   nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed."
   mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
@@ -743,7 +797,7 @@ else
 fi
 
 if [[ ! -e "/Applications/Trading212.app" ]]; then
-  tell "Trading212.app installation"
+  section "Trading212.app installation"
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
   nativefier -i "$trading_icon" --inject "$trading_script" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
 
@@ -802,57 +856,177 @@ echo
 ### Manual part
 ####################################################
 # In this part, the script is just instructing, at most helping out a bit
-tell "Manual part"
+supersection "Manual part"
 echo
 
-# TODO Settings
-### logins
-# - spotify login
-# - one note login, ggf Excel, Word, PowerPoint
-# - calender login google
-# - idea login
-# - trello login
-
-### manual settings
-# - Dock: Finder, nv, wunderlist, simplenote, th, f, Spotify, note, newsflow, audacity, idea, freefilesync, prefs, iTerm, FileMerge, Trello, anki, bibdesk, filezilla
-# - install textmate bundles
-# - Trello: global shortcut
-# - nvALT: global shortcut
-# - Go2Shell: cd %PATH%; printf "\e[F\e[K"
-
-### manual installs
-# - install adobe, contains key
-# - install microsoft programs, user gui login
-
-### manual file load
-# - copy power point drafts uniwue from $D/Org/Studium/ # target was "$HOME/Library/Group Containers/UBF8T346G9.Office/User Content.localized/Templates.localized"
-# - notational velocity: $D/Apps/NV/
-# - import firefox bookmarks
-# - import newsflow opml
 # - load iTerm prefs and custom profile from $P/Prefs
+if ! defaults read com.googlecode.iterm2  >/dev/null; then
+  printf "%s" "$iterm_settings" | pbcopy
+  letRead "Let's switch to iTerm!
+Open Settings and set settings folder to: $iterm_settings (copied to clipboard)"
+  open /Applications/iTerm.app/ || die "Please install iTerm and restart the script to continue."
+  pressEnterTo
+  processname=iTerm2
+  processes=$(ps aux | grep -i -- "$processname" | grep -v -e "$0" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps aux."
+  if [[ -n "$processes" ]]; then
+    letRead "Hey, you didn't close iTerm! I will do it for you.."
+    for id in $(echo "$processes" | awk '{print $2}'); do
+      kill $id &>/dev/null
+    done
+  fi
+  letRead "Now you can close this window and start the script in iTerm if you want."
+  pressEnterTo
+else
+  echo "Skipped iTerm switch."
+fi
 
-### optional
-# - wine installs (jardinains, siedler5, finale)
+section "Logins"
+echo "Please login to following applications:"
 
-### Check if...
-# - ffmpeg is required by audacity or mplayer
-# - python@2 is required by something
-# - global shortcut for iTerm is applied
-# - os shortcuts
-# - check all other system prefs: open /Applications/System\ Preferences.app/
-# - dictionaries are installed rightly
-  # Wikipedia.wikipediadictionary
-  # Deutsch-Englisch.dictionary
-  # OpenThesaurus Deutsch.dictionary
-  # Apple Dictionary.dictionary
-  # Oxford American Writer's Thesaurus.dictionary
-  # New Oxford American Dictionary.dictionary
-  # Oxford Thesaurus of English.dictionary
-  # Duden Dictionary Data Set I.dictionary
-  # German - English.dictionary
-  # French - English.dictionary
-  # Italian - English.dictionary
-  # Spanish - English.dictionary
-  # Russian - English.dictionary
+if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
+  letRead "  - Spotify"
+  open /Applications/Spotify.app/ || die "Please install Spotify and restart the script to continue."
+  pressEnterTo
+else
+  echo "Skipped Spotify login."
+fi
 
+if [[ ! -e "$HOME/Library/Containers/com.microsoft.onenote.mac" ]]; then
+  letRead "  - OneNote"
+  open /Applications/Microsoft\ OneNote.app/ || die "Please install OneNote and restart the script to continue."
+  pressEnterTo
+else
+  echo "Skipped OneNote login."
+fi
+
+if ! grep gmail.com $HOME/Library/Calendars/Calendar\ Cache > /dev/null; then
+  letRead "  - Google Calendar"
+  open /System/Library/PreferencePanes/InternetAccounts.prefPane || die "WTF. Apple has changed the preferences pane."
+  pressEnterTo
+else
+  echo "Skipped Google Calendar login."
+fi
+
+if [[ ! -e "$HOME/Library/Containers/com.atlassian.trello" ]]; then
+  letRead "  - Trello (use the opportunity to set global shortcut to cmd+alt+t !)"
+  open /Applications/Trello.app/ || die "Please install Trello and restart the script to continue."
+  pressEnterTo
+else
+  echo "Skipped Trello login."
+fi
+
+echo
+section "Settings"
+
+current_dockitems=$(defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g')
+if [[ "$dockitems" != "$current_dockitems" ]]; then
+  letRead "Arrange the Dock with the following items in the given order:"
+  open /Applications/
+  letRead "$dockitems"
+  pressEnterTo
+else
+  echo "Skipped Dock arrangement."
+fi
+
+if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles" ]]; then
+  letRead "Go to Textmate Preferences and install bundles as you like."
+  open /Applications/TextMate.app/ || die "Please install TextMate and restart the script to continue."
+  pressEnterTo
+else
+  echo "Skipped Textmate bundles."
+fi
+
+if ls "$studium"/*.potx >/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
+  # maybe also available via: defaults read | grep /Templates.localized | grep Normal
+  if pot_target=$(echo ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.localized) 2>/dev/null; then
+    if ! ls "$pot_target"/*.potx >/dev/null; then
+      echo "Copying Power Point templates to $pot_target"
+      cp "$studium"/*.potx "$pot_target" || die "Copying Power Point templates failed"
+    else
+      echo "Skipped Power Point template copying. Already exist."
+    fi
+  else
+    letRead "Please find the correct Power Point templates folder. Maybe you have to start and log in first.
+Was at: ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.localized"
+    pressEnterTo
+  fi
+else
+  echo "Skipped Power Point template copying. Power Point not installed or no template found at ${studium}."
+fi
+
+if ! defaults read net.elasticthreads.nv >/dev/null; then
+  printf "%s" "$nv_directory" | pbcopy
+  letRead "Go to nvALT Preferences and set note directory to $nv_directory (copied to clipboard)
+Also log in to simplenote (yeah, pass in a new window..) and set a global shortcut here: cmd+alt+n"
+  open /Applications/nvALT.app/ || die "Please install nvALT and restart the script to continue."
+  pressEnterTo
+fi
+
+if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
+  open /Applications/Firefox.app || die "Please install Firefox and restart the script to continue."
+  letRead "Did not found the firefox bookmark folder. Starting Firefox now."
+  pressEnterTo
+fi
+howtorestorebackup="https://support.mozilla.org/en-US/kb/restore-bookmarks-from-backup-or-move-them\#w_restoring-from-backups"
+if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
+  letRead "Did not found bookmarks folder again. Import bookmarks manually from: $firefox_bookmark_backup"
+  open -a /Applications/Firefox.app "$howtorestorebackup"
+  pressEnterTo
+else
+  if [[ -z $(ls -A "$firefox_profile") ]]; then
+    if [[ -f "$firefox_bookmark_backup" ]]; then
+      letRead "Copying bookmarks backup into Firefox Bookmark folder: $firefox_profile"
+      cp "$firefox_bookmark_backup" "$firefox_profile/"
+      open -a /Applications/Firefox.app "$howtorestorebackup"
+      pressEnterTo
+    else
+      echo "WARNING: Firefox has no bookmarks yet, but no bookmark backup found: $firefox_bookmark_backup"
+    fi
+  else
+    echo "Skipped copying firefox bookmarks, because booksmark backups are already present at: \"$firefox_profile\""
+  fi
+fi
+
+if [[ ! -e ~/Library/Containers/com.rockysandstudio.Newsflow ]]; then
+  letRead "Import in Newsflow the OPML: $newsflow_opml_backup"
+  open /Applications/Newsflow.app/ || die "Please install Newsflow and restart the script to continue."
+  pressEnterTo
+else
+  echo "Skipped Newsflow OPML import."
+fi
+
+echo "Last, but not least, check if:
+### Dependencies
+  - ffmpeg is required by audacity or mplayer
+  - python@2 is required by something
+  - you need osxfuse for the external drive
+### Settings
+  - intellij is logged in
+  - global shortcut (and other settings) for iTerm is applied
+  - go2shell is set up right (cd %PATH%; printf \"\e[F\e[K\")
+  - check all system prefs: open /Applications/System\ Preferences.app/
+  - are os shortcuts set?
+  - dictionaries are installed rightly
+    - Wikipedia.wikipediadictionary
+    - Deutsch-Englisch.dictionary
+    - OpenThesaurus Deutsch.dictionary
+    - Apple Dictionary.dictionary
+    - Oxford American Writer's Thesaurus.dictionary
+    - New Oxford American Dictionary.dictionary
+    - Oxford Thesaurus of English.dictionary
+    - Duden Dictionary Data Set I.dictionary
+    - German - English.dictionary
+    - French - English.dictionary
+    - Italian - English.dictionary
+    - Spanish - English.dictionary
+    - Russian - English.dictionary
+
+And in the end, you might think of installing
+  - adobe pro (contains key)
+  - microsoft programs (see pdf in Documents)
+  - wine (jardinains, siedler5, finale)
+
+Thanks for your attention!"
+
+supersection "The End"
 popd &> /dev/null
