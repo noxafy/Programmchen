@@ -1,6 +1,6 @@
 #!/bin/bash
 
-API_KEY="***REMOVED***"
+API_KEY="$(git config --global custom.googleAPI)"
 
 die() {
   echo "$*"
