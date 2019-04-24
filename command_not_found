@@ -1,7 +1,7 @@
 
 if [[ ! -t 0 ]]; then
   # not interactive, but piped
-  echo "Sorry, did not found: $*"
+  echo "Sorry, didn't find: $*"
   exit 1
 fi
 
@@ -40,7 +40,7 @@ case $1 in
     cmd=sm
     ;;
   *)
-    echo "Sorry, did not found: $*"
+    echo "Sorry, didn't find: $*"
     echo "Maybe you can add it to handle if it was a frequent misspelling."
     exit 1
     ;;

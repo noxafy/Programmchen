@@ -58,7 +58,7 @@ function command_not_found_handler() {
   if type command_not_found >/dev/null 2>&1; then
     command_not_found "$@"
   else
-    echo "Sorry, did not found: $*"
+    echo "Sorry, didn't find: $*"
   fi
 }
 
