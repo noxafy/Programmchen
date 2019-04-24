@@ -27,7 +27,7 @@ trading_script="$IT/Programmchen/212listener.js" # listener for Trading212.app
 dashboard="$thisdir/Dashboard" # Dashboard widgets
 
 brews=(
-#agedu
+#agedu		# Unix utility for tracking down wasted disk space
 #aspell
 #automake
 bash
@@ -35,21 +35,21 @@ bash-completion
 bash-snippets
 bfg
 brightness
-#bro
-#chafa # Versatile and fast Unicode/ASCII/ANSI graphics renderer
-cheat
+#bro		# Network security monitor
+#chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
+#cheat		# Better version contained in bash snippets
 #chordii
 #chromedriver
 cloc
-coreutils
-darksky-weather
+#coreutils
 diff-pdf
 #exiftool
-expect
+#expect		# Program that can automate interactive applications
+#fasttext	# Library for fast text representation and classification
 fd
-#ffmpeg #required by audacity?
+#ffmpeg #Required by audacity or mplayer?
 fortune
-#freeling
+#freeling	# Suite of language analyzers
 #fswatch
 fzf
 gcal
@@ -60,7 +60,7 @@ go
 googler
 hexedit
 howdoi
-#launch4j
+#launch4j # Cross-platform Java executable wrapper
 lf
 lorem
 lsd
@@ -76,16 +76,16 @@ nativefier
 pdfgrep
 plan9port
 pup
-#python@2
+#python@2 #someone depending on this?
 recode
 rename
 ripgrep
 rsync
 shpotify
-#sic
-testdisk
-tldr
-trash
+#sic		# Minimal multiplexing IRC client
+testdisk	# Powerful free data recovery utility
+tldr		# Simplified and community-driven man pages
+trash		# CLI tool that moves files or folder to the trash
 wget
 wiki
 #wine
@@ -103,6 +103,7 @@ bibdesk
 #blender
 calibre
 disablemonitor
+#docker
 #dropbox #already installed
 firefox
 flux
@@ -130,8 +131,9 @@ qlstephen
 skype
 soundflower
 spotify
+#teamviewer
 telegram
-#texstudio
+texstudio
 textmate
 the-unarchiver
 thunderbird
