@@ -36,11 +36,23 @@ case $1 in
     ;;
 esac
 
+killID=$(lsof -i :$port | sed -n 2p | awk '{print $2}')
 
-runningProcessID=$(lsof -i :$port | grep -o "[0-9]\+"| head -1)
-if [[ -n $runningProcessID ]]; then
-  echo "Killing running process $runningProcessID";
-  kill $runningProcessID;
+if [[ -n $killID ]]; then
+  lsof -a -d txt -p $killID | head -2
+
+  read -p "Do you really want to kill this process? (y/n) [y]:"
+  read ans
+  case $ans in
+    n)
+      ;;
+    *)
+      exit 0
+      ;;
+  esac
+
+  echo "Killing process $killID";
+  kill $killID;
 else
   echo "No process blocking port $port found :)"
 fi
