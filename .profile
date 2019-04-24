@@ -37,8 +37,8 @@ fi
 #############################
 ### source custom
 #############################
-source ~/.aliases
-source ~/.functions
+[[ -r ~/.profile_public ]] && source ~/.profile_public
+[[ -r ~/.profile_private ]] && source ~/.profile_private
 
 return;
 #############################

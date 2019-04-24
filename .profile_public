@@ -1,0 +1,340 @@
+#!/bin/bash
+
+#############################
+### ls
+#############################
+alias l=ll
+alias la="lsd -a" #="ls -A"
+alias ll="lsd -laF" #='ls -liAF'
+alias tl="tree -fasFhpN --du"
+alias td="tree -faphFN --du | grep --color=never /$"
+alias fdd="fd -t d"
+alias fdf="fd -t f"
+alias fzf="fzf --no-mouse --bind='ctrl-t:toggle-preview' --exit-0 --color=hl:9,hl+:1 --preview=\"if [[ -r {} ]]; then \
+  printf '\e[37m'; file {} | tr -d '\n'; printf ' ('; stat -f '%z' {} | tr -d '\n'; printf ' Bytes)'; printf '\e[0m\n'; cat {}; \
+elif [[ -r {-1} ]]; then \
+  printf '\e[37m'; file {-1} | tr -d '\n'; printf ' ('; stat -f '%z' {-1} | tr -d '\n'; printf ' Bytes)'; printf '\e[0m\n'; cat {-1}; \
+else \
+  echo 'Invalid file name: ' {}; \
+fi\" --preview-window=right:hidden"
+alias lsusers="dscl . list /Users | grep -v ^_"
+
+#############################
+### git
+#############################
+alias gd="PAGER= git diff"
+alias gst="git status"
+alias ga="git add"
+alias a="git add"
+alias glt='git ls-tree -r --name-only "$(git rev-parse --short HEAD)"'
+alias glf='git log --graph --abbrev-commit --decorate --format=format:'\''%C(yellow)%h%C(reset) - %C(cyan)%aD (%ar)%C(reset)%C(white)%d%C(reset)%n'\'\''          %s%C(dim) - %aN <%aE>%C(reset)'\'' --all'
+function c() {
+  git status > /dev/null || return
+  if [[ $(git config --show-origin user.email) != file:.git/config* ]]; then
+    echo "Please set up user.name and user.email first!"
+    local def_name=$(git config user.name)
+    printf "user.name [%s]: " "$def_name"
+    local name; read name
+    if [[ -z $name ]]; then name=$def_name; fi
+    git config user.name "$name"
+
+    local def_email=$(git config user.email)
+    printf "user.email [%s]: " "$def_email"
+    local email; read email
+    if [[ -z $email ]]; then email=$def_email; fi
+    git config user.email "$email"
+  fi
+
+  git commit -m "$*"
+}
+
+#############################
+### bashy
+#############################
+alias ec='echo $?'
+alias q=exit
+alias rg='rg --hidden'
+alias h=howdoi
+alias mvninit="mvn archetype:generate"
+alias cal="gcal --starting-day=1 --with-week-number -q DE_BY -G"
+alias cal3="gcal --starting-day=1 --with-week-number -q DE_BY --force-highlighting .+ | sed -n '6,\$p'"
+alias vwc='echo $(pbpaste) | wc'
+alias latexwc="pbpaste | sed 's/^%.*//' | wc -w"
+alias ql="qlmanage -p"
+alias shutup="osascript -e 'Set volume output volume 0'"
+
+#############################
+### internet
+#############################
+alias airport=/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport
+alias wi="wiki -l de"
+alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
+alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
+
+function wlan() {
+  networksetup -setairportpower en0 $1 1> /dev/null || echo "on|off"
+}
+alias won="wlan on"
+alias woff="wlan off"
+
+#############################
+### applications
+#############################
+alias bs="brew search"
+alias bi="brew info"
+alias play="spotify play"
+alias pause="spotify pause"
+alias next="spotify next"
+alias prev="spotify prev"
+alias show="defaults write com.apple.finder AppleShowAllFiles YES && killall Finder"
+alias hide="defaults write com.apple.finder AppleShowAllFiles NO && killall Finder"
+alias lftp="sudo -s launchctl load -w /System/Library/LaunchDaemons/ftp.plist"
+alias uftp='sudo -s launchctl unload -w /System/Library/LaunchDaemons/ftp.plist && sudo kill $(ps -ax | grep ftpd | grep -v grep | grep -o "\d\+" | sed -n 1p) > /dev/null 2>&1'
+alias dark="osascript -e 'tell application \"System Events\" to tell appearance preferences to set dark mode to not dark mode'"
+
+#############################
+### fi*
+#############################
+function fif() {
+  typeset -f | grep --color=never -E ' \(\) \{?' | sed -E 's/ \(\) \{?$//g' | grep -e "$*"
+}
+
+function fia() {
+  alias | sed 's/^alias //g' | grep -e "$*"
+}
+
+#############################
+### files
+#############################
+function _pick() {
+  local file_only=$1
+  shift
+
+  local q_dirname=$(dirname "$*")
+  local query
+  local -a fd_args
+  if [[ -n "$*" ]]; then
+    if [[ -f "$*" && -r "$*" ]]; then
+      # existing file given
+      echo "$*"
+      return;
+    elif [[ -d "$*" && -r "$*" ]]; then
+      # existing dir given (to search in)
+      if $file_only; then
+        pushd "$*" > /dev/null
+        q_dirname="$*"
+      else
+        echo "$*"
+        return;
+      fi
+    elif [[ -d $q_dirname && -r $q_dirname ]]; then
+      # invalid path given, but parent exists
+      # go there and search file
+      pushd "$q_dirname" > /dev/null
+      query=$(basename "$*")
+    else
+      query="$*"
+    fi
+  fi
+
+  $file_only && fd_args=(-t f)
+
+  local depth_indicator
+  local pwd_name
+  if [[ $PWD == $HOME ]]; then
+    depth_indicator=(-d 1)
+    pwd_name="~"
+  elif [[ / == $(dirname "$PWD") ]]; then
+    [[ / == $PWD ]] && pwd_name= || pwd_name=/"$pwd_name"
+  else
+    pwd_name=$(basename "$PWD")
+  fi
+
+  local picked
+  picked=$(fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/objects/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right)
+  local exit_code=$?
+  case $exit_code in
+    0) # found
+      echo "$q_dirname/$picked"
+      ;;
+    1) # not found
+      echo "$q_dirname/$query"
+      ;;
+    *)
+      return $exit_code
+      ;;
+  esac
+}
+
+function _pick_and_execute() {
+  local file_only=false
+  if [[ "-f" == $1 ]]; then
+    file_only=true
+    shift
+  fi
+
+  local -a cmd=($(echo $1))
+  shift
+  [[ -z $cmd ]] && {
+    echo "No command given"
+    exit 1
+  }
+
+  local -a args
+  if [[ -z "$1" || "${@: -1}" == -* ]]; then
+    args=($@)
+    query=
+  else
+    args=(${@:1:$# -1})
+    query="${@: -1}"
+  fi
+
+  local picked
+  picked=$(_pick $file_only "$query") || return $?
+  "${cmd[@]}" "${args[@]}" "$picked"
+}
+
+function e() {
+  _pick_and_execute -f less "$@"
+}
+
+function n() {
+  _pick_and_execute -f nano "$@"
+}
+
+function sn() {
+  _pick_and_execute -f "sudo nano" "$@"
+}
+
+function m() {
+  _pick_and_execute mate "$@"
+}
+
+function sm() {
+  _pick_and_execute "sudo mate" "$@"
+}
+
+function o() {
+  _pick_and_execute open "$@"
+}
+
+function cdf() {
+  local picked__dir=$(fd -t d | fzf --query="$1") || return $?
+  cd "$picked__dir"
+}
+
+#############################
+### pass
+#############################
+alias pe="pass edit"
+
+function pc() {
+  export COPYCONTENT=$(pbpaste)
+  if [[ -z "$*" ]]; then
+    pass | grep -v 'Password Store'
+  else
+    local res
+    if res=$(pass -c "$*"); then
+      if [[ $(echo "$res" | wc -l) -eq 1 ]]; then
+        pwde -c "$(pbpaste)"
+      else
+        echo "$res"
+      fi
+    fi
+  fi
+}
+
+function pi() {
+  [[ -z "$*" ]] && echo "Please give a pass-name for inserting." && return 1
+  if [[ -z $2 ]]; then
+    pgen || return 0;
+  fi
+  export COPYCONTENT=$(pbpaste)
+  pwen -c && echo "pass insert \"$*\"" && pass insert "$*"
+}
+
+function pm() {
+  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing e-mail address." && return 1;
+  local p_res=$(pass "$*")
+  [[ $? -ne 0 ]] && return 1
+
+  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^m: ")
+  [[ -z $res ]] && echo "No mail address found for: $*" && return 1
+  res=$(echo "$res" | cut -c 4-)
+
+  if [[ ! -t 1 ]]; then
+    echo "$res"
+  else
+    printf "%s" "$res" | pbcopy
+    echo "$res (copied to clipboard)"
+  fi
+}
+
+function pu() {
+  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing username." && return 1;
+  local p_res=$(pass "$*")
+  [[ $? -ne 0 ]] && return 1
+
+  local res=$(echo "$p_res" | grep --binary-files=text -m 1 "^u: ")
+  if [[ -z $res ]]; then
+    res=$(echo "$p_res" | grep --binary-files=text -m 1 "^CID: ")
+    if [[ -z $res ]]; then
+      echo "No username found for: $*" && return 1
+    else
+      res=$(echo "$res" | cut -c 6-)
+    fi
+  else
+    res=$(echo "$res" | cut -c 4-)
+  fi
+
+  if [[ ! -t 1 ]]; then
+    echo "$res"
+  else
+    printf "%s" "$res" | pbcopy
+    echo "$res (copied to clipboard)"
+  fi
+}
+
+function po() {
+  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing online login site." && return 1;
+  local p_res=$(pass "$*")
+  [[ $? -ne 0 ]] && return 1
+
+  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
+  [[ -z $res ]] && echo "No online link found for: $*" && return 1
+  res=$(echo "$res" | cut -c 4-)
+
+  if which f >/dev/null; then
+    f "$res"
+  else
+    open "$res"
+  fi
+}
+
+#############################
+### misc stuff
+#############################
+alias showUnixTime="/usr/local/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
+alias weekday="case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo \"Invalid week day number: $(date +%u)\";; esac"
+
+function pdfpages() {
+  local -a files=("$@")
+  if [[ -z "$*" ]]; then
+    IFS=$'\n' files=($(fd -t f -d 1 '\.pdf')); unset IFS
+    [[ -z "$files" ]] && echo "No .pdf file found." && return 0
+  fi
+  local -i pages=$(echo $(mdls -name kMDItemNumberOfPages "${files[@]}" | sed "s/kMDItemNumberOfPages =/+/g") | cut -c "3-" | bc)
+  printf "%d pages found in %d files.\n" "$pages" "${#files}"
+}
+
+function zombiesAndStuff() {
+  ps aux | awk ' $8 !~ /S/ {print $0}' | grep -v "ps aux"
+}
+
+function showHexFlow() {
+  _pick_and_execute -f hexdump "$@" | sed 's/[0123456789abcdef]\{7\}//g' | grep --color=always -e "3e\|$" | xargs printf "%s "; echo
+}
+
+function battery() {
+  system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
+}
