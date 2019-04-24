@@ -18,7 +18,7 @@ Warning: Leave in place!
 skipauto=
 def_ssid=
 def_password=
-email=""
+email=
 wlan_device=en0
 
 #resource paths
@@ -344,8 +344,8 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   # TODO: Add OpenThesaurus dic from https://tekl.de/OpenThesaurusDeutsch to ~/Library/Dictionaries
   defaults write com.apple.Dictionary "last available dictionaries" "(
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
-    \"~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
-    \"~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
+    \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
+    \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
     \"asset:/Oxford Dictionary of English.dictionary\",
     \"asset:/Traditional Chinese.dictionary\",
     \"asset:/The Standard Dictionary of Contemporary Chinese.dictionary\",
@@ -384,8 +384,8 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   defaults write com.apple.DictionaryServices DCSActiveDictionaries '(
     "/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary",
     "com.apple.dictionary.OxfordGerman",
-    "~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary",
-    "~/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary",
+    "$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary",
+    "$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary",
     "com.apple.dictionary.AppleDictionary",
     "com.apple.dictionary.OAWT",
     "com.apple.dictionary.NOAD",
@@ -496,7 +496,7 @@ fi
 
 # bash4=/usr/local/bin/bash
 # if [[ -f "$bash4" && "$SHELL" != "$bash4" ]]; then
-if [ ! -d "$ZSH" ]; then
+if [[ ! -d "$ZSH" ]]; then
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
   # tell "Changing the login shell to $bash4 (bash4)"
@@ -533,6 +533,9 @@ if [[ -z $(which pass) ]]; then
 else
   echo "Skipped pass installation."
 fi
+
+# copy .gitconfig from pass
+pass .gitconfig > ~/.gitconfig
 
 #TODO
 # install other wifis (requires "pass")
