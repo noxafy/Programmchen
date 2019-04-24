@@ -18,7 +18,6 @@ Warning: Leave in place!
 skipauto=
 def_ssid=
 def_password=
-email=
 wlan_device=en0
 
 #resource paths
@@ -281,7 +280,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   tell "Preferences installation"
 
   # install .profile's as root
-  c -s .bashrc .profile .zshrc
+  c -s .bashrc .profile .profile_public .zshrc
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed!"
@@ -482,7 +481,7 @@ else
 fi
 
 # install dashboard apps
-if [ -d "$dashboard" ]; then
+if [[ -d "$dashboard" ]]; then
   tell "Dashboard app installation"
   c dashboard
   cd "dashboard"
@@ -536,8 +535,9 @@ else
   echo "Skipped pass installation."
 fi
 
-# copy .gitconfig from pass
+# copy .gitconfig and .profile_private from pass
 pass .gitconfig > ~/.gitconfig
+pass .profile_private > ~/.profile_private
 
 #TODO
 # install other wifis (requires "pass")
@@ -567,18 +567,13 @@ fi
 if [[ -z $(which mas) ]]; then
   tell "mas installation"
   brew install mas || die "brew install mas failed."
-  if [[ -z $(mas account) ]]; then
-    mas signin --dialog "$email"
+  while [[ -z $(mas account) ]]; do
+    open /Applications/App\ Store.app/
     waitUser "Please sign in to App Store"
-  fi
+  done
   echo "mas account: $(mas account)"
 else
   echo "Skipped mas installation."
-fi
-
-if [[ -z $(mas account) ]]; then
-  open /Applications/App\ Store.app/
-  waitUser "Please sign in to App Store"
 fi
 
 # install chordpro
@@ -601,10 +596,10 @@ echo
 
 if [[ -z $skipauto ]]; then
 
-#move remaining files from baskup
+#move remaining files from backup
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 if [[ ! -d IdeaProjects ]]; then
-  c IdeaProjects Documents/ Pictures/ Music/
+  c IdeaProjects Downloads/ Documents/ Pictures/ Music/
 else
   echo "IdeaProjects already exists. Skipped copying."
 fi
