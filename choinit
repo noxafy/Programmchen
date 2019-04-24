@@ -176,10 +176,21 @@ if [[ -e "$filename" && ! -n $forceOverwriting ]]; then
   esac
 fi
 
+year=$(date +%Y)
+name=$(git config --global user.name)
+
+if [[ -z $name ]]; then
+  read -p "Please give your name (not specified in global git config): " name
+  if [[ -z "$name" ]]; then
+    echo "Name must not be empty!"
+    exit 1
+  fi
+fi
+
 content="{title: $title}
 {composer: $artist}
-{copyright: © $(date +%Y) $(git config --global user.name)}
-{meta: arr Arr.: $(git config --global user.name)}
+{copyright: © $year $name }
+{meta: arr Arr.: $name}
 #{tempo: 120bpm}
 # transpose 0
 
