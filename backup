@@ -194,6 +194,8 @@ if [[ -z $warningFlag ]]; then
   rm -rf "$backup_dir" || die "Deleting dated backup failed!"
 else
   echo "There was an error. Backed up backup is being preserved ($backup_dir)."
+  echo "Fix that error and try again."
+  exit 1
 fi
 
 ####################################################
@@ -201,18 +203,18 @@ fi
 ####################################################
 
 #export:
-# mkdir manual
-#
-# echo "Export and save to $target/manual:"
-# echo " - Newsflow OPML" # - Newsflow OPML
-# echo " - Firefox bookmarks" # - firefox bookmarks
+[[ ! -d manual ]] && mkdir manual
+
+echo "Export and save to $target/manual:"
+echo " - Newsflow OPML" # - Newsflow OPML
+echo " - Firefox bookmarks" # - firefox bookmarks
+open manual
 
 #ensure:
-#mkdir dashboard
-#echo "Copy to $target/dashboard" # - Dashboard apps
-#echo " - eCalc_Scientific.wdgt"
-#echo " - iStat Pro.wdgt"
-#echo "Copy to $target/"
-#echo " - [Adobe Pro Installer]" # - adobe installer
-# echo "Paste password in sys_install:20, when placed in position"
+[[ ! -d dashboard ]] && mkdir dashboard
+echo "Ensure existence in $target/dashboard" # - Dashboard apps
+echo " - eCalc_Scientific.wdgt"
+echo " - iStat Pro.wdgt"
+echo "Copy to $target/"
+echo " - [Adobe Pro Installer]" # - adobe installer
 
