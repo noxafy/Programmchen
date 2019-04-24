@@ -130,20 +130,20 @@ listDirs() {
 listAllWithGrep() {
   if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
     ((dirCnt++))
-    echo "$1/" | grep "$grepexp"
+    echo "$1/" | grep -e "$grepexp"
     if [[ $rec -eq 1 ]]; then
       list "$1/" $2
     fi
   else
     ((fileCnt++))
-    echo "$1" | grep "$grepexp"
+    echo "$1" | grep -e "$grepexp"
   fi
 }
 
 listDirsWithGrep() {
   if [[ -d "$1" ]] && [[ ! -L "$1" ]]; then
     ((dirCnt++))
-    echo "$1/" | grep "$grepexp"
+    echo "$1/" | grep -e "$grepexp"
     if [[ $rec -eq 1 ]]; then
       list "$1/" $2
     fi
@@ -160,7 +160,7 @@ listFilesWithGrep() {
     fi
   else
     ((fileCnt++))
-	  echo "$1" | grep "$grepexp"
+	  echo "$1" | grep -e "$grepexp"
   fi
 }
 

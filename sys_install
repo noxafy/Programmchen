@@ -502,7 +502,7 @@ if [[ ! -d "$ZSH" ]]; then
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
   # tell "Changing the login shell to $bash4 (bash4)"
-#   if [[ -z $(grep "$bash4" /etc/shells) ]]; then
+#   if [[ -z $(grep -e "$bash4" /etc/shells) ]]; then
 #     sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
 #   fi
 #   if type chsh >/dev/null 2>&1; then

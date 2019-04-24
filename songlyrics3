@@ -132,7 +132,7 @@ function findLyrics() {
       echo "No results. Lets try another...";
       continue;
     fi
-    URL="$(echo "${ALL[*]}" | tr ' ' '\n' | grep "$site" -m 1)";
+    URL="$(echo "${ALL[*]}" | tr ' ' '\n' | grep -e "$site" -m 1)";
 
     # try to validate self
     tileInUrl=$(echo "$2" | sed -e 's/(.*)//g' -e "s/'//g")
