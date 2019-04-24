@@ -1,4 +1,10 @@
 
+if [[ ! -t 0 ]]; then
+  # not interactive, but piped
+  echo "Sorry, did not found: $*"
+  exit 1
+fi
+
 cmd=
 # link regex does not work because (http:)// gets recognized as file path
 case $1 in
@@ -10,8 +16,8 @@ case $1 in
     cmd=o
     ;;
   greo)
-    shift
-    grep --color=always "$@"
+    cmd=grep
+    arg="--color=always" # grep alias is created by oh-my-zsh
     ;;
   e*)
     arg=${1:1}
@@ -36,12 +42,13 @@ case $1 in
   *)
     echo "Sorry, did not found: $*"
     echo "Maybe you can add it to handle if it was a frequent misspelling."
+    exit 1
     ;;
 esac
 
 if [[ -n "$cmd" ]]; then
   args=($@)
-  args[0]=$arg
+  [[ -n "$arg" ]] && args[0]=$arg
   printf "Did you mean: $cmd ${args[*]} ? (y/n) [y]: "
   [[ -n "$ZSH_VERSION" ]] && readoption="-k" || readoption="-n"
   read $readoption 1 ans
@@ -57,7 +64,7 @@ if [[ -n "$cmd" ]]; then
       ;;
   esac
 
-  . ~/.profile  # index aliases
+  source ~/.profile  # index aliases
   "$cmd" "${args[@]}"
 fi
 
