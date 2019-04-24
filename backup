@@ -102,7 +102,7 @@ if [[ -z "$target" ]]; then
 fi
 
 ####################################################
-### Preparation
+### Preparation: Make backup of backup
 ####################################################
 
 if [[ -d "$target" ]]; then
@@ -215,6 +215,8 @@ open manual
 echo "Ensure existence in $target/dashboard" # - Dashboard apps
 echo " - eCalc_Scientific.wdgt"
 echo " - iStat Pro.wdgt"
-echo "Copy to $target/"
-echo " - [Adobe Pro Installer]" # - adobe installer
+[[ ! -d installers ]] && mkdir installers
+echo "Ensure existence in $target/installers"
+echo " - Adobe Pro Installer" # - adobe installer
+echo " - .exe-files for Jardinains, Siedler5 and Finale" # wine
 
