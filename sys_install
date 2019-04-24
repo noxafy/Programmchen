@@ -534,8 +534,13 @@ else
 fi
 
 # copy .gitconfig and .profile_private from pass
-pass .gitconfig > ~/.gitconfig
-pass .profile_private > ~/.profile_private
+if [[ ! -e ~/.profile_private || ! -e ~/.gitconfig ]]; then
+  tell "Copying .gitconfig and .profile_private from pass"
+  pass .gitconfig > ~/.gitconfig
+  pass .profile_private > ~/.profile_private
+else
+  echo "Skipped copying .gitconfig and .profile_private from pass"
+fi
 
 #TODO
 # install other wifis (requires "pass")
@@ -595,27 +600,27 @@ echo
 if [[ -z $skipauto ]]; then
 
 #move remaining files from backup
-pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
+pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed!"
 if [[ ! -d IdeaProjects ]]; then
   c IdeaProjects Downloads/ Documents/ Pictures/ Music/
 else
-  echo "IdeaProjects already exists. Skipped copying."
+  echo "Skipped copying of IdeaProjects to $HOME/."
 fi
 
-cd "Library" || die "cd to $HOME/Library failed!"
+cd "Library" || die "cd to $HOME/Library/ failed!"
 if [[ ! -d Thunderbird ]]; then
   c Thunderbird
 else
-  echo "Thunderbird already exists in $HOME/Library/. Skipped copying."
+  echo "Skipped copying of Thunderbird to $HOME/Library/"
 fi
 
 
 ### place at ~/Library/Application\ Support
-cd "Application Support" || die "cd to $HOME/Library/Application\ Support failed!"
+cd "Application Support" || die "cd to $HOME/Library/Application\ Support/ failed!"
 if [[ ! -n $(ls IntelliJIdea* 2> /dev/null) ]]; then
   c IntelliJIdea*
 else
-  echo "An IntelliJIdea config folder already exists in $HOME/LibraryApplication\ Support. Skipped copying."
+  echo "Skipped copying of IntelliJIdea config folder to $HOME/LibraryApplication\ Support/."
 fi
 
 ### place at /Applications
@@ -623,7 +628,7 @@ cd "/Applications" || die "cd to /Applications failed!"
 if [[ ! -d Minecraft ]]; then
   c Minecraft
 else
-  echo "/Applications/Minecraft already exists. Skipped copying."
+  echo "Skipped copying Minecraft to /Applications/."
 fi
 
 popd &> /dev/null || die "cd failed"
