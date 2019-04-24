@@ -26,7 +26,7 @@ $usage
 		third can be used for comments. Be aware of the required formatting shown below.
 		Default path is $file.
 	\e[1m-o\e[0m	Opens the vocabulary list ($vocs).
-        \e[1m-a\e[0m	Adds a new word to the vocabulary list. Uses formatting compliant to \e[1mvoc\e[0m.
+	\e[1m-a\e[0m	Adds a new word to the vocabulary list. Uses formatting compliant to \e[1mvoc\e[0m.
 	\e[1m-s\e[0m	Searches a word in both, vocabulary list and vocabulary database. Case-insensitive.
 
 Create the .csv in the following form:
