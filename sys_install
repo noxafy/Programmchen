@@ -384,7 +384,6 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   )"
   defaults write com.apple.DictionaryServices DCSActiveDictionaries '(
     "/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary",
-    "com.apple.dictionary.OxfordGerman",
     "$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary",
     "$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary",
     "com.apple.dictionary.AppleDictionary",
@@ -392,10 +391,11 @@ if [[ -z "$IT" ]]; then # $IT is required by script
     "com.apple.dictionary.NOAD",
     "com.apple.dictionary.OTE",
     "com.apple.dictionary.de.DDDSI",
+    "com.apple.dictionary.OxfordGerman",
     "com.apple.dictionary.OxfordFrench",
     "com.apple.dictionary.OxfordItalian",
-    "com.apple.dictionary.OxfordRussian",
-    "com.apple.dictionary.OxfordSpanish"
+    "com.apple.dictionary.OxfordSpanish",
+    "com.apple.dictionary.OxfordRussian"
   )'
 
   echo "Shortcuts settings."
@@ -766,14 +766,14 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
   if [[ -e "$mainpath" ]]; then
     mainjs=$(cat "$mainpath")
     lineToInsert=$(echo "$mainjs" | grep -n "mainWindow.webContents.on('will-navigate', onWillNavigate);" | awk '{ print $1 + 0; }') #5335
+    line='  mainWindow.webContents.on("did-finish-load", function () { setTimeout(function () { mainWindow.webContents.send("loadListener"); }, 10000); })'
     if [[ -n $lineToInsert ]]; then
-      line='  mainWindow.webContents.on("did-finish-load", function () { setTimeout(function () { mainWindow.webContents.send("loadListener"); }, 10000); })'
       echo "$mainjs" | sed -n "1,${lineToInsert}p" > "${mainpath}"
       echo "$line" >> "${mainpath}"
       echo "$mainjs" | sed -n "${lineToInsert},\$p" >> "${mainpath}"
       echo "Successfully injected listener call!"
     else
-      echo "Failed to fetch listener insertion location. Please insert manually:  $line"
+      echo "Failed to fetch listener insertion location. Please insert manually: $line"
       echo "mate -l '5306' \"$mainpath\" # location with nativefier 7.6.4: mainWindow.webContents.on('will-navigate', onWillNavigate);"
     fi
 
@@ -801,49 +801,53 @@ tell "Manual part"
 echo
 
 # TODO Settings
+### logins
+# - spotify login
+# - one note login, ggf Excel, Word, PowerPoint
+# - calender login google
+# - idea login
+# - trello login
+
 ### manual settings
-# - Dock: Finder, Not, th, f, Spotify, note, newsflow, audacity, idea, lightshot, freefilesync, prefs, iTerm, FileMerge, Trello
-# - Go2Shell: cd %PATH%; printf "\e[F\e[K"
+# - Dock: Finder, nv, wunderlist, simplenote, th, f, Spotify, note, newsflow, audacity, idea, freefilesync, prefs, iTerm, FileMerge, Trello, anki, bibdesk, filezilla
 # - install textmate bundles
-# - copy power point drafts uniwue from $D/Org/Studium/ # target was "$HOME/Library/Group Containers/UBF8T346G9.Office/User Content.localized/Templates.localized"
-# - set all prefs are desired: open /Applications/System\ Preferences.app/
-# - load iTerm prefs and custom profile from $P/Prefs
+# - Trello: global shortcut
+# - nvALT: global shortcut
+# - Go2Shell: cd %PATH%; printf "\e[F\e[K"
 
 ### manual installs
 # - install adobe, contains key
 # - install microsoft programs, user gui login
 
 ### manual file load
-# - notational velocity: $D/Org/Notational/
+# - copy power point drafts uniwue from $D/Org/Studium/ # target was "$HOME/Library/Group Containers/UBF8T346G9.Office/User Content.localized/Templates.localized"
+# - notational velocity: $D/Apps/NV/
 # - import firefox bookmarks
 # - import newsflow opml
-
-### logins
-# - spotify login
-# - one note login, ggf Excel, Word, PowerPoint
-# - calender login google
+# - load iTerm prefs and custom profile from $P/Prefs
 
 ### optional
 # - wine installs (jardinains, siedler5, finale)
 
 ### Check if...
-# - ffmpeg is required by audacity
+# - ffmpeg is required by audacity or mplayer
+# - python@2 is required by something
 # - global shortcut for iTerm is applied
 # - os shortcuts
 # - check all other system prefs: open /Applications/System\ Preferences.app/
 # - dictionaries are installed rightly
-  # German - English.dictionary
   # Wikipedia.wikipediadictionary
-  # Apple Dictionary.dictionary
-  # New Oxford American Dictionary.dictionary
   # Deutsch-Englisch.dictionary
   # OpenThesaurus Deutsch.dictionary
-  # Duden Dictionary Data Set I.dictionary
+  # Apple Dictionary.dictionary
   # Oxford American Writer's Thesaurus.dictionary
+  # New Oxford American Dictionary.dictionary
   # Oxford Thesaurus of English.dictionary
+  # Duden Dictionary Data Set I.dictionary
+  # German - English.dictionary
   # French - English.dictionary
-  # Spanish - English.dictionary
   # Italian - English.dictionary
+  # Spanish - English.dictionary
   # Russian - English.dictionary
 
 popd &> /dev/null

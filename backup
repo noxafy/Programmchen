@@ -204,9 +204,7 @@ fi
 # mkdir manual
 #
 # echo "Export and save to $target/manual:"
-# echo " - Terminal layouts" # - Terminal layout Homebrew
 # echo " - Newsflow OPML" # - Newsflow OPML
-# echo " - Keychains (mircosoft, wlans)" # - keychain (microsoft, wlans)
 # echo " - Firefox bookmarks" # - firefox bookmarks
 
 #ensure:
