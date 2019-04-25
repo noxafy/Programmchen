@@ -135,7 +135,7 @@ else
     findres="$(find $path -name .DS_Store)"
   else
   #  findres="$(find $path -name .DS_Store -depth 1)" # depth is not what it seems
-     clean@1 -t && exit $? #use old dependency
+     clean@1 -t; exit $? #use old dependency
   fi
   for file in $findres; do
     clean "$file"
