@@ -5,21 +5,6 @@ openLink=1
 DEBUG=
 openCommands=
 
-
-
-
-wa="https://web.whatsapp.com/"
-
-psy="https://lexikon.stangl.eu/alphabetisches-inhaltsverzeichnis/"
-
-
-#
-#
-#
-#
-#
-#
-
 e="https://www.ecosia.org/search?q="
 e_def="https://www.ecosia.org/"
 g="https://www.google.com/search?q="
@@ -56,14 +41,8 @@ $usage
 	\e[4moption\e[0m	Is one of:
 	  Option type 1 opens a specific web page. Any following arguments will be ignored.
 	    OPTION1	SITE
-	    w		$w
-	    sb		$sb
-	    bib		$bib
 	    wa		$wa
-	    mensa	$mensa
 	    psy		$psy
-	    mail	$mail
-	    t212	$t212
 
 	  Option type 2 processes directly a search with given keywords on a particular site.
 	  Without any other argument the related home page will be opened.
