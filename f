@@ -29,7 +29,7 @@ def_def=$e_def
 # here the actual used search engine is set
 site=def
 
-usage="Usage: \e[1m$(basename $0)\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [-g] [ \e[4moption1\e[0m | [--] \e[4mkey\e[0m \e[4m...\e[0m | \33[4moption2\e[0m [\e[4mkey\e[0m \e[4m...\e[0m] ]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | -i \e[4msites\e[0m \e[4m...\e[0m | [-y] [-d] [-g] [\e[4msite\e[0m] [--] [\e[4mkey\e[0m \e[4m...\e[0m]"
 help="Open a site or search \e[4mkey\e[0m directly there or with default search engine ($def_def).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
@@ -38,15 +38,9 @@ $usage
 	\e[1m-g\e[0m	Open browser silently in background.
 	\e[1m-d\e[0m	Debug logging and don't open anything at all.
 	\e[4mkey\e[0m	The query keywords to look for a translation.
-	\e[4moption\e[0m	Is one of:
-	  Option type 1 opens a specific web page. Any following arguments will be ignored.
-	    OPTION1	SITE
-	    wa		$wa
-	    psy		$psy
-
-	  Option type 2 processes directly a search with given keywords on a particular site.
+	\e[site\e[0m	Processes directly a search with given keywords on a particular site.
 	  Without any other argument the related home page will be opened.
-	    OPTION2	SITE
+	    SITE	WEB ADDRESS
 	    e		$e\$key (default)
 	    g		$g\$key
 	    yt		$yt\$key
@@ -168,7 +162,7 @@ case $1 in
     exit 0
     ;;
   -i)
-    if [ ! -t 0 ]; then
+    if [[ ! -t 0 ]]; then
       keys="$(cat | grep -v '^$')"
     else
       shift
@@ -186,7 +180,7 @@ case $1 in
 esac
 
 #read from piped
-if [ ! -t 0 ]; then
+if [[ ! -t 0 ]]; then
   key="$(cat | grep -v '^$' | sed -n 1p)"
 fi
 
