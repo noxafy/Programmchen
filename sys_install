@@ -1,11 +1,9 @@
 #!/bin/bash
 
-skipauto=
 usage="\e[1msys_install\e[0m -h | [-s]"
 help="An install script for mac reset.
 $usage
 	\e[1m-h\e[0m	Displays this message and exists.
-	\e[1m-s\e[0m	Skip full automatic (mainly brew, brew cask and mas installs).
 
 Fast internet connection recommended.
 Warning: Leave in place!
@@ -19,9 +17,6 @@ case $1 in
   -h)
     printf "$help"
     exit 0
-    ;;
-  -s)
-    skipauto=true
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -669,8 +664,6 @@ echo
 supersection "Full automatic part"
 echo
 
-if [[ -z $skipauto ]]; then
-
 #move remaining files from backup
 pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed!"
 if [[ ! -d IdeaProjects ]]; then
@@ -860,9 +853,6 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
 
 else
   echo "Skipped creation of Trading212.app with nativefier."
-fi
-else
-  echo "Skipped brew, brew cask, mas and nativefier installs."
 fi
 
 echo
