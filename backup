@@ -92,12 +92,23 @@ case $1 in
     ;;
 esac
 
+function saveToPass() {
+  filename=$(basename "$1")
+  echo "Save $filename to pass"
+  cat "$1" | pass insert -m "$filename" > /dev/null || die "Copying $filename into pass failed"
+}
+
+# for convenience reasons, place here
+# update .gitconfig and .profile_private into pass
+saveToPass ~/.gitconfig
+saveToPass ~/.profile_private
+
 if [[ -d "$default_target" ]]; then
   target="$default_target"
 fi
 
 if [[ -z "$target" ]]; then
-  printf "Please give a target folder. See -h for more help.\n"
+  printf "Please give a target folder to backup to. See -h for more help.\n"
   exit 1
 fi
 
@@ -149,10 +160,6 @@ ctt() {
 
 # Copy from ~
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
-
-# update .gitconfig and .profile_private into pass
-cat .gitconfig | pass insert -m .gitconfig > /dev/null || die 'copying .gitconfig into pass failed'
-cat .profile_private | pass insert -m .profile_private > /dev/null || die 'copying .profile_private into pass failed'
 
 if [[ ! -e "$target/.m2" ]]; then
   mkdir "$target/.m2" || die "mkdir .m2 failed"
