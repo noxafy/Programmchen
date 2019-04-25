@@ -13,6 +13,7 @@ Warning: Leave in place!
 ##### Args parsing
 ########################################################################################################
 
+# TODO: Divide full and slim install
 case $1 in
   -h)
     printf "$help"
@@ -680,7 +681,7 @@ else
 fi
 
 ### place at ~/Library/Preferences
-if [[ ! -n $(ls IntelliJIdea* 2> /dev/null) ]]; then
+if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
   c Preferences/
 else
   echo "Skipped copying of Preferences to $HOME/Library/Preferences/."
@@ -1010,7 +1011,7 @@ echo "Last, but not least, check if:
   - go2shell is set up right (cd %PATH%; printf \"\e[F\e[K\")
   - check all system prefs: open /Applications/System\ Preferences.app/
   - are os shortcuts set?
-  - dictionaries are installed rightly
+  - dictionaries are installed correctly
     - Wikipedia.wikipediadictionary
     - Deutsch-Englisch.dictionary
     - OpenThesaurus Deutsch.dictionary
