@@ -67,15 +67,25 @@ alias shutup="osascript -e 'Set volume output volume 0'"
 ### internet
 #############################
 alias airport=/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport
-alias wi="wiki -l de"
-alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
-alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
-
 function wlan() {
   networksetup -setairportpower en0 $1 1> /dev/null || echo "on|off"
 }
 alias won="wlan on"
 alias woff="wlan off"
+
+alias wi="wiki -l de"
+alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
+alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
+function fetch_dwd() { # usage: dwd "state" "city"
+  local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
+  local enc_location=$(echo "$2" | recode latin1..utf8)
+  local wetterwarnung=$(curl -sS "${dwd_site}warntab_$1_node.html" | sed -n "/<h2 id=\"${enc_location}\"/,/<\/table>/p")
+  if [[ -n $wetterwarnung ]]; then
+    echo $wetterwarnung | grep -oE "<h2 id=\"${enc_location}\"(.*?)</table>" | sed 's/<thead>.*<\/thead>//' | pup 'text{}' | xargs -L 1 echo
+  else
+    echo "Keine amtlichen Wetterwarnungen für ${2}."
+  fi
+}
 
 #############################
 ### applications
