@@ -1,9 +1,5 @@
 #!/bin/bash
 
-thisdir=$(dirname "$PWD/$BASH_SOURCE")
-if [[ ! -e $thisdir ]]; then
-  thisdir=$(dirname "$BASH_SOURCE")
-fi
 skipauto=
 usage="\e[1msys_install\e[0m -h | [-s]"
 help="An install script for mac reset.
@@ -14,6 +10,33 @@ $usage
 Fast internet connection recommended.
 Warning: Leave in place!
 "
+
+########################################################################################################
+##### Args parsing
+########################################################################################################
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -s)
+    skipauto=true
+    ;;
+  -*)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
+esac
+
+########################################################################################################
+##### Variables
+########################################################################################################
+
+thisdir=$(dirname "$PWD/$BASH_SOURCE")
+if [[ ! -e $thisdir ]]; then
+  thisdir=$(dirname "$BASH_SOURCE")
+fi
 
 # dirs
 nv_directory="$D/Apps/NV"
@@ -45,6 +68,27 @@ BibDesk
 FileZilla'
 
 brews=(
+  brightness
+  cloc
+  diff-pdf
+  fd
+  fortune
+  fzf
+  git
+  howdoi
+  lsd
+  nano
+  pdfgrep
+  pup
+  recode
+  ripgrep
+  rsync
+  testdisk	# Powerful free data recovery utility
+  wget
+  wiki
+)
+
+brews+=(
 #agedu		# Unix utility for tracking down wasted disk space
 #aspell
 #automake
@@ -52,88 +96,76 @@ bash
 bash-completion
 bash-snippets
 bfg
-brightness
 #bro		# Network security monitor
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
 #cheat		# Better version contained in bash snippets
 #chordii
 #chromedriver
-cloc
 #coreutils
-diff-pdf
 #exiftool
 #expect		# Program that can automate interactive applications
 #fasttext	# Library for fast text representation and classification
-fd
 #ffmpeg #Required by audacity or mplayer?
-fortune
 #freeling	# Suite of language analyzers
 #fswatch
-fzf
 gcal
 #geoipupdate
-git
 go
 #gobject-introspection
 googler
 hexedit
-howdoi
 #launch4j   # Cross-platform Java executable wrapper
 lf
 lorem
-lsd
 #mas #already installed
 maven
 maven-completion
 mplayer
 #mujs
 mysql
-nano
 nativefier
 #pass #already installed
-pdfgrep
 plan9port
-pup
 #python@2 #someone depending on this?
-recode
 rename
-ripgrep
-rsync
 shpotify
 #sic		# Minimal multiplexing IRC client
-testdisk	# Powerful free data recovery utility
 tldr		# Simplified and community-driven man pages
 trash		# CLI tool that moves files or folder to the trash
-wget
-wiki
 #wine
 #winetricks
 woff2
 #you-get
 youtube-dl)
 
-brewcasks=(android-file-transfer
+brewcasks=(
+  anki
+  disablemonitor
+  #dropbox #already installed
+  firefox
+  flux
+  font-hack-nerd-font
+  freefilesync
+  go2shell
+  google-chrome
+  iterm2
+  qlstephen
+  textmate
+  the-unarchiver
+)
+
+brewcasks+=(android-file-transfer
 #android-sdk
 #android-studio
-anki
 #axure-rp
 bibdesk
 #blender
 calibre
-disablemonitor
 #docker
-#dropbox #already installed
-firefox
-flux
-font-hack-nerd-font
-freefilesync
 #freemind
 geogebra
-go2shell
-google-chrome
 google-earth-pro
 intellij-idea
-iterm2
 java
 #jwzlyrics
 mactex
@@ -144,7 +176,6 @@ nvalt
 #onedrive
 #openoffice
 #osxfuse #maybe needed for plugging the external drive?
-qlstephen
 #sketch
 skype
 soundflower
@@ -152,19 +183,20 @@ spotify
 #teamviewer
 telegram
 texstudio
-textmate
-the-unarchiver
 thunderbird
 ukelele
 xquartz)
 
 masinstalls=(
 ### Free
+1278508951 # Trello
+)
+
+masinstalls+=(
+### Free
 890805912 # Newsflow
 595191960 # CopyClip
-526298438 # Lightshot Screenshot
 #404010395 # TextWrangler
-1278508951 # Trello
 1061963639 # VirtualDJ 8
 692867256 # Simplenote
 410628904 # Wunderlist
@@ -189,24 +221,6 @@ masinstalls=(
 def_ssid=
 def_password=
 wlan_device=en0
-
-########################################################################################################
-##### Args parsing
-########################################################################################################
-
-case $1 in
-  -h)
-    printf "$help"
-    exit 0
-    ;;
-  -s)
-    skipauto=true
-    ;;
-  -*)
-    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-    exit 1
-    ;;
-esac
 
 ########################################################################################################
 ##### Helper functions
