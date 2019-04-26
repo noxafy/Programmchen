@@ -64,8 +64,13 @@ calc_size() {
       return_code=1
       continue
     }
-    #printf "Size needed for $f: %s\n" >&2 "$(sizeFormat $((size*512)))"
-    overall_size=$((overall_size + size * 512))
+    if [[ -f "$f" && $size -lt 2049 ]]; then # calc small files (<1MB) more exactly
+      size=$(wc -c < "$f")
+    else
+      ((size*=512))
+    fi
+    #printf "Size needed for $f: %s\n" >&2 "$(sizeFormat $size)"
+    ((overall_size+=size))
   done
   sizeFormat $overall_size
   return $return_code
