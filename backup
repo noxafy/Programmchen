@@ -121,7 +121,7 @@ if [[ -d "$default_target" ]]; then
 fi
 
 if [[ -z "$target" ]]; then
-  printf "Please give a target folder to backup to. See -h for more help.\n"
+  printf "Please give a target folder (-t) to backup to. See -h for more help.\n"
   exit 1
 fi
 
@@ -133,16 +133,9 @@ if [[ -d "$target" ]]; then
   echo "Backing up current backup (calculating size ..."
   size=$(calc_size "$target") || die "Size calculation for $target failed"
 
-  cnt=1
-  backup_dir="$HOME/backup$cnt"
-  while [[ -d "$backup_dir" ]]; do
-    ((cnt++))
-    [[ $cnt == 1 ]] && die "Could not create a backup folder name"
-    backup_dir="$HOME/backup$cnt"
-  done
-  echo "Backing up current backup ($size) to $backup_dir ..."
-  mkdir "$backup_dir" || die "Creating backup dir for backing up the current backup failed!"
-  rsync -a $rsync_progress "$target/" "$backup_dir" || die "Backing up current backup failed!"
+  backup_dir="$HOME/backup"
+  printf "\e[F\e[KBacking up current backup ($size) to $backup_dir ...\n"
+  rsyncit "$target/" "$backup_dir" || die "Backing up current backup failed"
 fi
 
 ####################################################
