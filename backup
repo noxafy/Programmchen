@@ -159,12 +159,21 @@ ctt() {
   done
 }
 
+function createTargetDir() {
+  if [[ ! -d "$target/$1" ]]; then
+    if [[ -e "$target/$1" ]]; then
+      echo "Already exists, but is not a directory: $target/$1"
+      echo "Removing ..."
+      rm -rf "$target/$1" || die "rm $target/$1 failed"
+    fi
+    mkdir "$target/$1" || die "mkdir $target/$1 failed"
+  fi
+}
+
 # Copy from ~
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 
-if [[ ! -e "$target/.m2" ]]; then
-  mkdir "$target/.m2" || die "mkdir .m2 failed"
-fi
+createTargetDir .m2
 
 rm -rf .gnupg/S.gpg-agent* #remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
 ctt .bashrc .profile .public_profile .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
@@ -181,13 +190,14 @@ ctt .bashrc .profile .public_profile .zshrc .nanorc .m2/settings.xml .tm_propert
 ctt Dropbox IdeaProjects Downloads Documents Pictures Music Desktop
 
 cd "Library" || die "cd to $HOME/Library failed"
-if [[ ! -e "$target/Thunderbird" ]]; then
-  mkdir "$target/Thunderbird" || die "mkdir Thunderbird failed"
-fi
+
+createTargetDir Thunderbird
 ctt Thunderbird/Profiles # - Thunderbird folder
+
 ctt "Keyboard Layouts" # - keyboard layout
 ctt "Dictionaries" # Databases for Dictionary.app
 
+createTargetDir Preferences
 ctt Preferences/IntelliJIdea* # IntelliJ config folder
 ctt Preferences/com.googlecode.iterm2
 ctt Preferences/com.zipzapmac.Go2Shell.plist
@@ -224,7 +234,7 @@ fi
 ####################################################
 
 #export:
-[[ ! -d files ]] && mkdir files
+createTargetDir files
 
 echo "Save to $target/files:"
 echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")" # - Newsflow OPML
@@ -233,12 +243,13 @@ open files
 #ensure:
 echo "Ensure existence in $target/files"
 echo " - Firefox bookmarks (as \"firefox_bookmark.jsonlz4\")"
-[[ ! -d dashboard ]] && mkdir dashboard
+
+createTargetDir dashboard
 echo "Ensure existence in $target/dashboard" # - Dashboard apps
 echo " - eCalc_Scientific.wdgt"
 echo " - iStat Pro.wdgt"
-[[ ! -d installers ]] && mkdir installers
+
+createTargetDir installers
 echo "Ensure existence in $target/installers"
 echo " - Adobe Pro Installer" # - adobe installer
 echo " - .exe-files for Jardinains, Siedler5 and Finale" # wine
-
