@@ -62,11 +62,12 @@ case $1 in
     pics=$(du -s Pictures/ | awk '{print $1}')
     mus=$(du -s Music/ | awk '{print $1}')
     drop=$(du -s Dropbox/ | awk '{print $1}')
+    desk=$(du -s Desktop/ | awk '{print $1}')
     thund=$(du -s Library/Thunderbird/Profiles | awk '{print $1}')
     dicts=$(du -s Library/Dictionaries | awk '{print $1}')
     intelli=$(du -s Library/Preferences/IntelliJIdea* | awk '{print $1}' | xargs -n 1 printf "%d + ")
     intelli=$(echo "$intelli 0" | bc)
-    all=$(echo "($idea + $docs + $pics + $mus + $drop + $thund + $dicts + $intelli) * 512" | bc)
+    all=$(echo "($idea + $docs + $pics + $mus + $drop + $desk + $thund + $dicts + $intelli) * 512" | bc)
     echo "You will need about $(sizeFormat $all)."
     popd &> /dev/null
     exit 0
@@ -177,7 +178,7 @@ ctt .bashrc .profile .profile_public .zshrc .nanorc .m2/settings.xml .tm_propert
 #   ;;
 # esac
 
-ctt Dropbox IdeaProjects Downloads Documents Pictures Music
+ctt Dropbox IdeaProjects Downloads Documents Pictures Music Desktop
 
 cd "Library" || die "cd to $HOME/Library failed"
 if [[ ! -e "$target/Thunderbird" ]]; then
