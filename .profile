@@ -37,8 +37,11 @@ fi
 #############################
 ### source custom
 #############################
-[[ -r ~/.profile_public ]] && source ~/.profile_public
-[[ -r ~/.profile_private ]] && source ~/.profile_private
+sources=("$HOME/.public_profile" "$HOME/.private_profile")
+
+for f in "${sources[@]}"; do
+  [[ -r "$f" ]] && source "$f"
+done
 
 return;
 #############################

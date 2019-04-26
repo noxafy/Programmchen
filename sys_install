@@ -332,7 +332,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   section "Preferences installation"
 
   # install .profile's as root
-  c -s .bashrc .profile .profile_public .zshrc
+  c .bashrc .profile .public_profile .zshrc
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed!"
@@ -599,13 +599,13 @@ else
   echo "Skipped pass installation."
 fi
 
-# copy .gitconfig and .profile_private from pass
-if [[ ! -e ~/.profile_private || ! -e ~/.gitconfig ]]; then
-  section "Copying .gitconfig and .profile_private from pass"
+# copy .gitconfig and .private_profile from pass
+if [[ ! -e ~/.private_profile || ! -e ~/.gitconfig ]]; then
+  section "Copying .gitconfig and .private_profile from pass"
   pass .gitconfig > ~/.gitconfig
-  pass .profile_private > ~/.profile_private
+  pass .private_profile > ~/.private_profile
 else
-  echo "Skipped copying .gitconfig and .profile_private from pass"
+  echo "Skipped copying .gitconfig and .private_profile from pass"
 fi
 
 #TODO

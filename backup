@@ -100,9 +100,9 @@ function saveToPass() {
 }
 
 # for convenience reasons, place here
-# update .gitconfig and .profile_private into pass
+# update .gitconfig and .private_profile into pass
 saveToPass ~/.gitconfig
-saveToPass ~/.profile_private
+saveToPass ~/.private_profile
 
 if [[ -d "$default_target" ]]; then
   target="$default_target"
@@ -167,7 +167,7 @@ if [[ ! -e "$target/.m2" ]]; then
 fi
 
 rm -rf .gnupg/S.gpg-agent* #remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
-ctt .bashrc .profile .profile_public .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+ctt .bashrc .profile .public_profile .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 
 # read -p "Do you want to continue backup with the time consuming folders? (y/n) [y]: " ans
 # case $ans in
