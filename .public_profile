@@ -327,6 +327,18 @@ function po() {
 alias showUnixTime="/usr/local/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
 alias weekday="case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo \"Invalid week day number: $(date +%u)\";; esac"
 
+function backup() {
+  local target=$(basename $(dirname $(git config --global custom.backup)))
+  echo "Plug in $target now"
+  while [[ -z $(ls /Volumes | grep "$target") ]]; do
+    sleep 1
+  done
+  echo "Detected $target! Starting backup script now."
+  echo
+  $P/backup
+  unmount
+}
+
 function pdfpages() {
   local -a files=("$@")
   if [[ -z "$*" ]]; then
