@@ -9,6 +9,7 @@ Fast internet connection recommended.
 Warning: Leave in place!
 "
 
+# TODO: Clone repos, especially $P, and ln .* files to ~
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
@@ -228,12 +229,6 @@ die() {
 }
 
 c() {
-  if [[ $1 == "-s" ]]; then
-    sudo=true
-    shift
-  else
-    sudo=
-  fi
   while [[ -n $1 ]]; do
     origin="$thisdir/$1"
     shift
@@ -249,11 +244,7 @@ c() {
       printf "Copying folder $origin to $target"
     fi
     printf " ($(du -sh "$origin" | awk '{print $1}')) ...\n"
-    if [[ -n $sudo ]]; then
-      sudo cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
-    else
-      cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
-    fi
+    cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
   done
 }
 
