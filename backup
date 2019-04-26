@@ -155,8 +155,6 @@ case $1 in
       exit 1
     fi
     target=$(cd $(dirname "$2"); pwd)/$(basename "$2") || die "Bad target path: $2"
-    echo "Set target to: $target"
-    echo
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -181,9 +179,10 @@ if [[ -z "$target" ]]; then
     exit 1
   fi
 fi
+echo "Set target to: $target"
 echo
 
-backup_dir="$HOME/backup42"
+backup_dir="$HOME/backup"
 if [[ -n $(ls -A "$target") ]]; then
   echo "Backing up current backup (calculating size ..."
   size=$(calc_size "$target") || die "Size calculation for $target failed"
