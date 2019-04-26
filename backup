@@ -3,7 +3,7 @@
 target=
 default_target="$(git config --global custom.backup)"
 warningFlag=
-rsync --version | grep "version [210]\." && rsync_option="" || rsync_option="--info=progress2"
+rsync --version | grep "version [210]\." && rsync_progress="" || rsync_progress="--info=progress2"
 usage="\e[1m$(basename $0)\e[0m -h | -t \e[4mdir\e[0m"
 help="An preparation script for the install script for computer reset.
 $usage
@@ -119,11 +119,17 @@ fi
 
 if [[ -d "$target" ]]; then
   size=$(du -sh "$target" | awk '{print $1}')
-  backup_dir="$HOME/Desktop/backup$RANDOM"
+
+  cnt=1
+  backup_dir="$HOME/backup$cnt"
+  while [[ -d "$backup_dir" ]]; do
+    ((cnt++))
+    [[ $cnt == 1 ]] && die "Could not create a backup folder name"
+    backup_dir="$HOME/backup$cnt"
+  done
   echo "Backing up current backup ($size) to $backup_dir ..."
-  [[ -d "$backup_dir" ]] && rm -rf "$backup_file"
   mkdir "$backup_dir" || die "Creating backup dir for backing up the current backup failed!"
-  rsync -a $rsync_option "$target/" "$backup_dir" || die "Backing up current backup failed!"
+  rsync -a $rsync_progress "$target/" "$backup_dir" || die "Backing up current backup failed!"
 fi
 
 ####################################################
