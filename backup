@@ -171,13 +171,13 @@ esac
 saveToPass ~/.gitconfig
 saveToPass ~/.private_profile
 
-if [[ -d "$default_target" ]]; then
-  target="$default_target"
-fi
-
 if [[ -z "$target" ]]; then
-  printf "Please give a target folder (-t) to backup to. See -h for more help.\n"
-  exit 1
+  if [[ -d "$default_target" ]]; then
+    target="$default_target"
+  else
+    printf "Please give a target folder (-t) to backup to. See -h for more help.\n"
+    exit 1
+  fi
 fi
 
 if [[ -d "$target" ]]; then
