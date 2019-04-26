@@ -240,14 +240,14 @@ ctt Minecraft
 
 popd &> /dev/null
 
-if [[ -z $warningFlag ]]; then
-  echo "Deleting dated backup at $backup_dir"
-  rm -rf "$backup_dir" || die "Deleting dated backup failed"
-else
-  echo "There was an error. Backed up backup is being preserved ($backup_dir)."
-  echo "Fix that error and try again."
-  exit 1
-fi
+#if [[ -z $warningFlag ]]; then
+#  echo "Deleting dated backup at $backup_dir"
+#  rm -rf "$backup_dir" || die "Deleting dated backup failed"
+#else
+#  echo "There was an error. Backed up backup is being preserved ($backup_dir)."
+#  echo "Fix that error and try again."
+#  exit 1
+#fi
 echo "Backup finished!"
 echo
 
