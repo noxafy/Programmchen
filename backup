@@ -222,7 +222,7 @@ ctt "Dictionaries" # Databases for Dictionary.app
 
 createTargetDir Preferences
 ctt Preferences/IntelliJIdea* # IntelliJ config folder
-ctt Preferences/com.googlecode.iterm2
+ctt Preferences/com.googlecode.iterm2.plist
 ctt Preferences/com.zipzapmac.Go2Shell.plist
 
 # firefox bookmark backup
@@ -260,7 +260,7 @@ fi
 #export:
 echo "Save to $target/files:"
 echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")"
-open files
+open "$target/files"
 
 #ensure:
 echo "Ensure existence in $target/files"
