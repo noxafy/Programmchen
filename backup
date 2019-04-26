@@ -5,11 +5,11 @@ default_target="$(git config --global custom.backup)"
 warningFlag=
 rsync --version | grep "version [210]\." && rsync_progress="" || rsync_progress="--info=progress2"
 usage="\e[1m$(basename $0)\e[0m -h | -t \e[4mdir\e[0m"
-help="An preparation script for the install script for computer reset.
+help="A backup script.
 $usage
-	\e[1m-h\e[0m	Displays this message and exists.
-	\e[1m-t\e[0m	Give a target folder where the data should be stored.
-	\e[1m-c\e[0m	Calculate needed space for backup.
+	\e[1m-h\e[0m	Display this message and exist.
+	\e[1m-t\e[0m	Give a target folder where the backup should be saved.
+	\e[1m-c\e[0m	Calculate the space needed for the backup.
 "
 
 ####################################################
@@ -111,8 +111,7 @@ function ensureTargetDir() {
   if [[ ! -d "$target/$1" ]]; then
     if [[ -e "$target/$1" ]]; then
       echo "Already exists, but is not a directory: $target/$1"
-      echo "Removing ..."
-      rm -rf "$target/$1" || die "rm $target/$1 failed"
+      rm -i "$target/$1" || die "rm $target/$1 failed"
     fi
     mkdir "$target/$1" || die "mkdir $target/$1 failed"
   fi
@@ -204,7 +203,7 @@ ensureTargetDir .m2
 rm -rf .gnupg/S.gpg-agent* #remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
 ctt .bashrc .profile .public_profile .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 
-# read -p "Do you want to continue backup with the time consuming folders? [y]: " trash
+# read -p "Do you want to continue the backup with the time consuming folders? [y]: " trash
 
 ctt Dropbox IdeaProjects Downloads Documents Pictures Music Desktop
 
@@ -229,9 +228,9 @@ if firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.defa
   cp "$recent_backup" "files/firefox_bookmark.jsonlz4"
   ensureTargetDir files
   ctt "files/firefox_bookmark.jsonlz4"
-  rm -rf files || die "Removing tmp dir failed: $firefox_profile/files"
+  rm -rf files || warn "Removing temp dir failed: $firefox_profile/files"
 else
-  warn "Could not backup firefox bookmark! Folder does not exist: $firefox_profile"
+  warn "Could not backup firefox bookmarks! Folder does not exist: $firefox_profile"
 fi
 
 # - minecraft launcher
