@@ -22,16 +22,6 @@ warn() {
   warningFlag=true
 }
 
-####################################################
-### Args parsing
-####################################################
-
-case $1 in
-  -h)
-    printf "$help"
-    exit 0
-    ;;
-  -c)
 sizeFormat() {
   if [[ $1 -ge 100000000000 ]]; then
     printf "%.0f GB" $(echo "scale=1; $1/1073741824" | bc)
@@ -56,19 +46,41 @@ sizeFormat() {
   fi
 }
 
+calc_size() {
+  overall_size=0
+  return_code=0
+  for f in "$@"; do
+    size=$(du -s "$f") || {
+      warn "Failed to fetch size: $1"
+      return_code=1
+      continue
+    }
+    size=$(echo "$size" | awk '{print $1}') || {
+      warn "Failed to calculate size: $1"
+      return_code=1
+      continue
+    }
+    #printf "Size needed for $f: %s\n" >&2 "$(sizeFormat $((size*512)))"
+    overall_size=$((overall_size + size * 512))
+  done
+  sizeFormat $overall_size
+  return $return_code
+}
+
+####################################################
+### Args parsing
+####################################################
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  -c)
     pushd "$HOME" &> /dev/null
-    idea=$(du -s IdeaProjects/ | awk '{print $1}')
-    docs=$(du -s Documents/ | awk '{print $1}')
-    pics=$(du -s Pictures/ | awk '{print $1}')
-    mus=$(du -s Music/ | awk '{print $1}')
-    drop=$(du -s Dropbox/ | awk '{print $1}')
-    desk=$(du -s Desktop/ | awk '{print $1}')
-    thund=$(du -s Library/Thunderbird/Profiles | awk '{print $1}')
-    dicts=$(du -s Library/Dictionaries | awk '{print $1}')
-    intelli=$(du -s Library/Preferences/IntelliJIdea* | awk '{print $1}' | xargs -n 1 printf "%d + ")
-    intelli=$(echo "$intelli 0" | bc)
-    all=$(echo "($idea + $docs + $pics + $mus + $drop + $desk + $thund + $dicts + $intelli) * 512" | bc)
-    echo "You will need about $(sizeFormat $all)."
+    overall_size=$(calc_size IdeaProjects Documents Pictures Music Dropbox Desktop \
+                             Library/Thunderbird/Profiles Library/Dictionaries Library/Preferences/IntelliJIdea*)
+    echo "You will need about $overall_size."
     popd &> /dev/null
     exit 0
     ;;
@@ -118,7 +130,8 @@ fi
 ####################################################
 
 if [[ -d "$target" ]]; then
-  size=$(du -sh "$target" | awk '{print $1}')
+  echo "Backing up current backup (calculating size ..."
+  size=$(calc_size "$target") || die "Size calculation for $target failed"
 
   cnt=1
   backup_dir="$HOME/backup$cnt"
@@ -148,12 +161,8 @@ function ctt() {
   while [[ -n "$1" ]]; do
     source_name="$1"
     shift
-    echo "Backing up $PWD/$source_name"
-    size=$(du -sh "$source_name") || {
-      warn "Failed to backup: $PWD/$source_name"
-      continue;
-    }
-    size=$(echo "$size" | awk '{print $1}')
+    echo "Backing up $PWD/$source_name (calculating size ..."
+    size=$(calc_size "$PWD/$source_name") || continue;
     printf "\033[A\rBacking up $PWD/$source_name (%s) ...\n" "${size:-??}"
     if [[ -d "$source_name" ]]; then
       rsyncit "$source_name/" "$target/$source_name" || {
