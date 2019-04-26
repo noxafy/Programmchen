@@ -254,7 +254,7 @@ fi
 
 #export:
 echo "Save to $target/files:"
-echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")" # - Newsflow OPML
+echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")"
 open files
 
 #ensure:
@@ -262,11 +262,11 @@ echo "Ensure existence in $target/files"
 echo " - Firefox bookmarks (as \"firefox_bookmark.jsonlz4\")"
 
 createTargetDir dashboard
-echo "Ensure existence in $target/dashboard" # - Dashboard apps
+echo "Ensure existence in $target/dashboard"
 echo " - eCalc_Scientific.wdgt"
 echo " - iStat Pro.wdgt"
 
 createTargetDir installers
 echo "Ensure existence in $target/installers"
-echo " - Adobe Pro Installer" # - adobe installer
-echo " - .exe-files for Jardinains, Siedler5 and Finale" # wine
+echo " - Adobe Pro Installer"
+echo " - wine: .exe-files for Jardinains, Siedler5 and Finale"
