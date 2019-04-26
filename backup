@@ -138,8 +138,8 @@ fi
 
 function rsyncit() {
   rsync $rsync_progress --size-only --recursive --filter=':- .gitignore' \
-          --links --perms --times --crtimes --group --owner --devices --specials --xattrs `# preserve everything` \
-          --prune-empty-dirs --delete --delete-delay `# but delete empty dir and non existing files` \
+          --links --perms --times --crtimes --group --owner --devices --specials `# preserve everything` \
+          --delete --delete-delay `# but delete non existing files` \
           "$1" "$2"; return $?
 }
 
@@ -221,6 +221,7 @@ if firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.defa
   recent_backup=$(ls -t | head -1)
   mkdir files
   cp "$recent_backup" "files/firefox_bookmark.jsonlz4"
+  createTargetDir files
   ctt "files/firefox_bookmark.jsonlz4"
   rm -rf files || die "Removing tmp dir failed: $firefox_profile/files"
 else
@@ -235,7 +236,7 @@ popd &> /dev/null
 
 if [[ -z $warningFlag ]]; then
   echo "Deleting dated backup."
-  rm -rf "$backup_dir" || die "Deleting dated backup failed!"
+  rm -rf "$backup_dir" || die "Deleting dated backup failed"
 else
   echo "There was an error. Backed up backup is being preserved ($backup_dir)."
   echo "Fix that error and try again."
@@ -247,8 +248,6 @@ fi
 ####################################################
 
 #export:
-createTargetDir files
-
 echo "Save to $target/files:"
 echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")" # - Newsflow OPML
 open files
