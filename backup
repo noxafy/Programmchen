@@ -32,29 +32,29 @@ case $1 in
     exit 0
     ;;
   -c)
-    sizeFormat() {
-      if [[ $1 -ge 100000000000 ]]; then
-        printf "%.0f GB" $(echo "scale=1; $1/1000000000" | bc)
-      elif [[ $1 -ge 10000000000 ]]; then
-        printf "%.1f GB" $(echo "scale=2; $1/1000000000" | bc)
-      elif [[ $1 -ge 1000000000 ]]; then
-        printf "%.2f GB" $(echo "scale=3; $1/1000000000" | bc)
-      elif [[ $1 -ge 100000000 ]]; then
-        printf "%.0f MB" $(echo "scale=1; $1/1000000" | bc)
-      elif [[ $1 -ge 10000000 ]]; then
-        printf "%.1f MB" $(echo "scale=2; $1/1000000" | bc)
-      elif [[ $1 -ge 1000000 ]]; then
-        printf "%.2f MB" $(echo "scale=3; $1/1000000" | bc)
-      elif [[ $1 -ge 100000 ]]; then
-        printf "%.0f kB" $(echo "scale=1; $1/1000" | bc)
-      elif [[ $1 -ge 10000 ]]; then
-        printf "%.1f kB" $(echo "scale=2; $1/1000" | bc)
-      elif [[ $1 -ge 1000 ]]; then
-        printf "%.2f kB" $(echo "scale=3; $1/1000" | bc)
-      else
-        printf "$1 Bytes"
-      fi
-    }
+sizeFormat() {
+  if [[ $1 -ge 100000000000 ]]; then
+    printf "%.0f GB" $(echo "scale=1; $1/1073741824" | bc)
+  elif [[ $1 -ge 10000000000 ]]; then
+    printf "%.1f GB" $(echo "scale=2; $1/1073741824" | bc)
+  elif [[ $1 -ge 1000000000 ]]; then
+    printf "%.2f GB" $(echo "scale=3; $1/1073741824" | bc)
+  elif [[ $1 -ge 100000000 ]]; then
+    printf "%.0f MB" $(echo "scale=1; $1/1048576" | bc)
+  elif [[ $1 -ge 10000000 ]]; then
+    printf "%.1f MB" $(echo "scale=2; $1/1048576" | bc)
+  elif [[ $1 -ge 1000000 ]]; then
+    printf "%.2f MB" $(echo "scale=3; $1/1048576" | bc)
+  elif [[ $1 -ge 100000 ]]; then
+    printf "%.0f kB" $(echo "scale=1; $1/1024" | bc)
+  elif [[ $1 -ge 10000 ]]; then
+    printf "%.1f kB" $(echo "scale=2; $1/1024" | bc)
+  elif [[ $1 -ge 1000 ]]; then
+    printf "%.2f kB" $(echo "scale=3; $1/1024" | bc)
+  else
+    printf "$1 Bytes"
+  fi
+}
 
     pushd "$HOME" &> /dev/null
     idea=$(du -s IdeaProjects/ | awk '{print $1}')
