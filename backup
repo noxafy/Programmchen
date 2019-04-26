@@ -91,7 +91,7 @@ function ctt() { #copy to target
     # calc size
     echo "$PWD/$source_name (calculating size ..."
     size=$(calc_size "$PWD/$source_name") || continue;
-    printf "\e[F\e[K$PWD/$source_name (%s) ...\n" "${size:-??}"
+    printf "\e[F\e[K%s (%s) to %s\n" "$PWD/$source_name" "${size:-??}" "$target/$source_name"
 
     # backup
     if [[ -d "$source_name" ]]; then
