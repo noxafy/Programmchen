@@ -180,7 +180,7 @@ if [[ -z "$target" ]]; then
   fi
 fi
 
-if [[ -d "$target" ]]; then
+if [[ -n $(ls -A "$target") ]]; then
   echo "Backing up current backup (calculating size ..."
   size=$(calc_size "$target") || die "Size calculation for $target failed"
 
