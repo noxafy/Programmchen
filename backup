@@ -87,27 +87,27 @@ function ctt() { #copy to target
   while [[ -n "$1" ]]; do
     source_name="$1"
     shift
-    echo "Backing up $PWD/$source_name (calculating size ..."
+
+    # calc size
+    echo "$PWD/$source_name (calculating size ..."
     size=$(calc_size "$PWD/$source_name") || continue;
-    printf "\e[F\e[KBacking up $PWD/$source_name (%s) ...\n" "${size:-??}"
+    printf "\e[F\e[K$PWD/$source_name (%s) ...\n" "${size:-??}"
+
+    # backup
     if [[ -d "$source_name" ]]; then
-      rsyncit "$source_name/" "$target/$source_name" || {
-        warn "Backing up folder $source_name to $target failed"
-        continue;
-      }
-    elif [[ -f "$source_name" ]]; then
-      rsyncit "$source_name" "$target/$source_name" || {
-        warn "Backing up file $source_name to $target failed"
-        continue;
-      }
-    else
+      source_name="$source_name/"
+    elif [[ ! -f "$source_name" ]]; then
       warn "Invalid backup task: $source_name"
       continue;
     fi
+    rsyncit "$source_name" "$target/$source_name" || {
+      warn "Backing up $source_name to $target failed"
+      continue;
+    }
   done
 }
 
-function createTargetDir() {
+function ensureTargetDir() {
   if [[ ! -d "$target/$1" ]]; then
     if [[ -e "$target/$1" ]]; then
       echo "Already exists, but is not a directory: $target/$1"
@@ -155,6 +155,8 @@ case $1 in
       exit 1
     fi
     target=$(cd $(dirname "$2"); pwd)/$(basename "$2") || die "Bad target path: $2"
+    echo "Set target to: $target"
+    echo
     ;;
   -*)
     printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
@@ -162,9 +164,9 @@ case $1 in
     ;;
 esac
 
-####################################################
-### Preparation: Make backup of backup
-####################################################
+echo "####################################################"
+echo "### Preparation"
+echo "####################################################"
 
 # for convenience reasons, place here
 # update .gitconfig and .private_profile into pass
@@ -179,48 +181,43 @@ if [[ -z "$target" ]]; then
     exit 1
   fi
 fi
+echo
 
+backup_dir="$HOME/backup42"
 if [[ -n $(ls -A "$target") ]]; then
   echo "Backing up current backup (calculating size ..."
   size=$(calc_size "$target") || die "Size calculation for $target failed"
 
-  backup_dir="$HOME/backup"
   printf "\e[F\e[KBacking up current backup ($size) to $backup_dir ...\n"
   rsyncit "$target/" "$backup_dir" || die "Backing up current backup failed"
+  echo
 fi
 
-####################################################
-### Backup
-####################################################
+echo "####################################################"
+echo "### Backup"
+echo "####################################################"
 
 # Copy from ~
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 
-createTargetDir .m2
+ensureTargetDir .m2
 
 rm -rf .gnupg/S.gpg-agent* #remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
 ctt .bashrc .profile .public_profile .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
 
-# read -p "Do you want to continue backup with the time consuming folders? (y/n) [y]: " ans
-# case $ans in
-# n)
-#   exit 0
-#   ;;
-# *)
-#   ;;
-# esac
+# read -p "Do you want to continue backup with the time consuming folders? [y]: " trash
 
 ctt Dropbox IdeaProjects Downloads Documents Pictures Music Desktop
 
 cd "Library" || die "cd to $HOME/Library failed"
 
-createTargetDir Thunderbird
+ensureTargetDir Thunderbird
 ctt Thunderbird/Profiles # - Thunderbird folder
 
 ctt "Keyboard Layouts" # - keyboard layout
 ctt "Dictionaries" # Databases for Dictionary.app
 
-createTargetDir Preferences
+ensureTargetDir Preferences
 ctt Preferences/IntelliJIdea* # IntelliJ config folder
 ctt Preferences/com.googlecode.iterm2.plist
 ctt Preferences/com.zipzapmac.Go2Shell.plist
@@ -231,7 +228,7 @@ if firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.defa
   recent_backup=$(ls -t | head -1)
   mkdir files
   cp "$recent_backup" "files/firefox_bookmark.jsonlz4"
-  createTargetDir files
+  ensureTargetDir files
   ctt "files/firefox_bookmark.jsonlz4"
   rm -rf files || die "Removing tmp dir failed: $firefox_profile/files"
 else
@@ -245,33 +242,31 @@ ctt Minecraft
 popd &> /dev/null
 
 if [[ -z $warningFlag ]]; then
-  echo "Deleting dated backup."
+  echo "Deleting dated backup at $backup_dir"
   rm -rf "$backup_dir" || die "Deleting dated backup failed"
 else
   echo "There was an error. Backed up backup is being preserved ($backup_dir)."
   echo "Fix that error and try again."
   exit 1
 fi
+echo "Backup finished!"
+echo
 
-####################################################
-### Manual
-####################################################
+echo "####################################################"
+echo "### Manual part"
+echo "####################################################"
 
 #export:
-echo "Save to $target/files:"
+echo "Save to $target/files"
 echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")"
-open "$target/files"
+echo
 
-#ensure:
-echo "Ensure existence in $target/files"
-echo " - Firefox bookmarks (as \"firefox_bookmark.jsonlz4\")"
-
-createTargetDir dashboard
+ensureTargetDir dashboard
 echo "Ensure existence in $target/dashboard"
 echo " - eCalc_Scientific.wdgt"
 echo " - iStat Pro.wdgt"
 
-createTargetDir installers
+ensureTargetDir installers
 echo "Ensure existence in $target/installers"
 echo " - Adobe Pro Installer"
 echo " - wine: .exe-files for Jardinains, Siedler5 and Finale"
