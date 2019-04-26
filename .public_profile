@@ -265,8 +265,8 @@ function pi() {
 
 function pm() {
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing e-mail address." && return 1;
-  local p_res=$(pass "$*")
-  [[ $? -ne 0 ]] && return 1
+  local p_res
+  p_res=$(pass "$*") || return $?
 
   local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^m: ")
   [[ -z $res ]] && echo "No mail address found for: $*" && return 1
@@ -282,8 +282,8 @@ function pm() {
 
 function pu() {
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing username." && return 1;
-  local p_res=$(pass "$*")
-  [[ $? -ne 0 ]] && return 1
+  local p_res
+  p_res=$(pass "$*") || return $?
 
   local res=$(echo "$p_res" | grep --binary-files=text -m 1 "^u: ")
   if [[ -z $res ]]; then
@@ -307,8 +307,8 @@ function pu() {
 
 function po() {
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing online login site." && return 1;
-  local p_res=$(pass "$*")
-  [[ $? -ne 0 ]] && return 1
+  local p_res
+  p_res=$(pass "$*") || return $?
 
   local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
   [[ -z $res ]] && echo "No online link found for: $*" && return 1
