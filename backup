@@ -136,8 +136,15 @@ fi
 ### Backup
 ####################################################
 
+function rsyncit() {
+  rsync $rsync_progress --size-only --recursive --filter=':- .gitignore' \
+          --links --perms --times --crtimes --group --owner --devices --specials --xattrs `# preserve everything` \
+          --prune-empty-dirs --delete --delete-delay `# but delete empty dir and non existing files` \
+          "$1" "$2"; return $?
+}
+
 #copy to target
-ctt() {
+function ctt() {
   while [[ -n "$1" ]]; do
     source_name="$1"
     shift
@@ -149,12 +156,12 @@ ctt() {
     size=$(echo "$size" | awk '{print $1}')
     printf "\033[A\rBacking up $PWD/$source_name (%s) ...\n" "${size:-??}"
     if [[ -d "$source_name" ]]; then
-      rsync $rsync_option --size-only --delete -a "$source_name/" "$target/$source_name" || {
+      rsyncit "$source_name/" "$target/$source_name" || {
         warn "Backing up folder $source_name to $target failed"
         continue;
       }
     elif [[ -f "$source_name" ]]; then
-      rsync $rsync_option --size-only --delete -a "$source_name" "$target/$source_name" || {
+      rsyncit "$source_name" "$target/$source_name" || {
         warn "Backing up file $source_name to $target failed"
         continue;
       }
