@@ -527,6 +527,7 @@ else
 fi
 
 # install dashboard apps
+# TODO: check with: defaults read com.apple.dashboard | grep "relativepath" | sed 's/.*= //;s/;$//'
 if [[ -d "$thisdir/dashboard" ]]; then
   section "Dashboard app installation"
   c dashboard
@@ -753,7 +754,7 @@ else
 fi
 echo
 
-section "Whatsapp Web and Trading212 installation with nativefier"
+section "nativefier application installations"
 # ensure required dropbox content synced
 while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
   printf "Please wait until required dropbox data is syncing "
