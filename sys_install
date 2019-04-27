@@ -75,7 +75,7 @@ brews=(
   howdoi
   lsd
   nano
-  #pass #already installed
+  pass #already installed
   pdfgrep
   pup
   recode
@@ -115,7 +115,7 @@ hexedit
 #launch4j   # Cross-platform Java executable wrapper
 lf
 lorem
-#mas #already installed
+mas #already installed
 maven
 maven-completion
 mplayer
@@ -138,7 +138,7 @@ youtube-dl)
 brewcasks=(
   anki
   disablemonitor
-  #dropbox #already installed
+  dropbox #already installed
   firefox
   flux
   font-hack-nerd-font
@@ -195,7 +195,7 @@ masinstalls=(
 1278508951 # Trello
 
 ### Apple
-#497799835 # XCode, already required by mas
+497799835 # XCode, already required by mas
 408981434 # iMovie
 409183694 # Keynote
 409201541 # Pages
