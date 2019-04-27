@@ -75,6 +75,7 @@ brews=(
   howdoi
   lsd
   nano
+  #pass #already installed
   pdfgrep
   pup
   recode
@@ -121,7 +122,6 @@ mplayer
 #mujs
 mysql
 nativefier
-#pass #already installed
 plan9port
 #python@2 #someone depending on this?
 rename
@@ -146,6 +146,7 @@ brewcasks=(
   go2shell
   google-chrome
   iterm2
+  nvalt
   qlstephen
   textmate
   the-unarchiver
@@ -169,7 +170,6 @@ mactex
 #mp3tag
 mpv
 #notational-velocity
-nvalt
 #onedrive
 #openoffice
 #osxfuse #maybe needed for plugging the external drive?
@@ -186,17 +186,13 @@ xquartz)
 
 masinstalls=(
 ### Free
-1278508951 # Trello
-)
-
-masinstalls+=(
-### Free
 890805912 # Newsflow
 595191960 # CopyClip
 #404010395 # TextWrangler
 1061963639 # VirtualDJ 8
 692867256 # Simplenote
 410628904 # Wunderlist
+1278508951 # Trello
 
 ### Apple
 #497799835 # XCode, already required by mas
@@ -258,11 +254,11 @@ installWifi() {
     echo "$networks" | grep "WPA2"
     read -p "Please enter a SSID to connect to (s = search again all available): " ssid
     if [[ -z "$ssid" ]]; then
-      echo "The SSID must not empty to connect to the internet."
+      echo "The SSID must not be empty to connect to the internet."
     elif [[ "$ssid" = s ]]; then
       ssid=
     elif [[ -z $(echo "$networks"  | awk '{print $1}' | grep -- "^${ssid}\$") ]]; then
-      echo "Network \"$ssid\" is not available."
+      echo "Network \"$ssid\" is not available!"
       ssid=
     fi
   done
@@ -363,7 +359,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
 
   # trackpad prefs
   # "Apple Global Domain" = {
-  echo "Mouse and Trackpad settings."
+  echo "Mouse and Trackpad settings"
   defaults -currentHost write -g com.apple.mouse.tapBehavior 1
   defaults -currentHost write -g com.apple.trackpad.enableSecondaryClick 1
   defaults -currentHost write -g com.apple.trackpad.fiveFingerPinchSwipeGesture 2
@@ -382,7 +378,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   defaults -currentHost write -g com.apple.trackpad.twoFingerFromRightEdgeSwipeGesture 3
   # };
 
-  echo "Dock settings."
+  echo "Dock settings"
   # "com.apple.dock" = {
   defaults write com.apple.dock autohide 1
   defaults write com.apple.dock largesize 55
@@ -393,7 +389,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   # }
 
   # Dictionary
-  echo "Dictionary settings."
+  echo "Dictionary settings"
   defaults write com.apple.Dictionary "last available dictionaries" "(
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
@@ -449,7 +445,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
     \"com.apple.dictionary.OxfordRussian\"
   )"
 
-  echo "Shortcuts settings."
+  echo "Shortcuts settings"
   # defaults read | grep -A 5 NSUserKeyEquivalents
   defaults write com.apple.Preview NSUserKeyEquivalents '{ "Text hervorheben" = "@h"; }'
   defaults write com.apple.Terminal NSUserKeyEquivalents '{ "Standardgr\\U00f6\\U00dfe wiederherstellen" = "@$r"; }'
@@ -460,7 +456,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
         "Sprache f\\U00fcr Korrekturhilfen festlegen..." = "@l"; }'
   defaults write org.audacityteam.audacity NSUserKeyEquivalents '{ "Audio exportieren ..." = "@$s"; }'
 
-  echo "Various other settings."
+  echo "Various other settings"
   # Emoji & Symbole Palette
   defaults write com.apple.CharacterPaletteIM CVActiveCategories '(
     "Category-Emoji",
@@ -500,19 +496,18 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   sudo shutdown -r now
   exit 0
 else
-  echo "Skipped preferences installation."
+  echo "Skipped preferences installation"
 fi
 
 # install internet
-ping -t 3 -c 1 8.8.8.8 >& /dev/null
-if [[ $? -ne 0 ]]; then # no internet connection
+if ! ping -t 3 -c 1 8.8.8.8 >& /dev/null; then # no internet connection
   if [[ $(networksetup -listpreferredwirelessnetworks "$wlan_device" | wc -l) -le 1 ]]; then #first time; no internet installed
     section "Internet connection installation"
     networksetup -setairportpower "$wlan_device" on
     #wlan login
     installWifi "$def_ssid" "$def_password" #pass not installed yet, so paste password in prefs section (at top) before running
   else
-    echo "No internet connection detected."
+    echo "No internet connection detected!"
   fi
   #AEG
   printf "Turning Wi-Fi off ..."
@@ -520,18 +515,15 @@ if [[ $? -ne 0 ]]; then # no internet connection
   echo " and on ..."
   networksetup -setairportpower "$wlan_device" on
   sleep 3
-  ping -t 3 -c 1 8.8.8.8 >& /dev/null
-  if [[ $? -ne 0 ]]; then
+  if ! ping -t 3 -c 1 8.8.8.8 >& /dev/null; then
     echo "Auto connection failed. Please select the network from menu bar."
     echo "This script will continue as soon as an internet connection is found."
-    ping -t 3 -c 1 8.8.8.8 >& /dev/null
-    while [[ $? -ne 0 ]]; do
+    while ! ping -t 3 -c 1 8.8.8.8 >& /dev/null; do
       sleep 1
-      ping -t 3 -c 1 8.8.8.8 >& /dev/null
     done
   fi
 else
-  echo "Skipped internet installation."
+  echo "Skipped internet installation"
 fi
 
 # install dashboard apps
@@ -544,59 +536,50 @@ if [[ -d "$thisdir/dashboard" ]]; then
     open "$wgt"
     pressEnterTo
   done
-  cd ".."
+  cd ..
   rm -rf dashboard
 else
   echo "Skipped Dashboard apps (no directory \"dashboard\" available at $thisdir)"
 fi
 
-# bash4=/usr/local/bin/bash
-# if [[ -f "$bash4" && "$SHELL" != "$bash4" ]]; then
 if [[ ! -d "$ZSH" ]]; then
+  section "Oh my zsh installation"
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-
-  # section "Changing the login shell to $bash4 (bash4)"
-#   if [[ -z $(grep -e "$bash4" /etc/shells) ]]; then
-#     sudo bash -c "echo \"$bash4\" >> /etc/shells" || die "Adding $bash4 to /etc/shells failed."
-#   fi
-#   if type chsh >/dev/null 2>&1; then
-#     chsh -s "$bash4" || die "Changing users default shell failed."
-#     echo "Please close this window now and start this script again."
-#     echo "Now."
-#     exit 0
-#   else
-#     echo "Please manually change your default shell to ${bash4}!"
-#   fi
 else
-  # echo "Skipped login shell change."
-  echo "Skipped Oh my zsh installation."
+  echo "Skipped Oh my zsh installation"
 fi
 
-# install homebrew
 if ! hash brew &>/dev/null; then
-  echo "Installing Homebrew ..."
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed."
+  section "Homebrew installation"
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed"
   echo "Tapping caskrooms ..."
-  brew tap caskroom/cask || die "brew tap caskroom/cask failed."
+  brew tap caskroom/cask || die "brew tap caskroom/cask failed"
   brew tap caskroom/fonts || die "brew tap caskroom/fonts failed"
 else
-  echo "Skipped brew installation."
+  echo "Skipped brew installation"
 fi
 
 if ! hash pass &>/dev/null; then
   section "pass installation"
-  brew install pass || die "brew install pass failed."
+  brew install pass || die "brew install pass failed"
 else
-  echo "Skipped pass installation."
+  echo "Skipped pass installation"
 fi
 
-# copy .gitconfig and .private_profile from pass
-if [[ ! -e ~/.private_profile || ! -e ~/.gitconfig ]]; then
-  section "Copying .gitconfig and .private_profile from pass"
-  pass .gitconfig > ~/.gitconfig
+# copy .private_profile from pass
+if [[ ! -e ~/.private_profile ]]; then
+  echo "Copying .private_profile from pass"
   pass .private_profile > ~/.private_profile
 else
-  echo "Skipped copying .gitconfig and .private_profile from pass"
+  echo "Skipped copying .private_profile from pass"
+fi
+
+# copy .gitconfig from pass
+if [[ ! -e ~/.gitconfig ]]; then
+  echo "Copying .gitconfig from pass"
+  pass .gitconfig > ~/.gitconfig
+else
+  echo "Skipped copying .gitconfig from pass"
 fi
 
 #TODO
@@ -611,12 +594,12 @@ if [[ ! -e /Applications/Dropbox.app/ ]]; then
   section "Dropbox installation"
   brew cask install dropbox || die "brew cask install dropbox failed!"
   #log in dropbox
-  letRead "Please log in to Dropbox."
+  letRead "Please log in to Dropbox"
   open -g /Applications/Dropbox.app/
   pc dropbox
   pressEnterTo
 else
-  echo "Skipped Dropbox installation."
+  echo "Skipped Dropbox installation"
 fi
 
 # TODO
@@ -627,15 +610,15 @@ fi
 
 if ! hash mas &>/dev/null; then
   section "mas installation"
-  brew install mas || die "brew install mas failed."
+  brew install mas || die "brew install mas failed"
   while [[ -z $(mas account) ]]; do
-    letRead "Please sign in to App Store."
+    letRead "Please sign in to App Store!"
     open /Applications/App\ Store.app/
     pressEnterTo
   done
   echo "mas account: $(mas account)"
 else
-  echo "Skipped mas installation."
+  echo "Skipped mas installation"
 fi
 
 # install chordpro
@@ -644,7 +627,7 @@ if ! hash chordpro &>/dev/null; then
   #sudo cpan chordpro
   sudo cpan install JV/App-Music-ChordPro-0.94.tar.gz
 else
-  echo "Skipped chordpro installation."
+  echo "Skipped chordpro installation"
 fi
 
 echo
@@ -656,12 +639,13 @@ echo
 supersection "Full automatic part"
 echo
 
+section "Copying of data folders"
 #move remaining files from backup
 pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed!"
 if [[ ! -d IdeaProjects ]]; then
   c IdeaProjects Downloads/ Documents/ Pictures/ Music/
 else
-  echo "Skipped copying of IdeaProjects to $HOME/."
+  echo "Skipped copying of IdeaProjects to $HOME/"
 fi
 
 cd "Library" || die "cd to $HOME/Library/ failed!"
@@ -675,7 +659,7 @@ fi
 if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
   c Preferences/
 else
-  echo "Skipped copying of Preferences to $HOME/Library/Preferences/."
+  echo "Skipped copying of Preferences to $HOME/Library/Preferences/"
 fi
 
 ### place at /Applications
@@ -683,14 +667,14 @@ cd "/Applications" || die "cd to /Applications failed!"
 if [[ ! -d Minecraft ]]; then
   c Minecraft
 else
-  echo "Skipped copying Minecraft to /Applications/."
+  echo "Skipped copying Minecraft to /Applications/"
 fi
 
 popd &> /dev/null || die "cd failed"
 echo
 
 #app store
-echo "### App Store apps installation"
+section "App Store apps installation"
 failedapps=""
 masls=$(mas list | awk '{print $1}')
 for app in ${masinstalls[@]}; do
@@ -715,7 +699,7 @@ else
 fi
 echo
 
-echo "### brew cask installs"
+section "brew cask installs"
 #brew cask install
 failedcasks=
 echo "Looking up installed brew casks ..."
@@ -743,7 +727,7 @@ fi
 echo
 
 #brew install
-echo "### brew installs"
+section "brew installs"
 failedformulas=
 echo "Looking up installed brew formulas ..."
 brewls=$(brew ls)
@@ -769,6 +753,7 @@ else
 fi
 echo
 
+section "Whatsapp Web and Trading212 installation with nativefier"
 # ensure required dropbox content synced
 while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
   printf "Please wait until required dropbox data is syncing "
@@ -781,44 +766,26 @@ while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
   sleep 1
   printf "\r\e[K"
 done
-echo "All required dropbox data available."
-echo
+echo "All required dropbox data available"
 
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
-  section "Whatsapp Web.app installation"
+  echo "### Whatsapp Web.app installation"
   echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
   nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed."
   mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
   rm -rf WhatsApp Web-darwin-x64/
 else
-  echo "Skipped creation of Whatsapp Web.app with nativefier."
+  echo "Skipped creation of Whatsapp Web.app with nativefier"
 fi
 
 if [[ ! -e "/Applications/Trading212.app" ]]; then
-  section "Trading212.app installation"
+  echo "### Trading212.app installation"
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
   nativefier -i "$trading_icon" --inject "$trading_script" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
 
   mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed."
   rm -rf Trading212-darwin-x64/
-
-  # Remove context menu - not necessary anymore, since 7.6.4
-  # mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
-  # if [[ -e "$mainpath" ]]; then
-  #   mainjs=$(cat "$mainpath")
-  #   contextmenustart=$(echo "$mainjs" | grep -n "_electron.ipcMain.on('contextMenuOpened', function (event, targetHref) {" | awk '{ print $1 + 0; }') # 6893
-  #   contextmenuend=$(echo "$mainjs" | grep -n 'mainWindow.contextMenuOpen = true;' | awk '{ print $1 + 1; }') # 6928
-  #   if [[ -n $contextmenustart && -n $contextmenuend ]]; then
-  #     echo "$mainjs" | sed "${contextmenustart},${contextmenuend}d" > "$mainpath"
-  #     echo "Successfully removed context menu (sed '${contextmenustart},${contextmenuend}d')"
-  #   else
-  #     echo "Failed to fetch context menu location. Please remove context menu initialization manually."
-  #     echo "mate -l '6893-6928' \"$mainpath\" # location with nativefier 7.6.1; leave surrounding 'function initContextMenu(mainWindow) {'"
-  #   fi
-  # else
-  #   echo "Failed to remove context menu. File not found: $mainpath"
-  # fi
 
   mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
   if [[ -e "$mainpath" ]]; then
@@ -844,10 +811,11 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
   fi
 
 else
-  echo "Skipped creation of Trading212.app with nativefier."
+  echo "Skipped creation of Trading212.app with nativefier"
 fi
 
 echo
+
 ####################################################
 ### Manual part
 ####################################################
@@ -873,7 +841,7 @@ Open Settings and set settings folder to: $iterm_settings (copied to clipboard)"
   letRead "Now you can close this window and start the script in iTerm if you want."
   pressEnterTo
 else
-  echo "Skipped iTerm switch."
+  echo "Skipped iTerm switch"
 fi
 
 section "Logins"
@@ -884,7 +852,7 @@ if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
   open /Applications/Spotify.app/ || die "Please install Spotify and restart the script to continue."
   pressEnterTo
 else
-  echo "Skipped Spotify login."
+  echo "Skipped Spotify login"
 fi
 
 if [[ ! -e "$HOME/Library/Containers/com.microsoft.onenote.mac" ]]; then
@@ -892,7 +860,7 @@ if [[ ! -e "$HOME/Library/Containers/com.microsoft.onenote.mac" ]]; then
   open /Applications/Microsoft\ OneNote.app/ || die "Please install OneNote and restart the script to continue."
   pressEnterTo
 else
-  echo "Skipped OneNote login."
+  echo "Skipped OneNote login"
 fi
 
 if ! grep gmail.com $HOME/Library/Calendars/Calendar\ Cache > /dev/null; then
@@ -900,7 +868,7 @@ if ! grep gmail.com $HOME/Library/Calendars/Calendar\ Cache > /dev/null; then
   open /System/Library/PreferencePanes/InternetAccounts.prefPane || die "WTF. Apple has changed the preferences pane."
   pressEnterTo
 else
-  echo "Skipped Google Calendar login."
+  echo "Skipped Google Calendar login"
 fi
 
 if [[ ! -e "$HOME/Library/Containers/com.atlassian.trello" ]]; then
@@ -908,7 +876,7 @@ if [[ ! -e "$HOME/Library/Containers/com.atlassian.trello" ]]; then
   open /Applications/Trello.app/ || die "Please install Trello and restart the script to continue."
   pressEnterTo
 else
-  echo "Skipped Trello login."
+  echo "Skipped Trello login"
 fi
 
 echo
@@ -921,7 +889,7 @@ if [[ "$dockitems" != "$current_dockitems" ]]; then
   letRead "$dockitems"
   pressEnterTo
 else
-  echo "Skipped Dock arrangement."
+  echo "Skipped Dock arrangement"
 fi
 
 if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles" ]]; then
@@ -929,7 +897,7 @@ if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles" ]]; then
   open /Applications/TextMate.app/ || die "Please install TextMate and restart the script to continue."
   pressEnterTo
 else
-  echo "Skipped Textmate bundles."
+  echo "Skipped Textmate bundles"
 fi
 
 if ls "$studium"/*.potx >/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
@@ -939,7 +907,7 @@ if ls "$studium"/*.potx >/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.
       echo "Copying Power Point templates to $pot_target"
       cp "$studium"/*.potx "$pot_target" || die "Copying Power Point templates failed"
     else
-      echo "Skipped Power Point template copying. Already exist."
+      echo "Skipped Power Point template copying, because they exist already"
     fi
   else
     letRead "Please find the correct Power Point templates folder. Maybe you have to start and log in first.
@@ -947,7 +915,7 @@ Was at: ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.l
     pressEnterTo
   fi
 else
-  echo "Skipped Power Point template copying. Power Point not installed or no template found at ${studium}."
+  echo "Skipped Power Point template copying. Power Point not installed or no template found at ${studium}"
 fi
 
 if ! defaults read net.elasticthreads.nv >/dev/null; then
@@ -988,7 +956,7 @@ if [[ ! -e ~/Library/Containers/com.rockysandstudio.Newsflow ]]; then
   open /Applications/Newsflow.app/ || die "Please install Newsflow and restart the script to continue."
   pressEnterTo
 else
-  echo "Skipped Newsflow OPML import."
+  echo "Skipped Newsflow OPML import"
 fi
 
 echo "Last, but not least, check if:
