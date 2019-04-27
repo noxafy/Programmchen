@@ -238,31 +238,6 @@ function cdf() {
 #############################
 alias pe="pass edit"
 
-function pc() {
-  export COPYCONTENT=$(pbpaste)
-  if [[ -z "$*" ]]; then
-    pass | grep -v 'Password Store'
-  else
-    local res
-    if res=$(pass -c "$*"); then
-      if [[ $(echo "$res" | wc -l) -eq 1 ]]; then
-        pwde -c "$(pbpaste)"
-      else
-        echo "$res"
-      fi
-    fi
-  fi
-}
-
-function pi() {
-  [[ -z "$*" ]] && echo "Please give a pass-name for inserting." && return 1
-  if [[ -z $2 ]]; then
-    pgen || return 0;
-  fi
-  export COPYCONTENT=$(pbpaste)
-  pwen -c && echo "pass insert \"$*\"" && pass insert "$*"
-}
-
 function pm() {
   [[ -z "$*" ]] && echo "Please give a pass-name for grabbing e-mail address." && return 1;
   local p_res
