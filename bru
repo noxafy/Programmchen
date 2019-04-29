@@ -42,9 +42,7 @@ start() {
 
 runCmd() {
   title=$(echo "$@" | awk '{print toupper($0)}')
-  echo "$title" | tee -a "$dest"
-
-  "$@" 2>&1 | tee -a "$dest"
+  echo "$title" && "$@" 2>&1 | tee /dev/tty | while IFS= read -r line; do printf "%s: %s\n" "$(date +'%Y-%m-%d %T')" "$line"; done >> "$dest"
 }
 
 #test internet connection
