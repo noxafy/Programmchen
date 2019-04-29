@@ -26,6 +26,11 @@ die() {
 
 if type mplayer &>/dev/null && type lame &>/dev/null; then
   for f in "$@" ; do
+    [[  -d "$f" ]] && {
+      echo "Skipped \"$f\" as it is a directory"
+      continue;
+    }
+
     mplayer -noar -novideo -ao pcm:fast "$f" || die "mplayer error on converting: $f"
     filename=$(basename "$f")
     #echo "filename: $filename"
