@@ -24,20 +24,24 @@ die() {
   exit 1
 }
 
-if type mplayer && type lame; then
+if type mplayer &>/dev/null && type lame &>/dev/null; then
   for f in "$@" ; do
-    mplayer -novideo -ao pcm:fast "$f" || die "Conversion to wav failed: $f"
+    mplayer -noar -novideo -ao pcm:fast "$f" || die "mplayer error on converting: $f"
     filename=$(basename "$f")
-    echo "filename: $filename"
+    #echo "filename: $filename"
     filename=${filename%.*}
-    echo "filename: $filename"
+    #echo "filename: $filename"
     [[ -z "$filename" ]] && {
       echo "Conversion failed due to bad file name of [${f}] -> [${filename}]"
       continue;
     }
-    lame --preset extreme audiodump.wav "${filename}.mp3";
+    [[ ! -f audiodump.wav ]] && {
+      echo "mplayer could not extract wav from source"
+      continue;
+    }
+    lame --preset extreme audiodump.wav "${filename}.mp3" || die "lame error on converting: $f"
+    rm -f audiodump.wav
   done
-  rm -f audiodump.wav
 else
   echo "mplayer or lame not found"
 fi
