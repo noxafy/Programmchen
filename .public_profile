@@ -335,3 +335,19 @@ function showHexFlow() {
 function battery() {
   system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
 }
+
+function ocr() {
+  # copied from https://unix.stackexchange.com/a/482184
+  if [[ -f "$1" ]]; then
+    TMPF=$(mktemp ocr.XXXXXXXX.tif)
+    filebase=${1%.*}
+    [[ -n $2 ]] && res_name=$2 || res_name=${filebase}.txt
+    convert "$1" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off "$TMPF" \
+      && tesseract "$TMPF" "$res_name"
+    mv "${res_name}.txt" "$res_name"
+    rm -f "$TMPF"
+  else
+    echo "Usage: $(basename $0) imagefile [textfile]" >&2
+    echo "Creates a plain text file with the text found in imagefile" >&2
+  fi
+}
