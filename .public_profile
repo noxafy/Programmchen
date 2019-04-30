@@ -303,7 +303,9 @@ alias showUnixTime="/usr/local/bin/bash -c 'while true; do printf \"\\r\\e[K\$EP
 alias weekday="case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo \"Invalid week day number: $(date +%u)\";; esac"
 
 function backup() {
-  local target=$(basename $(dirname $(git config --global custom.backup)))
+  local custom_backup=$(git config --global custom.backup)
+  local custom_backup_dir=$(dirname "$custom_backup")
+  local target=$(basename "$custom_backup_dir")
   echo "Plug in $target now"
   while [[ -z $(ls /Volumes | grep "$target") ]]; do
     sleep 1
