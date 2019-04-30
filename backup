@@ -200,8 +200,9 @@ pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 
 ensureTargetDir .m2
 
-rm -rf .gnupg/S.gpg-agent* #remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
-ctt .bashrc .profile .public_profile .zshrc .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+rm -rf .gnupg/S.gpg-agent* # remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
+ctt .bashrc .profile .zshrc # only transitionally
+ctt .m2/settings.xml .ssh .password-store .gnupg
 
 # read -p "Do you want to continue the backup with the time consuming folders? [y]: " trash
 

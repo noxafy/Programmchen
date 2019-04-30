@@ -327,7 +327,7 @@ if [[ -z "$IT" ]]; then # $IT is required by script
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed!"
   fi
-  c .nanorc .m2/settings.xml .tm_properties .ssh .password-store .gnupg
+  c .m2/settings.xml .ssh .password-store .gnupg
 
   #install terminal layouts
   open "$thisdir/*.terminal"
