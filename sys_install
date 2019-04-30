@@ -318,8 +318,11 @@ pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 if [[ -z "$IT" ]]; then # $IT is required by script
   section "Preferences installation"
 
-  # install .profile's as root
-  c .bashrc .profile .public_profile .zshrc
+  # install basic shell sources
+  c .bashrc .profile .zshrc
+  printf "#dummy" > "$HOME/.public_profile" # dummy for preventing sourcing error and to be replaced later
+  printf "#dummy" > "$HOME/.private_profile"
+
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed!"
@@ -522,6 +525,7 @@ if ! ping -t 3 -c 1 8.8.8.8 >& /dev/null; then # no internet connection
       sleep 1
     done
   fi
+  echo
 else
   echo "Skipped internet installation"
 fi
@@ -539,6 +543,7 @@ if [[ -d "$thisdir/dashboard" ]]; then
   done
   cd ..
   rm -rf dashboard
+  echo
 else
   echo "Skipped Dashboard apps (no directory \"dashboard\" available at $thisdir)"
 fi
@@ -546,6 +551,7 @@ fi
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+  echo
 else
   echo "Skipped Oh my zsh installation"
 fi
@@ -556,6 +562,7 @@ if ! hash brew &>/dev/null; then
   echo "Tapping caskrooms ..."
   brew tap caskroom/cask || die "brew tap caskroom/cask failed"
   brew tap caskroom/fonts || die "brew tap caskroom/fonts failed"
+  echo
 else
   echo "Skipped brew installation"
 fi
@@ -563,12 +570,13 @@ fi
 if ! hash pass &>/dev/null; then
   section "pass installation"
   brew install pass || die "brew install pass failed"
+  echo
 else
   echo "Skipped pass installation"
 fi
 
 # copy .private_profile from pass
-if [[ ! -e ~/.private_profile ]]; then
+if [[ ! -e ~/.private_profile || $(cat ~/.private_profile) == "#dummy" ]]; then
   echo "Copying .private_profile from pass"
   pass .private_profile > ~/.private_profile
 else
@@ -579,6 +587,7 @@ fi
 if [[ ! -e ~/.gitconfig ]]; then
   echo "Copying .gitconfig from pass"
   pass .gitconfig > ~/.gitconfig
+  echo
 else
   echo "Skipped copying .gitconfig from pass"
 fi
@@ -599,6 +608,7 @@ if [[ ! -e /Applications/Dropbox.app/ ]]; then
   open -g /Applications/Dropbox.app/
   pc dropbox
   pressEnterTo
+  echo
 else
   echo "Skipped Dropbox installation"
 fi
@@ -616,6 +626,7 @@ if ! hash mas &>/dev/null; then
     letRead "Please sign in to App Store!"
     open /Applications/App\ Store.app/
     pressEnterTo
+    echo
   done
   echo "mas account: $(mas account)"
 else
@@ -626,9 +637,37 @@ fi
 if ! hash chordpro &>/dev/null; then
   section "Chordpro installation"
   #sudo cpan chordpro
-  sudo cpan install JV/App-Music-ChordPro-0.94.tar.gz
+  sudo cpan install chordpro
+  echo
 else
   echo "Skipped chordpro installation"
+fi
+
+echo
+section "brew cask installs"
+#brew cask install
+failedcasks=
+echo "Looking up installed brew casks ..."
+brewcaskls=$(brew cask ls)
+for cask in ${brewcasks[@]}; do
+  if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
+    echo "Installing cask $cask ..."
+    brew cask install $cask
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $cask"
+      failedcasks+="$cask "
+    fi
+  else
+    echo "Skipped already installed cask: $cask"
+  fi
+done
+if [[ -n "$failedcasks" ]]; then
+  echo "Retry following cask installs:"
+  for cask in $failedcasks; do
+    echo "brew cask install $cask"
+  done
+else
+  echo "All casks installed with no obvious problems."
 fi
 
 echo
@@ -638,40 +677,6 @@ echo
 # In this part, there is *no* need for user intervention at all
 # no use of pressEnterTo function, die only in severe error cases
 supersection "Full automatic part"
-echo
-
-section "Copying of data folders"
-#move remaining files from backup
-pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed!"
-if [[ ! -d IdeaProjects ]]; then
-  c IdeaProjects Downloads/ Documents/ Pictures/ Music/
-else
-  echo "Skipped copying of IdeaProjects to $HOME/"
-fi
-
-cd "Library" || die "cd to $HOME/Library/ failed!"
-if [[ ! -d Thunderbird ]]; then
-  c Thunderbird
-else
-  echo "Skipped copying of Thunderbird to $HOME/Library/"
-fi
-
-### place at ~/Library/Preferences
-if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
-  c Preferences/
-else
-  echo "Skipped copying of Preferences to $HOME/Library/Preferences/"
-fi
-
-### place at /Applications
-cd "/Applications" || die "cd to /Applications failed!"
-if [[ ! -d Minecraft ]]; then
-  c Minecraft
-else
-  echo "Skipped copying Minecraft to /Applications/"
-fi
-
-popd &> /dev/null || die "cd failed"
 echo
 
 #app store
@@ -697,33 +702,6 @@ if [[ -n "$failedapps" ]]; then
   done
 else
   echo "All apps installed with no obvious problems."
-fi
-echo
-
-section "brew cask installs"
-#brew cask install
-failedcasks=
-echo "Looking up installed brew casks ..."
-brewcaskls=$(brew cask ls)
-for cask in ${brewcasks[@]}; do
-  if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
-    echo "Installing cask $cask ..."
-    brew cask install $cask
-    if [[ $? -ne 0 ]]; then
-      echo "Failed installing $cask"
-      failedcasks+="$cask "
-    fi
-  else
-    echo "Skipped already installed cask: $cask"
-  fi
-done
-if [[ -n "$failedcasks" ]]; then
-  echo "Retry following cask installs:"
-  for cask in $failedcasks; do
-    echo "brew cask install $cask"
-  done
-else
-  echo "All casks installed with no obvious problems."
 fi
 echo
 
@@ -754,6 +732,58 @@ else
 fi
 echo
 
+section "Copying of data folders"
+#move remaining files from backup
+pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed!"
+if [[ ! -d IdeaProjects ]]; then
+  c IdeaProjects Downloads/ Documents/ Pictures/ Music/
+else
+  echo "Skipped copying of IdeaProjects to $HOME/"
+fi
+
+cd "Library" || die "cd to $HOME/Library/ failed!"
+if [[ ! -d Thunderbird ]]; then
+  c Thunderbird
+else
+  echo "Skipped copying of Thunderbird to $HOME/Library/"
+fi
+
+### place at ~/Library/Preferences
+if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
+  c Preferences/
+else
+  echo "Skipped copying of content of Preferences to $HOME/Library/Preferences/"
+fi
+
+if [[ ! -e ~/.public_profile || $(cat ~/.public_profile) == "#dummy" ]]; then
+  section "Linking dotfiles to $HOME"
+  function hardLink() {
+    filename=$(basename "$1")
+    filedir=$(dirname "$1")
+    echo "Linking $filename from $filedir"
+    ln -f "$1" ~
+  }
+
+  hardLink "$P"/.profile
+  hardLink "$P"/.zshrc
+  hardLink "$P"/.bashrc
+  hardLink "$P"/.public_profile
+  hardLink "$P"/.nanorc
+else
+  echo "Skipped linking dotfiles"
+fi
+
+### place at /Applications
+cd "/Applications" || die "cd to /Applications failed!"
+if [[ ! -d Minecraft ]]; then
+  c Minecraft
+else
+  echo "Skipped copying Minecraft to /Applications/"
+fi
+
+popd &> /dev/null || die "cd failed"
+echo
+
 section "nativefier application installations"
 # ensure required dropbox content synced
 while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
@@ -776,6 +806,7 @@ if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
   nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed."
   mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
   rm -rf WhatsApp Web-darwin-x64/
+  echo
 else
   echo "Skipped creation of Whatsapp Web.app with nativefier"
 fi
@@ -807,6 +838,7 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
     pushd "$appdir/.." &>/dev/null || die "cd to $appdir/.. failed"
     npm i --save ws || die "npm install ws failed"
     popd &>/dev/null || die "cd failed"
+    echo
   else
     echo "Failed to insert listener script call function. File not found: $mainpath"
   fi
