@@ -37,7 +37,7 @@ fi
 
 # dirs
 nv_directory="$D/Apps/NV"
-studium="$D/Org/Studium"
+templates="$D/Org/Vorlagen"
 # resources
 trading_icon="$IT/212/trading212.icns" # icon for Trading212.app
 trading_script="$IT/212/212listener.js" # listener for Trading212.app
@@ -933,12 +933,12 @@ else
   echo "Skipped Textmate bundles"
 fi
 
-if ls "$studium"/*.potx >/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
+if ls "$templates"/*.potx >/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
   # maybe also available via: defaults read | grep /Templates.localized | grep Normal
   if pot_target=$(echo ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.localized) 2>/dev/null; then
     if ! ls "$pot_target"/*.potx >/dev/null; then
       echo "Copying Power Point templates to $pot_target"
-      cp "$studium"/*.potx "$pot_target" || die "Copying Power Point templates failed"
+      cp "$templates"/*.potx "$pot_target" || die "Copying Power Point templates failed"
     else
       echo "Skipped Power Point template copying, because they exist already"
     fi
@@ -948,7 +948,7 @@ Was at: ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.l
     pressEnterTo
   fi
 else
-  echo "Skipped Power Point template copying. Power Point not installed or no template found at ${studium}"
+  echo "Skipped Power Point template copying. Power Point not installed or no template found at ${templates}"
 fi
 
 if ! defaults read net.elasticthreads.nv >/dev/null; then
