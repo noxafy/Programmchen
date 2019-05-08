@@ -7,7 +7,7 @@ query=""
 declare -a LINKS
 declare -a DESCRIPTIONS
 usage="Usage: \e[1m$(basename $0)\e[0m -h | -l | \e[4msite\e[0m [\e[4mseries\e[0m] | -u \e[4muser\e[0m [\e[4mseries\e[0m] | \e[4mquery\e[0m \e[4m...\e[0m"
-help="Commandline interaction with YouTube.
+help="Some commandline interaction with YouTube.
 $usage
 	\e[1m-h\e[0m		Displays this message and exists.
 	\e[1m-l\e[0m		Print all aliases associated with this script.
@@ -32,7 +32,7 @@ while [[ -n $1 ]]; do
     exit 0
     ;;
   -l)
-    [[ -r ~/.aliases ]] && source ~/.aliases || source ~/.bashrc
+    source ~/.bashrc
     alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'
     exit 0
     ;;
