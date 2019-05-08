@@ -21,7 +21,7 @@ $usage
 "
 
 #resolve wholepage (-a) and multipage search (-r), open link (-o), verbose (-v) and help (-h)
-while [ "$*" ]; do
+while [[ -n "$*" ]]; do
  case $1 in
   -h)
     printf "$help"
@@ -314,6 +314,6 @@ js=${js/\$var1/$var1}
 js=${js/\$var2/$var2}
 js=${js//\$key/$key}
 js=${js//\$verbose/$verbose}
-allCh=$([ $all == 0 ] && echo "true" || echo "false")
+allCh=$([[ $all == 0 ]] && echo "true" || echo "false")
 js=${js//\$all/$allCh}
 node -e "$js"

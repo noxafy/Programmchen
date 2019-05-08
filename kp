@@ -16,18 +16,18 @@ Default flag is the software termination signal (15).
 "
 
 case $1 in
--h|--help)
-  printf "$help"
-  exit 0
-  ;;
--2|-9)
-  killflag="$1"
-  shift
-  ;;
--*)
-  printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-  exit 1
-  ;;
+  -h|--help)
+    printf "$help"
+    exit 0
+    ;;
+  -2|-9)
+    killflag="$1"
+    shift
+    ;;
+  -*)
+    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
+    exit 1
+    ;;
 esac
 
 die() {

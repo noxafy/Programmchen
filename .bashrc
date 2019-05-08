@@ -1,6 +1,3 @@
-
-
-
 export HISTTIMEFORMAT="%c " # Show date in history
 export HISTCONTROL=erasedups # Erase duplicates in history
 export HISTSIZE=10000 # Store 10k history entries
@@ -25,7 +22,7 @@ function command_not_found_handle() {
   fi
 }
 
-. ~/.profile
+source ~/.profile
 
 ### completions
 # automated alias completion generation: https://superuser.com/questions/436314/how-can-i-get-bash-to-perform-tab-completion-for-$

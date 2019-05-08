@@ -19,7 +19,7 @@ $usage
 
 trap 'printf "To file [$file]:\n"; resumee; exit 1' 2
 
-while [ "$*" ]; do
+while [[ -n "$*" ]]; do
   case $1 in
     -h)
       printf "$help"

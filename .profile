@@ -4,7 +4,6 @@
 export D=$HOME/Dropbox
 export IT=$D/IT
 export P=$IT/Programmchen
-
 export GOPATH=$IT/GoWork
 export GOROOT=/usr/local/opt/go/libexec
 export JAVA_HOME=$(/usr/libexec/java_home)
@@ -94,10 +93,10 @@ return;
 # x  # swap_pattern_and_hold
 # y  # transform_chars
 
-#bfg --replace-text help
-#PASSWORD1 # Replace literal string 'PASSWORD1' with '***REMOVED***' (default)
-#PASSWORD2==>examplePass         # replace with 'examplePass' instead
-#PASSWORD3==>                    # replace with the empty string
+#help for bfg --replace-text:
+#PASSWORD1                       # Replace literal string 'PASSWORD1' with '***REMOVED***' (default)
+#PASSWORD2==>examplePass         # Replace with 'examplePass' instead
+#PASSWORD3==>                    # Replace with the empty string
 #regex:password=\w+==>password=  # Replace, using a regex
 #regex:\r(\n)==>$1               # Replace Windows newlines with Unix newlines
 #https://stackoverflow.com/questions/4110652/how-to-substitute-text-from-files-in-git-history

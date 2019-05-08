@@ -76,7 +76,8 @@ alias woff="wlan off"
 alias wi="wiki -l de"
 alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
-function fetch_dwd() { # usage: dwd "state" "city"
+
+function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
   local enc_location=$(echo "$2" | recode latin1..utf8)
   local wetterwarnung=$(curl -sS "${dwd_site}warntab_$1_node.html" | sed -n "/<h2 id=\"${enc_location}\"/,/<\/table>/p")

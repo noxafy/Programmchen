@@ -12,7 +12,7 @@ gitcnt() {
 while [[ $@ ]]; do
   echo "${1}:"
   for dir in *; do
-    if [ -d "$dir" ] && [ -d "$dir/.git" ]; then
+    if [[ -d "$dir" && -d "$dir/.git" ]]; then
       printf "  ${dir}/"
       if [[ ${#dir} -lt 5 ]]; then
         printf "\t\t\t\t"
