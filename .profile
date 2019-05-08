@@ -47,6 +47,10 @@ return;
 ### help section
 #############################
 
+#############################
+### shell
+#############################
+
 # uncomment if git autocompletion is too slow
 #function __git_files () { _wanted files expl 'local files' _files  }
 
@@ -93,6 +97,10 @@ return;
 # x  # swap_pattern_and_hold
 # y  # transform_chars
 
+#############################
+### git history
+#############################
+
 #help for bfg --replace-text:
 #PASSWORD1                       # Replace literal string 'PASSWORD1' with '***REMOVED***' (default)
 #PASSWORD2==>examplePass         # Replace with 'examplePass' instead
@@ -130,3 +138,6 @@ function replace_git_name_and_mail() {
 # git rebase --interactive --root
 # then, for author change (committer?): git commit -a --amend --author="someone <someone@example.com>"
 # https://stackoverflow.com/questions/1186535/how-to-modify-a-specified-commit
+
+# grep trough all git history
+# PAGER= git grep <regexp> $(git rev-list --all)
