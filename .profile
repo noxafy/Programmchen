@@ -1,9 +1,9 @@
 #############################
 ### paths
 #############################
+export P=$HOME/Programmchen
 export D=$HOME/Dropbox
 export IT=$D/IT
-export P=$IT/Programmchen
 export GOPATH=$IT/GoWork
 export GOROOT=/usr/local/opt/go/libexec
 export JAVA_HOME=$(/usr/libexec/java_home)
