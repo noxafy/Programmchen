@@ -1,7 +1,6 @@
-*airport*
-testest
 todolist
 .idea/
-Programmchen.iml
-T*/
+*.iml
+Te*/
+test*
 .DS_Store
