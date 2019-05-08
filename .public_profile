@@ -303,17 +303,17 @@ alias showUnixTime="/usr/local/bin/bash -c 'while true; do printf \"\\r\\e[K\$EP
 alias weekday="case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo \"Invalid week day number: $(date +%u)\";; esac"
 
 function backup() {
-  local custom_backup=$(git config --global custom.backup)
-  local custom_backup_dir=$(dirname "$custom_backup")
-  local target=$(basename "$custom_backup_dir")
-  echo "Plug in $target now"
-  while [[ -z $(ls /Volumes | grep "$target") ]]; do
+  local target=$(git config --global custom.backup)
+  local drive=$(echo "$target" | sed 's/^\/Volumes\///;s/\/.*$//')
+  echo "Plug in $drive now"
+  while [[ -z $(ls /Volumes | grep "$drive") ]]; do
     sleep 1
   done
-  echo "Detected $target! Starting backup script now."
+  echo "Detected $drive!"
+  sleep 1 # short time for indexing
+  echo "Starting backup script now."
   echo
-  $P/backup
-  unmount
+  "$P"/backup -t "$target" && unmount
 }
 
 function pdfpages() {
