@@ -40,6 +40,10 @@ case $1 in
     cmd=sm
     ;;
   *)
+    if [[ -f "$P/asciiart/$1" ]]; then
+      cat "$P/asciiart/$1"
+      exit 0
+    fi
     echo "Sorry, didn't find: $*"
     echo "Maybe you can add it to handle if it was a frequent misspelling."
     exit 1
