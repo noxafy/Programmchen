@@ -1,4 +1,5 @@
 #!/bin/bash
+# copied from somewhere unknown
 
 function doBash {
   typeset P Q X Y a b c i v x y
