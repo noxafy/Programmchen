@@ -6,8 +6,10 @@ usage="\e[1mbru\e[0m [-h|-a]"
 help="An updater script for homebrew.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
-	\e[1m-a\e[0m	Extended processing (brew cleanups, mas upgrade).
-Executes the commands: ${cmds[*]}
+	\e[1m-a\e[0m	Extended processing.
+Executes the commands: brew update, brew upgrade
+With argument -a additional commands will be executed:
+	brew cask upgrade, brew cleanup, brew doctor, mas upgrade
 Logs the results to $dest.
 "
 
@@ -49,7 +51,7 @@ runCmd() {
 waitnet -s || exit 1
 
 start
-if [[ -n $extendedupgrade ]]; then
+if [[ -n $extendedUpgrade ]]; then
   echo "*** EXTENDED UPGRADE ***" >> $dest
 fi
 runCmd brew update
