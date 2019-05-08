@@ -2,6 +2,8 @@
 ### paths
 #############################
 export P=$HOME/Programmchen
+alias p="cd $P"
+
 export D=$HOME/Dropbox
 export IT=$D/IT
 export GOPATH=$IT/GoWork
