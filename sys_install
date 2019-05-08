@@ -237,7 +237,7 @@ c() {
       printf "Copying contents of $origin to $target"
     else
       #rm -f "$target" &> /dev/null
-      printf "Copying folder $origin to $target"
+      printf "Copying $origin to $target"
     fi
     printf " ($(du -sh "$origin" | awk '{print $1}')) ...\n"
     cp -a "$origin" "$target" || die "Copying $origin to $target failed!"
@@ -755,7 +755,12 @@ else
   echo "Skipped copying of content of Preferences to $HOME/Library/Preferences/"
 fi
 
-if [[ ! -e ~/.public_profile || $(cat ~/.public_profile) == "#dummy" ]]; then
+if [[ ! -e ~/.public_profile \
+   || $(cat ~/.public_profile) == "#dummy" \
+   || ! -e ~/.profile \
+   || ! -e ~/.zshrc \
+   || ! -e ~/.bashrc \
+   || ! -e ~/.nanorc ]]; then
   section "Linking dotfiles to $HOME"
   function hardLink() {
     filename=$(basename "$1")
@@ -763,6 +768,12 @@ if [[ ! -e ~/.public_profile || $(cat ~/.public_profile) == "#dummy" ]]; then
     echo "Linking $filename from $filedir"
     ln -f "$1" ~
   }
+
+  if [[ -z ${P+x} ]]; then
+    echo "Variable \$P not set!"
+  echo "Please link \$P/.profile to \$HOME manually"
+    exit 1
+  fi
 
   hardLink "$P"/.profile
   hardLink "$P"/.zshrc
