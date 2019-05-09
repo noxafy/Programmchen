@@ -305,6 +305,10 @@ alias weekday="case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo W
 
 function backup() {
   local target=$(git config --global custom.backup)
+  if [[ -z $target ]]; then
+    echo "Please set target first."
+    return 1;
+  fi
   local drive=$(echo "$target" | sed 's/^\/Volumes\///;s/\/.*$//')
   echo "Plug in $drive now"
   while [[ -z $(ls /Volumes | grep "$drive") ]]; do
