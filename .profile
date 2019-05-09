@@ -2,17 +2,17 @@
 ### paths
 #############################
 export P=$HOME/Programmchen
+export PATH="$P:$PATH"
 alias p="cd $P"
 
-export D=$HOME/Dropbox
-export IT=$D/IT
-export GOPATH=$IT/GoWork
+# frameworks
 export GOROOT=/usr/local/opt/go/libexec
 export JAVA_HOME=$(/usr/libexec/java_home)
 #export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_152.jdk/Contents/Home
-[[ "$PATH" == "$P"* ]] || export PATH="$P:$GOPATH/bin:./node_modules/.bin/:$PATH" #$JAVA_HOME/bin
 export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
-export ANDROID_HOME="/usr/local/share/android-sdk"
+export ANDROID_HOME=$ANDROID_SDK_ROOT
+export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node deps versioning
+#export PATH="$JAVA_HOME/bin:$PATH"
 
 #############################
 ### prefs
@@ -21,7 +21,7 @@ export LC_ALL='en_US.UTF-8'
 #export LANG=C
 export EDITOR="/usr/local/bin/mate -w"
 export SPELL="aspell -c"
-export NO_GETTEXT=1 # disable localization support and make git only use english
+export NO_GETTEXT=1 # disable localization support and make git use english only
 
 #############################
 ### interactive shell start
