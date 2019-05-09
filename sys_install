@@ -65,17 +65,15 @@ BibDesk
 FileZilla'
 
 brews=(
-  brightness
   cloc
   diff-pdf
   fd
   fortune
   fzf
-  git
   howdoi
   lsd
   nano
-  pass #already installed
+  node
   pdfgrep
   pup
   recode
@@ -94,6 +92,7 @@ bash
 bash-completion
 bash-snippets
 bfg
+brightness
 #bro		# Network security monitor
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
 #cheat		# Better version contained in bash snippets
@@ -107,6 +106,7 @@ bfg
 #freeling	# Suite of language analyzers
 #fswatch
 gcal
+git
 #geoipupdate
 go
 #gobject-introspection
@@ -122,6 +122,7 @@ mplayer
 #mujs
 mysql
 nativefier
+pass #already installed
 plan9port
 #python@2 #someone depending on this?
 rename
@@ -136,9 +137,7 @@ woff2
 youtube-dl)
 
 brewcasks=(
-  anki
   disablemonitor
-  dropbox #already installed
   firefox
   flux
   font-hack-nerd-font
@@ -155,10 +154,12 @@ brewcasks=(
 brewcasks+=(android-file-transfer
 #android-sdk
 #android-studio
+anki
 #axure-rp
 bibdesk
 #blender
 calibre
+dropbox #already installed
 #docker
 #freemind
 geogebra
@@ -315,7 +316,7 @@ echo
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
 
 # check if .profile has been executed
-if [[ -z "$IT" ]]; then # $IT is required by script
+if [[ -z "$P" ]]; then
   section "Preferences installation"
 
   # install basic shell sources
@@ -579,6 +580,9 @@ fi
 if [[ ! -e ~/.private_profile || $(cat ~/.private_profile) == "#dummy" ]]; then
   echo "Copying .private_profile from pass"
   pass .private_profile > ~/.private_profile
+
+  echo "Please restart this session now."
+  exit 0
 else
   echo "Skipped copying .private_profile from pass"
 fi
@@ -780,6 +784,9 @@ if [[ ! -e ~/.public_profile \
   hardLink "$P"/.bashrc
   hardLink "$P"/.public_profile
   hardLink "$P"/.nanorc
+
+  echo "Please restart this session now."
+  exit 0
 else
   echo "Skipped linking dotfiles"
 fi
