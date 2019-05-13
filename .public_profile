@@ -121,7 +121,7 @@ function _pick() {
   local file_only=$1
   shift
 
-  local q_dirname=$(dirname "$*")
+  local q_dirname
   local query
   local -a fd_args
   if [[ -n "$*" ]]; then
@@ -132,31 +132,37 @@ function _pick() {
     elif [[ -d "$*" && -r "$*" ]]; then
       # existing dir given (to search in)
       if $file_only; then
-        pushd "$*" > /dev/null
         q_dirname="$*"
       else
         echo "$*"
         return;
       fi
-    elif [[ -d $q_dirname && -r $q_dirname ]]; then
-      # invalid path given, but parent exists
-      # go there and search file
-      pushd "$q_dirname" > /dev/null
-      query=$(basename "$*")
     else
-      query="$*"
+      q_dirname=$(dirname "$*")
+      if [[ -d "$q_dirname" && -r "$q_dirname" ]]; then
+        # invalid path given, but parent exists
+        query=$(basename "$*")
+      else
+        query="$*"
+      fi
     fi
   fi
 
   $file_only && fd_args=(-t f)
 
-  local depth_indicator
+  local -a depth_indicator
+  if [[ -n "$q_dirname" ]]; then # if valid dirname given, cd there
+    pushd "$q_dirname" > /dev/null
+  fi
   local pwd_name
   if [[ $PWD == $HOME ]]; then
     depth_indicator=(-d 1)
     pwd_name="~"
+  elif [[ / == "$PWD" ]]; then
+    depth_indicator=(-d 1)
+    pwd_name=""
   elif [[ / == $(dirname "$PWD") ]]; then
-    [[ / == $PWD ]] && pwd_name= || pwd_name=/"$pwd_name"
+    pwd_name="$PWD"
   else
     pwd_name=$(basename "$PWD")
   fi
