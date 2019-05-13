@@ -434,15 +434,15 @@ if [[ -z "$P" ]]; then
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/0c32ebe1de94a069aca537b10f718806c5ad50c1.asset/AssetData/Spanish - English.dictionary\"
   )"
   defaults write com.apple.DictionaryServices DCSActiveDictionaries "(
-    \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
+    \"com.apple.dictionary.OxfordGerman\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
+    \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
     \"com.apple.dictionary.AppleDictionary\",
     \"com.apple.dictionary.OAWT\",
     \"com.apple.dictionary.NOAD\",
     \"com.apple.dictionary.OTE\",
     \"com.apple.dictionary.de.DDDSI\",
-    \"com.apple.dictionary.OxfordGerman\",
     \"com.apple.dictionary.OxfordFrench\",
     \"com.apple.dictionary.OxfordItalian\",
     \"com.apple.dictionary.OxfordSpanish\",
