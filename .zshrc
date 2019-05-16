@@ -34,12 +34,14 @@ source ~/.profile
 
 ### completions
 # https://stackoverflow.com/questions/14307086/tab-completion-for-aliased-sub-commands-in-zsh-alias-gco-git-checkout
-compdef pc=pass
-compdef pe=pass
-compdef pm=pass
-compdef pu=pass
-compdef pi=pass
-compdef po=pass
+if hash pass &>/dev/null; then
+  compdef pc=pass
+  compdef pe=pass
+  compdef pm=pass
+  compdef pu=pass
+  compdef pi=pass
+  compdef po=pass
+fi
 compdef _path_commands fip
 compdef _functions fif
 compdef _aliases fia

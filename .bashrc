@@ -26,12 +26,14 @@ source ~/.profile
 
 ### completions
 # automated alias completion generation: https://superuser.com/questions/436314/how-can-i-get-bash-to-perform-tab-completion-for-$
-complete -o filenames -F _pass pc
-complete -o filenames -F _pass pe
-complete -o filenames -F _pass pm
-complete -o filenames -F _pass pu
-complete -o filenames -F _pass pi
-complete -o filenames -F _pass po
+if hash pass &>/dev/null; then
+  complete -o filenames -F _pass pc
+  complete -o filenames -F _pass pe
+  complete -o filenames -F _pass pm
+  complete -o filenames -F _pass pu
+  complete -o filenames -F _pass pi
+  complete -o filenames -F _pass po
+fi
 
 ## PS1
 #\a     das ASCII bell Zeichen (07)
