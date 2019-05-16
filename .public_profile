@@ -147,6 +147,8 @@ function _pick() {
         query="$*"
       fi
     fi
+  else
+    q_dirname="$PWD"
   fi
 
   [[ "true" == "$file_only" ]] && fd_args=(-t f)
@@ -171,12 +173,14 @@ function _pick() {
   local picked
   picked=$(/usr/local/bin/fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right)
   local exit_code=$?
+
+  [[ "${q_dirname:${#q_dirname}-1:1}" != "/" ]] && q_dirname="$q_dirname/"
   case $exit_code in
     0) # found
-      echo "$q_dirname/$picked"
+      echo "$q_dirname$picked"
       ;;
     1) # not found
-      echo "$q_dirname/$query"
+      echo "$q_dirname$query"
       ;;
     *)
       return $exit_code
