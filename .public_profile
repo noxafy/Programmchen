@@ -169,7 +169,7 @@ function _pick() {
   fi
 
   local picked
-  picked=$(fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/objects/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right)
+  picked=$(/usr/local/bin/fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/objects/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right)
   local exit_code=$?
   case $exit_code in
     0) # found
