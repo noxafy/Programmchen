@@ -131,7 +131,7 @@ function _pick() {
       echo "$*"
       return;
     elif [[ -d "$*" && -r "$*" ]]; then
-      # existing dir given (to search in)
+      # existing dir given (to search in or give back)
       if $file_only; then
         q_dirname="$*"
       else
@@ -149,7 +149,7 @@ function _pick() {
     fi
   fi
 
-  $file_only && fd_args=(-t f)
+  [[ "true" == "$file_only" ]] && fd_args=(-t f)
 
   local -a depth_indicator
   if [[ -n "$q_dirname" ]]; then # if valid dirname given, cd there
