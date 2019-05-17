@@ -150,7 +150,7 @@ tryFirst() {
   fi
   stream=$("${CURL[@]}")
   res=$(echo "$stream" | grep -A 2 "result-url js-result-url\"" | grep -o "href=\"https\?://\(www.\)\?[^\"]*" | sed 's/href="//')
-  matching_res=$(echo "$res" | grep -m 1 -e "$key")
+  matching_res=$(echo "$res" | sed -n '1p')
 
   if [[ $DEBUG ]]; then
     echo "Lengths: stream (${#stream}); res (${#res}); matching_res (${#matching_res})"
