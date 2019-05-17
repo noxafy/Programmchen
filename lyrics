@@ -9,26 +9,23 @@ TITLE=
 VERBOSE=
 QUIET=
 AUTOSELECT=2 # 0 = ask always, 1 = ask if no match found, 2 = ask if no match found in all sites
-help="$(basename $0) - Find out the song lyrics for a currently playing song.
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-v] [-a] [-q] [ (spotify|rbox|rhythmbox) | \e[4mtitle\e[0m [\e[4martist\e[0m] | \e[4murl\e[0m ]"
+help="Find out the song lyrics for a given or currently playing song.
+$usage
+	\e[1m-h\e[0m		Display this message and exit.
+	\e[1m-v\e[0m, \e[1m--verbose\e[0m	Produce debugging output.
+	\e[1m-a\e[0m, \e[1m--ask\e[0m	Disable autoselection.
+	\e[1m-q\e[0m, \e[1m--quiet\e[0m	Suppress most messages.
 
-This script is capable of finding out the Artist and Title of the currently
-playing song. If, you are using Rhythmbox or Spotify. See usage message below.
+You can specify the song source in three ways:
+	1.  Give \"spotify\" or \"rhythmbox\" of fetching currently played song from there.
+	    Argument \"spotify\" is the default, if no argument is given.
+	2.  Give a \e[4mtitle\e[0m and an optional \e[4martist\e[0m to search lyrics for.
+	3.  Give an \e[4murl\e[0m to one of the known lyrics sources.
+The implemented lyrics sources are: ${sites[@]}
 
-Do it like this:
-  $(basename $0) <title> <artist>       - To look up lyrics for a song (you can omit artist if unknown)
-  $(basename $0) spotify                - To look up info for the currently playing song in Spotify
-  $(basename $0) rhythmbox|rbox         - To look up info for the currently playing song in Rhythmbox
-Also, you can give an url for extracting directly:
-  $(basename $0) <songtexte.com url>    - To display the lyrics from a given songtexte.com url
-  $(basename $0) <songlyrics.com url>   - To display the lyrics from a given songlyrics.com url
-  $(basename $0) <genius.com url>       - To display the lyrics from a given genius.com url
-  $(basename $0) <musixmatch.com url>   - To display the lyrics from a given musixmatch.com url
-  $(basename $0) <azlyrics.com url>     - To display the lyrics from a given azlyrics.com url
-  $(basename $0) <plyrics.com url>      - To display the lyrics from a given plyrics.com url
-
-Dependency to \"recode\". Parameter --verbose (-v) produces debugging output, --ask (-a) disables autoselection, --quiet (-q) suppresses most messages.
+Dependency to \"recode\".
 "
-#TODO: improve help message
 
 # prevent sed error on bad encoded characters by reading as ascii (test for failing (greek text): https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas)
 LC_CTYPE=C
@@ -36,7 +33,7 @@ LANG=C
 
 #TODO: html encode for musixmatch -> title and artist matching individually for each site
 
-#adding new lyrics sites:
+# adding new lyrics sites:
 #  add new site hostname to $sites
 #  find xml-elements directly before and after the text
 #  add ${site%.*} function name with a awk matching pattern
@@ -45,7 +42,9 @@ LANG=C
 #  add site to usage message
 
 die() {
-  echo "$*" >&2
+  mes=$1
+  shift
+  printf "$mes\n" "$*"
   exit 1
 }
 
@@ -265,8 +264,8 @@ function tryURL() {
     fi
   done
 
-  if [[ -n $urlonly && "$1" =~ '^https?://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9\\+&@./#%=~_|-]*$' ]]; then
-    die "Sorry, that site is not supported. Maybe you can add it. See in docs."
+  if [[ -n $urlonly && -n $(echo "$1" | grep -E '^https?://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9?\\+&@./#%=~_|-]*$') ]]; then
+    die "Sorry, that site is not supported: $1\nMaybe you can add it. See in docs."
   fi
 }
 
@@ -545,7 +544,7 @@ function lookupRhythmboxInfo() {
 while [[ -n $1 ]]; do
   case $1 in
   -h|--help)
-    printf "%s" "$help"
+    printf "$help"
     exit 0
     ;;
   -v|--verbose)
@@ -589,8 +588,6 @@ spotify)
     [[ $AUTOSELECT != 0 ]] && AUTOSELECT=1
   else
     lookupSpotifyInfo
-    #echo "Please give a Title and an artist or spotify or rhythmbox as arguments. See -h for more information."
-    #exit 0
   fi
   ;;
 esac
