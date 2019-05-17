@@ -36,10 +36,9 @@ LANG=C
 # adding new lyrics sites:
 #  add new site hostname to $sites
 #  find xml-elements directly before and after the text
-#  add ${site%.*} function name with a awk matching pattern
+#  add ${site%.*} function name with an awk matching pattern
 #  add filter for lyrics-sites to google function if applicable
 #  add filter for site-specific non-lyrics line-contents (awk grep only whole lines, so every outside of diamons is shown)
-#  add site to usage message
 
 die() {
   mes=$1
