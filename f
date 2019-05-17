@@ -248,7 +248,6 @@ if [[ -n "$key" ]]; then
   fi
 else
   key="$*"
-  echo "Set key to: $*"
 fi
 
 #preparing key
