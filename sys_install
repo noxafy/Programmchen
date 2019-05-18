@@ -460,6 +460,37 @@ if [[ -z "$P" ]]; then
         "Sprache f\\U00fcr Korrekturhilfen festlegen..." = "@l"; }'
   defaults write org.audacityteam.audacity NSUserKeyEquivalents '{ "Audio exportieren ..." = "@$s"; }'
 
+  echo "Preview settings"
+	defaults write com.apple.Preview "NSToolbar Configuration CommonToolbar_v5.1" '{
+        "TB Default Item Identifiers" =         (
+            view,
+            zoom,
+            share,
+            NSToolbarFlexibleSpaceItem,
+            markup,
+            rotate,
+            "edit_banner",
+            search
+        );
+        "TB Display Mode" = 2;
+        "TB Icon Size Mode" = 1;
+        "TB Is Shown" = 1;
+        "TB Item Identifiers" =         (
+            view,
+            "zoom_to_fit",
+            scale,
+            zoom,
+            "goto_page",
+            markup,
+            NSToolbarFlexibleSpaceItem,
+            inspector,
+            selection,
+            "edit_banner",
+            search
+        );
+        "TB Size Mode" = 1;
+    }'
+
   echo "Various other settings"
   # Emoji & Symbole Palette
   defaults write com.apple.CharacterPaletteIM CVActiveCategories '(
