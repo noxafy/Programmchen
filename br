@@ -10,7 +10,10 @@ $usage
 	If no argument given, it prints the actual percentage of display brightness.
 "
 
-type brightness >/dev/null 2>&1 || (echo "Please install \"brightness\" first!" && exit 1)
+if ! hash brightness &>/dev/null; then
+  echo "Please install \"brightness\" first!"
+  exit 1
+fi
 
 actual=$(brightness -l | echo "$(grep -o -e '0\.\(\d\)\+' || echo 1)*100" | bc)
 
