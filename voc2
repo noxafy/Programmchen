@@ -80,6 +80,7 @@ searchForInAll() {
   searchFor "$vocs" "$1"
   searchFor "$unknowns" "$1"
   if [[ $justPrint -eq 0 && $othersDetected -ne 0 ]]; then
+    # TODO: Choice for editing
     printf "Do you want to continue adding anyway? (y/n) [n]: "
     read -n 1 ans
     case $ans in
