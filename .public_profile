@@ -356,17 +356,14 @@ function battery() {
 }
 
 function ocr() {
-  # copied from https://unix.stackexchange.com/a/482184
-  if [[ -f "$1" ]]; then
-    TMPF=$(mktemp ocr.XXXXXXXX.tif)
-    filebase=${1%.*}
-    [[ -n $2 ]] && res_name=$2 || res_name=${filebase}.txt
-    convert "$1" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off "$TMPF" \
-      && tesseract "$TMPF" "$res_name"
-    mv "${res_name}.txt" "$res_name"
-    rm -f "$TMPF"
+  local imagefile="${@: -1}"
+  if [[ -f "$imagefile" ]]; then
+    shift -p
+    convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -
   else
-    echo "Usage: $(basename $0) imagefile [textfile]" >&2
-    echo "Creates a plain text file with the text found in imagefile" >&2
+    echo "Usage: $(basename $0) [ \e[4mtesseract\e[0m \e[4moptions\e[0m \e[4m...\e[0m ] imagefile" >&2
+    echo "Print result of optical character recognition with tesseract to stdout." >&2
+    echo "See tesseract --help-extra for more help." >&2
   fi
+
 }
