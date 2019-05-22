@@ -120,7 +120,7 @@ maven
 maven-completion
 mplayer
 #mujs
-mysql
+#mysql
 nativefier
 pass #already installed
 plan9port
@@ -128,6 +128,7 @@ plan9port
 rename
 shpotify
 #sic		# Minimal multiplexing IRC client
+tesseract-lang
 tldr		# Simplified and community-driven man pages
 trash		# CLI tool that moves files or folder to the trash
 #wine
