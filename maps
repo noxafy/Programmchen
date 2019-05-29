@@ -21,18 +21,32 @@ elif [[ -z $destination ]]; then
        let location = result.geometry.location;
        console.log("Lat: " + location.lat);
        console.log("Lng: " + location.lng);
+     } else if (ans.error_message) {
+       console.log(ans.error_message);
      } else {
        console.log(ans)
      }
      ' "$ans"
-#  echo "Please specify the destination of your route as second argument."
-#  exit 1
 else
-  #curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY"
   ans=$(curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY" || die "Fetching route failed.");
   if [[ $ans == '<!DOCTYPE html>'* ]]; then
     echo "$ans"
   else
-    node maps.js "$ans"
+    node -e 'const ans = JSON.parse(process.argv[1]);
+
+    switch (ans.status) {
+      case "OK":
+        console.log("Entfernung: " + ans.routes[0].legs[0].distance.text + " (" + ans.routes[0].legs[0].duration.text + ")");
+        break;
+      case "INVALID_REQUEST":
+        console.log(ans.error_message);
+        break;
+      case "ZERO_RESULTS":
+        console.log("No route found for your request!");
+        break;
+      default:
+        console.log("Unknown status code: " + ans.status);
+        console.log(ans)
+    }' "$ans"
   fi
 fi
