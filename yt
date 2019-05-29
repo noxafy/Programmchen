@@ -161,7 +161,7 @@ function askForChoose() {
     esac
     exit 0
   else
-    printf "Which one do you want to open? (1-%d) [1]: " ${#DESCRIPTIONS[@]}
+    printf "Which one do you want to open? (1-%d/q) [1]: " ${#DESCRIPTIONS[@]}
     read ans
     [[ -z "$ans" ]] && ans=1
     if [[ $ans =~ ^[0-9]+$ ]]; then
