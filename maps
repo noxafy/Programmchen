@@ -13,14 +13,26 @@ if [[ -z $origin ]]; then
   echo "Please specify the origin of your route as first argument."
   exit 1
 elif [[ -z $destination ]]; then
-  echo "Please specify the destination of your route as second argument."
-  exit 1
-fi
-
-#curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY"
-ans=$(curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY" || die "Fetching route failed.");
-if [[ $ans == '<!DOCTYPE html>'* ]]; then
-  echo "$ans"
+   ans=$(curl -GsS "https://maps.google.com/maps/api/geocode/json" --data-urlencode "address=$origin" --data-urlencode "key=$API_KEY");
+   node -e 'const ans = JSON.parse(process.argv[1]);
+     if (ans.results[0]) {
+       let result = ans.results[0]
+       console.log(result.formatted_address)
+       let location = result.geometry.location;
+       console.log("Lat: " + location.lat);
+       console.log("Lng: " + location.lng);
+     } else {
+       console.log(ans)
+     }
+     ' "$ans"
+#  echo "Please specify the destination of your route as second argument."
+#  exit 1
 else
-  node maps.js "$ans"
+  #curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY"
+  ans=$(curl -sS "https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&units=metric&language=de&key=$API_KEY" || die "Fetching route failed.");
+  if [[ $ans == '<!DOCTYPE html>'* ]]; then
+    echo "$ans"
+  else
+    node maps.js "$ans"
+  fi
 fi
