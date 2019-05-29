@@ -49,6 +49,17 @@ function c() {
   git commit -m "$*"
 }
 
+function git_update() {
+  local mes=$1
+  shift
+  git stash save \
+   && git pull --rebase \
+   && git stash pop \
+   && git add "$@" \
+   && git commit -m "$mes" \
+   && git push
+}
+
 #############################
 ### bashy
 #############################
@@ -78,6 +89,40 @@ alias wi="wiki -l de"
 alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 
+function ytl() {
+  local -a yts=($(alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'))
+  [[ 0 -eq "${#yts}" ]] && {
+    echo "No matching alias found."
+    return;
+  }
+
+  for ((cnt=1; $cnt -le "${#yts}";cnt++)); do
+    for idx in "${!yts[@]}"; do
+      echo "$((idx+1)): ${yts[$idx]}"
+    done
+
+    if [[ $idx -eq 1 ]]; then
+      printf "Do you want to search that? (y/n) [y]: "
+      read -r ans
+      [[ y == $ans ]] && eval "$yts"
+    else
+      printf "Which one? (1-$idx/q) [$cnt]: ";
+      read -r ans
+      [[ -z $ans ]] && ans=$cnt
+      if [[ $ans =~ ^[0-9]+$ ]]; then
+        setopt ksh_arrays
+        if [[ 1 -le $ans && $idx -ge $ans ]]; then
+          ((ans--))
+          eval "${yts[$ans]}"
+        fi
+        unsetopt ksh_arrays
+      else
+        return
+      fi
+    fi
+  done
+}
+
 function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
   local enc_location=$(echo "$2" | recode latin1..utf8)
@@ -87,6 +132,34 @@ function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   else
     echo "Keine amtlichen Wetterwarnungen für ${2}."
   fi
+}
+
+function fetchPrecipitation() {
+  local lat=$1 lng=$2
+  [[ -z $lat || -z $lng || ! "$lat" =~ ^[0-9]+.[0-9]+$ || ! "$lng" =~ ^[0-9]+.[0-9]+$ ]] && {
+    echo "Usage: $0 \e[4mlat\e[0m \e[4mlng\e[0m"
+    return 1;
+  }
+  local ans=$(curl -Ss -A 'Firefox/66.0' -H "Accept-Language: en-US" -H "X-Requested-With: XMLHttpRequest" https://www.wetter.com/wetter_aktuell/nowcast_update/ --data-urlencode "lat=$lat" --data-urlencode "lng=$lng")
+  local res=$(node -e 'const ans=JSON.parse(process.argv[1]);
+    console.log(ans.text)
+    function hexToRgb(hex) {
+      if (hex.charAt(0) === "#") hex = hex.substring(1);
+      if (hex.length === 3) hex = hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2)
+      let bigint = parseInt(hex, 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+      }
+    }
+    for (let e of ans.events) {
+      if (e.precipitation === 0) continue;
+      let c = hexToRgb(e.color)
+      e.precipitation="\\e[38;2;" + c.r + ";" + c.g + ";" + c.b + "m" + e.precipitation.toFixed(1) + "mm"
+      console.log("%s\t%s (%s)\\e[0m", e.time, e.precipitation, e.short)
+    }' "$ans" | sed 's/<span class="\[ text--blue-dark \]">/\\e[34m/g;s/<\/span>/\\e[0m/g')
+  echo "$res"
 }
 
 #############################
