@@ -62,6 +62,8 @@ if [[ -n "$key" ]]; then
 elif [[ -z $openDirect ]]; then
   echo "Please specify some key words to search for. See -h for more help."
   exit 1
+else
+  site="https://www.dict.cc/"
 fi
 
 #ensure internet connection
@@ -197,7 +199,7 @@ else
     echo "var2: $var2"
   fi
   if [[ -z "$vars" ]]; then
-    if [[ -n $(echo "$srcf" | grep -o "Leider keine &Uuml;bersetzungen gefunden!") ]]; then
+    if [[ -n $(echo "$srcf" | grep -o "No entries found!") ]]; then
       echo "No translation found."
       exit 0
     else
