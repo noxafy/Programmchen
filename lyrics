@@ -301,7 +301,7 @@ function findLyrics() {
   [[ -z "$TITLE" ]] && die "No title given (artist: \"$ARTIST\")!"
   echo "Artist: $ARTIST
 Title: $TITLE" >&2
-  [[ -z "$QUIET" ]] && echo
+  [[ -z "$QUIET" ]] && echo >&2
 
   tileInUrl=$(preformat $TITLE | sed 's/ - [Ll]ive.*//g')
   titleWithHyphen=$(withHyphen $tileInUrl)
