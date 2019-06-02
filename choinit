@@ -92,7 +92,12 @@ cd "$destination" || die "cd failed"
 # if title is there
 if [[ -n "$title" ]]; then
   [[ -n $debug ]] && echo "Given title detected: $title"
-  echo "Grabbing lyrics for \"$title\"..."
+  [[ -z "$artist" ]] && read -p "Who's the artist? : " artist
+  if [[ -z "$artist" && -t 0 ]]; then
+    echo "Reaching out for lyrics of \"$title\"..."
+  else
+    echo "Reaching out for lyrics of \"$title\" by \"$artist\"..."
+  fi
   # use title/artist with lyrics
   lyrics=$(lyrics -q "$title" "$artist")
   extractFromLyrics
@@ -119,7 +124,7 @@ if [[ -z "$lyrics" ]]; then
   # no lyrics, no title, not piped
   elif [[ -z "$title" ]]; then
     #use lyrics spotify
-    echo "Grabbing lyrics from Spotify..."
+    echo "Grabbing lyrics ..."
     lyrics=$(lyrics -q)
     if [[ -n "$lyrics" ]]; then
       extractFromLyrics
@@ -127,8 +132,8 @@ if [[ -z "$lyrics" ]]; then
     if [[ -z "$title" ]]; then
       echo "Counldn't grab lyrics automatically. Please give some infomation."
       # ask artist/title and use them with lyrics --ask
-      read -p "Who's the artist? " artist
-      read -p "What's the title? " title
+      read -p "Who's the artist? : " artist
+      read -p "What's the title? : " title
       while [[ -z $title ]]; do printf "Title cannot be empty. "; read -p "What's the title? " title; done
       read -p "Do you want to search for lyrics? (y/n) [y]: " ans
       case $ans in
