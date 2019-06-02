@@ -18,7 +18,9 @@ If none of \e[1m-s\e[0m, \e[1m-m\e[0m or \e[1m-l\e[0m given, it tries automatica
 "
 
 die() {
-  echo "$*"
+  local mes=$1
+  shift
+  printf -- "$mes\n" "$@"
   exit 1
 }
 
@@ -185,24 +187,18 @@ while [[ -n "$1" ]]; do
   shift
 done
 
+[[ -z "$1" ]] && die "Please give an existing chordpro file to compile.\n$usage"
+
 while [[ -n "$1" ]]; do
   if [[ -d "$1" ]]; then
-    echo "$1: not a file - Please give an existing and readable chordpro file to compile."
-    shift
-    continue
+    die "Not a file: %s\nPlease give an existing and readable chordpro file to compile." "$1"
   elif [[ ! -f "$1" ]]; then
-    echo "$1: file not found - Please give an existing and readable chordpro file to compile."
-    shift
-    continue
+    die "File not found: %s\nPlease give an existing and readable chordpro file to compile." "$1"
   elif [[ ! -r "$1" ]]; then
-    echo "$1: file not readable - Please give an existing and readable chordpro file to compile."
-    shift
-    continue
+    die "File not readable: %s\nPlease give an existing and readable chordpro file to compile." "$1"
   fi
   if [[ "$1" != *.cho ]]; then
-    printf "%s: Wrong file type! Please give a chordpro/chordii file to compile.\n" "$1"
-    shift
-    continue
+    die "Wrong file type: %s\nPlease give a chordpro/chordii file to compile." "$1"
   fi
   if [[ $files -gt 0 || -n $2 ]]; then
     multipleFiles=true
