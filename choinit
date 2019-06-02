@@ -99,7 +99,7 @@ if [[ -n "$title" ]]; then
     echo "Reaching out for lyrics of \"$title\" by \"$artist\"..."
   fi
   # use title/artist with lyrics
-  lyrics=$(lyrics -q "$title" "$artist")
+  lyrics=$(lyrics "$title" "$artist")
   extractFromLyrics
 fi
 
@@ -130,7 +130,7 @@ if [[ -z "$lyrics" ]]; then
       extractFromLyrics
     fi
     if [[ -z "$title" ]]; then
-      echo "Counldn't grab lyrics automatically. Please give some infomation."
+      echo "Couldn't grab lyrics automatically. Please give some infomation."
       # ask artist/title and use them with lyrics --ask
       read -p "Who's the artist? : " artist
       read -p "What's the title? : " title
@@ -140,15 +140,20 @@ if [[ -z "$lyrics" ]]; then
       n)
         ;;
       *)
-        echo "Grabbing lyrics for \"$title\"..."
+        if [[ -z "$artist" && -t 0 ]]; then
+          echo "Reaching out for lyrics of \"$title\"..."
+        else
+          echo "Reaching out for lyrics of \"$title\" by \"$artist\"..."
+        fi
         # use title/artist with lyrics
-        lyrics=$(lyrics -q "$title" "$artist" | sed -n '3,$p')
+        lyrics=$(lyrics "$title" "$artist" | sed -n '3,$p')
         ;;
       esac
     fi
   fi
 fi
 
+[[ -z "$artist" ]] && read -p "Please give the artist now: " artist
 filename="$(toFilename $title)-$(toFilename $artist).cho"
 [[ -n $debug ]] && echo "Filename: $filename"
 
