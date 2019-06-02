@@ -92,19 +92,10 @@ cd "$destination" || die "cd failed"
 # if title is there
 if [[ -n "$title" ]]; then
   [[ -n $debug ]] && echo "Given title detected: $title"
-  if [[ -t 0 ]]; then
-    read -p "Do you want to search for lyrics? (y/n) [y]: " ans
-    case $ans in
-    n)
-      ;;
-    *)
-      echo "Grabbing lyrics for \"$title\"..."
-      # use title/artist with lyrics
-      lyrics=$(lyrics -q "$title" "$artist")
-      extractFromLyrics
-      ;;
-    esac
-  fi
+  echo "Grabbing lyrics for \"$title\"..."
+  # use title/artist with lyrics
+  lyrics=$(lyrics -q "$title" "$artist")
+  extractFromLyrics
 fi
 
 # if no lyrics and piped, use as lyrics
