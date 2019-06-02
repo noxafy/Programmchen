@@ -381,7 +381,7 @@ artistNoSpaces: $artistNoSpaces
       #add ALL to OVERALL and try to find in next site
       OVERALL+=("${ALL[@]}")
     else
-      [[ -z "$QUIET" ]] && echo "${#ALL[@]} results found."
+      [[ -z "$QUIET" ]] && echo "${#ALL[@]} results found." >&2
       while [[ -n "${ALL[@]}" ]]; do
         j=1
         for resURL in ${ALL[@]}; do
