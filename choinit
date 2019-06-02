@@ -190,7 +190,7 @@ fi
 
 content="{title: $title}
 {composer: $artist}
-{copyright: © $year $name }
+{copyright: © $year ${name}}
 {meta: arr Arr.: $name}
 #{tempo: 120bpm}
 # transpose 0
