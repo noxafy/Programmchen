@@ -7,6 +7,8 @@ die() {
   exit 1
 }
 
+[[ -z "$API_KEY" ]] && die "Please set your Google API key first: \`git config --global custom.googleAPI '<Your API key>'`""
+
 origin=$1
 destination=$2
 if [[ -z $origin ]]; then
