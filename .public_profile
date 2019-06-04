@@ -125,10 +125,27 @@ function ytl() {
 
 function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
+  local dwd_url="${dwd_site}warntab_$1_node.html"
+  local res=$(curl -sSi "$dwd_url")
+  local http_status=$(echo "$res" | sed -n '1p')
+  case "$http_status" in
+    *200*)
+      ;;
+    *404*)
+      echo "Probably bad state argument: $1"
+      echo "Link not found (404): $dwd_url"
+      return
+      ;;
+    *)
+      echo "Error: $http_status"
+      return
+      ;;
+  esac
+
   local enc_location=$(echo "$2" | recode latin1..utf8)
-  local wetterwarnung=$(curl -sS "${dwd_site}warntab_$1_node.html" | sed -n "/<h2 id=\"${enc_location}\"/,/<\/table>/p")
+  local wetterwarnung=$(echo "$res" | sed -n "/<h2 id=\"${enc_location}\"/,/<\/table>/p")
   if [[ -n $wetterwarnung ]]; then
-    echo $wetterwarnung | grep -oE "<h2 id=\"${enc_location}\"(.*?)</table>" | sed 's/<thead>.*<\/thead>//' | pup 'text{}' | xargs -L 1 echo
+    echo $wetterwarnung | tr '\n' ' ' | grep -oE "<h2 id=\"${enc_location}\".*</table>" | sed 's/<thead>.*<\/thead>//' | pup 'text{}' | xargs -L 1 echo
   else
     echo "Keine amtlichen Wetterwarnungen für ${2}."
   fi
@@ -430,7 +447,11 @@ function battery() {
 
 function ocr() {
   local imagefile="${@: -1}"
-  if [[ -f "$imagefile" ]]; then
+  if ! hash convert &>/dev/null; then
+    echo "Please make sure that convert (see imagemagick) is in your path!"
+  elif ! hash tesseract &>/dev/null; then
+    echo "Please make sure that tesseract is in your path!"
+  elif [[ -f "$imagefile" ]]; then
     shift -p
     convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -
   else
@@ -438,5 +459,4 @@ function ocr() {
     echo "Print result of optical character recognition with tesseract to stdout." >&2
     echo "See tesseract --help-extra for more help." >&2
   fi
-
 }
