@@ -1,5 +1,7 @@
 #!/bin/bash
 
+depth=
+sort=
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-S[h]] [\e[4mdepth\e[0m]"
 help="List directories with \"\e[1mtree\e[0m\".
 $usage
@@ -79,14 +81,24 @@ sizeFormat() {
   fi
 }
 
+function printEntry() {
+  size=$1
+  if [[ "$size" =~ ^[0-9]+$ ]]; then
+    shift
+    sizeFormat $size
+    printf "\t%s\n" "$*"
+  else
+    echo "Erroneous entry: $*"
+  fi
+}
+
 if [[ -n $sort ]]; then
   dirtree=$(tree -fapFN --du | grep /$)
   res="$(grep_it $depth)"
-  res=$(echo "$res" | sed -e 's/[│   ]*.── \[d[-rwx]* //; s/\]//' | sort -r)
+  res=$(echo "$res" | sed -e 's/[│   ]*.── \[[a-z][-rwx]* //; s/\]//' | sort -r)
   if [[ $sort -gt 1 ]]; then
-    IFS=$'\n'
-    for entry in $res; do
-      printf "%s\t%s\n" $(sizeFormat $(echo "$entry" | awk '{print $1}')) $(echo "$entry" | awk '{$1=""; print $0}')
+    echo "$res" | while read -r entry; do
+      printEntry $entry
     done
   else
     echo "$res"
