@@ -46,23 +46,22 @@ newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 iterm_settings="$P/Prefs/com.googlecode.iterm2.plist"
 
 dockitems='nvALT
-Wunderlist
 Simplenote
+Wunderlist
 Thunderbird
+Newsflow
 Firefox
 Spotify
 "Microsoft OneNote"
-Newsflow
+Anki
+calibre
 Audacity
 "IntelliJ IDEA"
 FreeFileSync
-"System\\U00adeinstellungen"
-iTerm
+FileZilla
 FileMerge
-Trello
-Anki
-BibDesk
-FileZilla'
+"System\\U00adeinstellungen"
+iTerm'
 
 brews=(
   cloc
