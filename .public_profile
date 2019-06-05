@@ -449,11 +449,21 @@ function ocr() {
   local imagefile="${@: -1}"
   if ! hash convert &>/dev/null; then
     echo "Please make sure that convert (see imagemagick) is in your path!"
+    return 1
   elif ! hash tesseract &>/dev/null; then
     echo "Please make sure that tesseract is in your path!"
+    return 1
   elif [[ -f "$imagefile" ]]; then
     shift -p
-    convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -
+    local res=$(convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -)
+    if ! echo "$res" | grep "\w" &>/dev/null; then
+      echo "Oh dear, no results! :(" >&2
+      echo "Maybe you should try: $0 --psm 11 $imagefile" >&2
+      echo "See tesseract --help-extra for more help." >&2
+      return 2
+    else
+      echo "$res"
+    fi
   else
     echo "Usage: $(basename $0) [ \e[4mtesseract\e[0m \e[4moptions\e[0m \e[4m...\e[0m ] imagefile" >&2
     echo "Print result of optical character recognition with tesseract to stdout." >&2
