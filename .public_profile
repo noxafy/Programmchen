@@ -96,10 +96,16 @@ function ytl() {
     return;
   }
 
-  for ((cnt=1; $cnt -le "${#yts}";cnt++)); do
-    for idx in "${!yts[@]}"; do
-      echo "$((idx+1)): ${yts[$idx]}"
-    done
+  for ((cnt=1; $cnt <= ${#yts}; cnt++)); do
+    if [[ $0 == "bash" ]]; then
+      for idx in "${!yts[@]}"; do #bash only
+        echo "$((idx+1)): ${yts[$idx]}"
+      done
+    else # assume zsh, how to test that?
+      for idx in {1..$#yts}; do
+        echo "$((idx)): ${yts[$idx]}"
+      done
+    fi
 
     if [[ $idx -eq 1 ]]; then
       printf "Do you want to search that? (y/n) [y]: "
