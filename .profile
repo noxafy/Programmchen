@@ -132,7 +132,9 @@ function replace_git_name_and_mail() {
       export GIT_AUTHOR_EMAIL="$CORRECT_EMAIL"
     fi
   ' --tag-name-filter cat -- --branches --tags
-  git gc --prune=now --aggressive
+  echo "All occurrences replaced!"
+  echo "See if you have to remove backup branches: git update-ref -d refs/original/refs/heads/master"
+  echo "After that do: git rebase --root && git reflog expire --expire=now --all && git gc --prune=now --aggressive"
 }
 #https://stackoverflow.com/questions/750172/how-to-change-the-author-and-committer-name-and-e-mail-of-multiple-commits-in-gi
 
