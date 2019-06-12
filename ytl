@@ -1,0 +1,38 @@
+#!/bin/bash
+
+shopt -s expand_aliases
+source ~/.profile  # index aliases
+declare -a yts=($(alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'))
+
+[[ 0 -eq "${#yts}" ]] && {
+  echo "No matching alias found"
+  return;
+}
+
+for ((cnt=1; $cnt <= ${#yts}; cnt++)); do
+  for idx in "${!yts[@]}"; do #bash only
+    echo "$((idx+1)): ${yts[$idx]}"
+  done
+  ((idx++))
+
+  if [[ $idx -eq 1 ]]; then
+    printf "Do you want to search that? (y/n) [y]: "
+    read -r ans
+    [[ y == $ans ]] && eval "$yts"
+  else
+    printf "Which one? (1-$idx/q) [$cnt]: ";
+    read -r ans
+    [[ -z $ans ]] && ans=$cnt
+    if [[ $ans =~ ^[0-9]+$ ]]; then
+      if [[ 1 -le $ans && $idx -ge $ans ]]; then
+        ((ans--))
+        eval "${yts[$ans]}"
+      else
+        echo "Out of range: $ans"
+        return;
+      fi
+    else
+      return
+    fi
+  fi
+done

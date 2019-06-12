@@ -89,49 +89,6 @@ alias wi="wiki -l de"
 alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 
-function ytl() {
-  local -a yts=($(alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'))
-  [[ 0 -eq "${#yts}" ]] && {
-    echo "No matching alias found."
-    return;
-  }
-
-  for ((cnt=1; $cnt <= ${#yts}; cnt++)); do
-    if [[ $0 == "bash" ]]; then
-      for idx in "${!yts[@]}"; do #bash only
-        echo "$((idx+1)): ${yts[$idx]}"
-      done
-    else # assume zsh, how to test that?
-      for idx in {1..$#yts}; do
-        echo "$((idx)): ${yts[$idx]}"
-      done
-    fi
-
-    if [[ $idx -eq 1 ]]; then
-      printf "Do you want to search that? (y/n) [y]: "
-      read -r ans
-      [[ y == $ans ]] && eval "$yts"
-    else
-      printf "Which one? (1-$idx/q) [$cnt]: ";
-      read -r ans
-      [[ -z $ans ]] && ans=$cnt
-      if [[ $ans =~ ^[0-9]+$ ]]; then
-        setopt ksh_arrays
-        if [[ 1 -le $ans && $idx -ge $ans ]]; then
-          ((ans--))
-          eval "${yts[$ans]}"
-        else
-          echo "Out of range: $ans"
-          return;
-        fi
-        unsetopt ksh_arrays
-      else
-        return
-      fi
-    fi
-  done
-}
-
 function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
   local dwd_url="${dwd_site}warntab_$1_node.html"
