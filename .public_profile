@@ -185,6 +185,20 @@ function fetchPrecipitation() {
   echo "$res"
 }
 
+function fetchWind() { # Usage: $0 <path on wetter.com>
+  local res=$(curl -sS "https://www.wetter.com$1")
+  #echo "$res" | pup '.icon-wind_arrow attr{title}' | sed -n '9,$p' | nl -v $(date +%H) | awk '{print $1 % 24 ":00\t" $2}'
+  local parsed=$(echo "$res" | pup '.hwg-col-wind-text json{}')
+  node -e 'const ans=JSON.parse(process.argv[1]); for (wind of ans) { console.log(wind.text)}' "$parsed" | nl -v $(date +%H) | awk '{
+    res=$1 % 24;
+    if (res < 10)
+      $1="0"res":00  ";
+    else
+      $1=res":00  ";
+    print $0
+  }' | sed -E 's/([[:alpha:]]) /\1    /;s/([[:alpha:]][[:alpha:]])  /\1 /;s/ Böen/  Böen/g'
+}
+
 #############################
 ### applications
 #############################
