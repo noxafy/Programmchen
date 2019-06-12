@@ -120,6 +120,9 @@ function ytl() {
         if [[ 1 -le $ans && $idx -ge $ans ]]; then
           ((ans--))
           eval "${yts[$ans]}"
+        else
+          echo "Out of range: $ans"
+          return;
         fi
         unsetopt ksh_arrays
       else
