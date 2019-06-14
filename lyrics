@@ -513,7 +513,7 @@ function lookupSpotifyInfo() {
           | cut -d ' ' -f 2- | tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     #precautionally open it
-    if [[ $(ps -x | grep 'Spotify.app' | wc -l) -eq 1 ]]; then
+    if ! pgrep Spotify >/dev/null; then
       echo "Opening Spotify at first ..." >&2
       open -j /Applications/Spotify.app/ && sleep 3
     fi
