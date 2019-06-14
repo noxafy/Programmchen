@@ -9,10 +9,10 @@ usage="\e[1mkp\e[0m -h | [-2|-9] \e[4mname\e[0m"
 help="Script for killing a process by name interactively.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
-	\e[1m-2\e[0m	Kill process with interrupt (2) flag.
-	\e[1m-9\e[0m	Kill process with kill (9) flag.
+	\e[1m-2\e[0m	Kill process with interrupt (2; SIGINT) flag.
+	\e[1m-9\e[0m	Kill process with kill (9; SIGKILL) flag.
 	\e[4mname\e[0m	Name of a process to grep for.
-Default flag is the software termination signal (15).
+Default flag is the software termination signal (15; SIGTERM).
 "
 
 case $1 in
