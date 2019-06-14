@@ -64,34 +64,27 @@ $usage
 ### Functions
 ################################
 
-die() {
+function die() {
   mes=$1
   shift
   printf "$mes\n" "$*"
   exit 1
 }
 
-testInternet() {
+function testInternet() {
   if [[ -z $internetConnection ]]; then
     if waitnet -s; then
-      internetConnection=true
+      internetConnection=0
     else
       echo "Could not establish internet connection. Try manually:"
-      internetConnection=false
+      internetConnection=1
     fi
   fi
 
-  case $internetConnection in
-  false)
-    return 1
-    ;;
-  true)
-    return 0
-    ;;
-  esac
+  return $internetConnection
 }
 
-startFireFox() {
+function startFireFox() {
   if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
     printf "Firefox not started yet!\nStarting Firefox"
     open $openCommands /Applications/Firefox.app
@@ -107,7 +100,7 @@ startFireFox() {
   fi
 }
 
-fire() {
+function fire() {
   if [[ -z $1 ]]; then
     die "Error: No link given!"
   fi
@@ -133,7 +126,7 @@ fire() {
   fi
 }
 
-tryFirst() {
+function tryFirst() {
   local data_encoded=$(node -e "console.log(encodeURIComponent(process.argv[1]))" "$key")
   local link="$e$data_encoded"
   local -a CURL=(curl -sS -A 'Mozilla/5.0' -GLm 10 -H "Accept-Language: de,en-US;q=0.7,en;q=0.3" "$link")
