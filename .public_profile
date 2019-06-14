@@ -89,6 +89,18 @@ alias wi="wiki -l de"
 alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 
+function uriencode() {
+  if hash node &>/dev/null; then
+    node -e 'console.log(encodeURIComponent(process.argv[1]))' "$*"
+  else
+    curl -Gso /dev/null -w %{url_effective} --data-urlencode "$*" "" | cut -c 3-
+  fi
+}
+
+function uridecode() {
+  node -e 'console.log(decodeURIComponent(process.argv[1]))' "$*"
+}
+
 function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
   local dwd_url="${dwd_site}warntab_$1_node.html"
