@@ -127,7 +127,7 @@ function fire() {
 }
 
 function tryFirst() {
-  local data_encoded=$(node -e "console.log(encodeURIComponent(process.argv[1]))" "$key")
+  local data_encoded=$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "$key" "" | cut -c 3-)
   local link="$e$data_encoded"
   local -a CURL=(curl -sS -A 'Mozilla/5.0' -GLm 10 -H "Accept-Language: de,en-US;q=0.7,en;q=0.3" "$link")
   if [[ $DEBUG ]]; then
@@ -304,7 +304,7 @@ if [[ -n $key ]]; then
 
   key=$(echo "$key" | grep -m 1 '.\+')
   [[ $DEBUG ]] && echo "Key before uri escaping: $key"
-  key=$(perl -MURI::Escape -e 'print uri_escape($ARGV[0]);' " $key" | sed 's/^%20//' | sed 's/%20/+/g')
+  key=$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "$key" "" | cut -c 3- | sed 's/%20/+/g')
   [[ $DEBUG ]] && echo "Key after uri escaping: $key"
 
   fire "$(eval echo \$$site)$key"
