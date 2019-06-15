@@ -2,9 +2,6 @@
 
 killflag="-15"
 
-processname=
-processes=
-
 usage="\e[1mkp\e[0m -h | [-2|-9] \e[4mname\e[0m"
 help="Script for killing a process by name interactively.
 $usage
@@ -39,36 +36,26 @@ die() {
 processname="$*"
 [[ -z "$processname" ]] && die "Please give a process name to search for. See -h for more information."
 
-processes=$(ps aux | grep -i -- "$processname" | grep -v -e "$0" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps aux."
-[[ -z "$processes" ]] && die "No process found matching \"$processname\"."
+processes=$(pgrep -a -i -- "$processname") || die "No process found matching \"$processname\"."
+firstprocess=$(echo "$processes" | head -1)
+pidToKill=$firstprocess
 
 if [[ $(echo "$processes" | wc -l) -eq 1 ]]; then
-  i=1
-  printf "USER               PID  %%CPU %%MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND\n"
-  echo "$processes"
-  read -p "Only one process found. Do you really want to kill that process? (y/n) [n]: " ans
-  [[ "$ans" == y ]] && ans=1 || ans=
+  ps u -p $processes
+  read -p "Only one process found. Do you really want to kill that process? (y/n) [y]: " ans
+  [[ -n "$ans" && "$ans" != y ]] && pidToKill=
 else
-  i=0
-  printf "\tUSER               PID  %%CPU %%MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND\n"
-  IFS=$'\n'
-  for p in $processes; do
-    ((i++))
-    printf "[$i]:\t%s\n" "$p"
-  done
-
-  read -p "Which process do you want to kill? (1-$i/q) [q]: " ans
+  ps u -p $(echo "$processes" | tr '\n' ',' | sed 's/,$//')
+  read -p "Which process do you want to kill? (PID) [$firstprocess]: " ans
+  [[ $ans =~ ^[0-9]+$ ]] && pidToKill=$ans || die "That was not a number."
 fi
 
-if [[ $ans =~ ^[0-9]+$ ]]; then
-  if [[ $ans -le $i ]]; then
-    pidToKill=$(echo "$processes" | sed -n "${ans}p" | awk '{print $2}')
-    printf "Killing %d ... " "$pidToKill"
-    kill $killflag $pidToKill || die "Killing $pidToKill failed."
-    echo "Done."
-  fi
-elif [[ -z $ans || $ans == q ]]; then
+if [[ -z $pidToKill ]]; then
   echo "Nothing killed."
+elif [[ -n $(echo "$processes" | grep -e "$pidToKill") ]]; then
+  printf "Killing %d ... " "$pidToKill"
+  kill $killflag $pidToKill || die "Killing $pidToKill failed."
+  echo "Done."
 else
-  die "That was not a number."
+  echo "Invalid pid: $pidToKill"
 fi
