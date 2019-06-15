@@ -16,6 +16,8 @@ $usage
 	\e[1m-c\e[0m \e[4mchannel\e[0m	Give a \e[4mchannel\e[0m to grep videos from.
 	\e[4mseries\e[0m		Filters for special series containing \e[4mseries\e[0m (case insensitive).
 	\e[4mquery\e[0m		Search a specified query on YouTube.
+
+Dependency to \"node\".
 "
 
 die() {

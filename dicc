@@ -18,6 +18,8 @@ $usage
 	\e[1m-x\e[0m	Show exact matching results only. This is the default.
 	\e[1m-v\e[0m	Verbose a little bit.
 	\e[4mkey\e[0m	The keyword to search translations for.
+
+Dependency to \"node\".
 "
 
 #resolve wholepage (-a) and multipage search (-r), open link (-o), verbose (-v) and help (-h)
