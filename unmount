@@ -6,37 +6,48 @@ disks=$(diskutil list external)
 [[ -z "$disks" ]] && echo "No external device found." && exit 0
 
 if [[ $(echo "$disks" | wc -l) -le 4 ]]; then
-  volumeline=$(echo "$disks" | sed -n '$p' | awk '{ $1=""; print $0 }')
-  echo "Only one external device detected: $volumeline"
+  echo "Only one external device detected:"
+  echo "$disks"
   read -p "Do you want to unmount that? (y/n) [y]: " ans
   case $ans in
   n)
     ;;
   *)
-    ans=$(echo "$volumeline" | awk '{print $NF}')
-    [[ -z "$ans" ]] && echo "Failed to extract volume id from line." && exit 1
+    volume=$(echo "$disks" | grep 'disk\d\+$' | awk '{print $NF}')
+    [[ -z "$volume" ]] && echo "Failed to extract volume id from line." && exit 1
     ;;
   esac
 else
   echo "$disks"
-  read -p "Which volume do you want to unmount (col: IDENTIFIER)? " ans
+  read -p "Which volume do you want to unmount (col: IDENTIFIER)? " volume
 fi
 
-case $ans in
-"")
+function unmount0() {
+  if [[ "$1" =~ disk.*s.* ]]; then
+    diskutil unmount "$1"
+  else
+    diskutil unmountDisk "$1"
+  fi
+}
+
+if [[ -z $volume ]]; then
   echo "Nothing unmounted."
-  ;;
-*)
-  if [[ "$ans" =~ disk* && -n $(echo "$disks" | grep -- "$ans") ]]; then
-    if [[ "$ans" =~ disk.*s.* ]]; then
-      res=$(diskutil unmount "$ans")
-    else
-      res=$(diskutil unmountDisk "$ans")
+else
+  if [[ "$volume" =~ disk* && -n $(echo "$disks" | grep -- "$volume") ]]; then
+    res=$(unmount0 "$volume" 2>&1)
+    echo "$res"
+    pid=$(echo "$res" | grep -oE "PID \d+" | cut -d ' ' -f 2)
+    if [[ -n $pid ]]; then
+      read -p "Do you want to kill this process? (y/n) [y]: " ans2
+      if [[ -z $ans2 || $ans2 == y ]]; then
+        kill $pid
+        unmount0 "$volume"
+      else
+        echo "Nothing killed. Try again later."
+      fi
     fi
-    echo "$res (${#res})"
-    # TODO: Filter if failed by blocking pid, ask for killing, kill, i.a., and try again
   else
     echo "Invalid answer."
     exit 1
   fi
-esac
+fi
