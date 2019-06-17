@@ -409,7 +409,10 @@ function backup() {
     sleep 1
   done
   echo "Detected $drive!"
-  sleep 1 # short time for indexing
+  while [[ ! -w "$target" ]]; do
+    echo "Not writable!"
+    sleep 1 # wait for mounting
+  done
   echo "Starting backup script now."
   echo
   "$P"/backup -t "$target" && unmount
