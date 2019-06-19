@@ -24,29 +24,28 @@ die() {
   exit 1
 }
 
-if type mplayer &>/dev/null && type lame &>/dev/null; then
-  for f in "$@" ; do
-    [[  -d "$f" ]] && {
-      echo "Skipped \"$f\" as it is a directory"
-      continue;
-    }
+hash mplayer &>/dev/null || die "mplayer not found"
+hash lame &>/dev/null || die "lame not found"
 
-    mplayer -noar -novideo -ao pcm:fast "$f" || die "mplayer error on converting: $f"
-    filename=$(basename "$f")
-    #echo "filename: $filename"
-    filename=${filename%.*}
-    #echo "filename: $filename"
-    [[ -z "$filename" ]] && {
-      echo "Conversion failed due to bad file name of [${f}] -> [${filename}]"
-      continue;
-    }
-    [[ ! -f audiodump.wav ]] && {
-      echo "mplayer could not extract wav from source"
-      continue;
-    }
-    lame --preset extreme audiodump.wav "${filename}.mp3" || die "lame error on converting: $f"
-    rm -f audiodump.wav
-  done
-else
-  echo "mplayer or lame not found"
-fi
+for f in "$@" ; do
+  [[  -d "$f" ]] && {
+    echo "Skipped \"$f\" as it is a directory"
+    continue;
+  }
+
+  mplayer -noar -novideo -ao pcm:fast "$f" || die "mplayer error on converting: $f"
+  filename=$(basename "$f")
+  #echo "filename: $filename"
+  filename=${filename%.*}
+  #echo "filename: $filename"
+  [[ -z "$filename" ]] && {
+    echo "Conversion failed due to bad file name of [${f}] -> [${filename}]"
+    continue;
+  }
+  [[ ! -f audiodump.wav ]] && {
+    echo "mplayer could not extract wav from source"
+    continue;
+  }
+  lame --preset extreme audiodump.wav "${filename}.mp3" || die "lame error on converting: $f"
+  rm -f audiodump.wav
+done
