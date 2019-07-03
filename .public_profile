@@ -410,7 +410,6 @@ function backup() {
   done
   echo "Detected $drive!"
   while [[ ! -w "$target" ]]; do
-    echo "Not writable!"
     sleep 1 # wait for mounting
   done
   echo "Starting backup script now."
