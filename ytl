@@ -4,10 +4,14 @@ shopt -s expand_aliases
 source ~/.profile  # index aliases
 declare -a yts=($(alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'))
 
-[[ 0 -eq "${#yts}" ]] && {
-  echo "No matching alias found"
-  return;
+function die() {
+  mes=$1
+  shift
+  printf "$mes\n" "$*"
+  exit 1
 }
+
+[[ 0 -eq "${#yts}" ]] && die "No matching alias found"
 
 for ((cnt=1; $cnt <= ${#yts}; cnt++)); do
   for idx in "${!yts[@]}"; do #bash only
@@ -28,11 +32,10 @@ for ((cnt=1; $cnt <= ${#yts}; cnt++)); do
         ((ans--))
         eval "${yts[$ans]}"
       else
-        echo "Out of range: $ans"
-        return;
+        die "Out of range: $ans"
       fi
     else
-      return
+      exit
     fi
   fi
 done
