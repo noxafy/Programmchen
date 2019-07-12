@@ -1,6 +1,13 @@
 #!/bin/bash
 
-[ ! -t 0 ] && echo "Please start this script interactively." && exit 1
+function die() {
+  mes=$1
+  shift
+  printf "$mes\n" "$*"
+  exit 1
+}
+
+[ ! -t 0 ] && die "Please start this script interactively."
 disks=$(diskutil list external)
 
 [[ -z "$disks" ]] && echo "No external device found." && exit 0
@@ -14,7 +21,7 @@ if [[ $(echo "$disks" | wc -l) -le 4 ]]; then
     ;;
   *)
     volume=$(echo "$disks" | grep 'disk\d\+$' | awk '{print $NF}')
-    [[ -z "$volume" ]] && echo "Failed to extract volume id from line." && exit 1
+    [[ -z "$volume" ]] && die "Failed to extract volume id from line."
     ;;
   esac
 else
@@ -38,9 +45,10 @@ else
     echo "$res"
     pid=$(echo "$res" | grep -oE "PID \d+" | cut -d ' ' -f 2)
     if [[ -n $pid ]]; then
+      ps -p $pid
       read -p "Do you want to kill this process? (y/n) [y]: " ans2
       if [[ -z $ans2 || $ans2 == y ]]; then
-        kill $pid
+        kill $pid || die "Failed to kill process PID $pid"
         unmount0 "$volume"
       else
         echo "Nothing killed. Try again later."
