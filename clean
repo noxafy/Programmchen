@@ -18,9 +18,16 @@ $usage
 	\e[4mpath\e[0m	Clean up the given path (default: current).
 "
 
+function die() {
+  mes=$1
+  shift
+  printf "$mes\n" "$*"
+  exit 1
+}
+
 while [[ -n "$*" ]]; do
   case "$1" in
-    -h|"-?")
+    -h|--help)
       printf "$help"
       exit 0
       ;;
@@ -33,20 +40,14 @@ while [[ -n "$*" ]]; do
     -l)
       uselocate=1
       ;;
-    -t|this)
+    -t)
       rec=
       ;;
     -*)
-      printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-      exit 1
+      die "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
       ;;
     *)
-      if [[ -e $1 && -d $1 ]]; then
-        path="$1"
-      else
-        echo "$1 is not a directory. See -h for more help."
-        exit 1
-      fi
+      [[ -e $1 && -d $1 ]] && path="$1" || die "$1 is not a directory. See -h for more help."
       ;;
   esac
   shift
