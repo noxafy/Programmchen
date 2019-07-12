@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Version 2
-evil=('.DS_Store') #things to be deleted
 removed=0 #counter for removed things
 verbose=1 #0=be silent, 1=only say when sth has been removed, 2=verbose everything
 rec="active" #by default clean will clean recursively
@@ -9,7 +7,7 @@ cleanedUp=0 #storage freed in bytes
 path="." #path as root for cleaning
 uselocate=0
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s|-v] [-l | [-t] [\e[4mpath\e[0m]]"
-help="Cleans up the current (or given) directory recursively from ${evil[@]}.
+help="Cleans up the current (or given) directory recursively from .DS_Store.
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-s\e[0m	Silence. Show errors only.
