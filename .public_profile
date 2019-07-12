@@ -104,8 +104,10 @@ function uridecode() {
 function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
   local dwd_url="${dwd_site}warntab_$1_node.html"
-  local res=$(curl -sSi "$dwd_url")
-  local http_status=$(echo "$res" | sed -n '1p')
+
+  local res http_status
+  res=$(curl -sSi "$dwd_url") || return $?
+  http_status=$(echo "$res" | sed -n '1p')
   case "$http_status" in
     *200*)
       ;;
@@ -135,8 +137,10 @@ function fetchPrecipitation() {
     echo "Usage: $0 \e[4mlat\e[0m \e[4mlng\e[0m"
     return 1;
   }
-  local ans=$(curl -Ss -A 'Firefox/66.0' -H "Accept-Language: en-US" -H "X-Requested-With: XMLHttpRequest" https://www.wetter.com/wetter_aktuell/nowcast_update/ --data-urlencode "lat=$lat" --data-urlencode "lng=$lng")
-  local res=$(node -e 'const ans=JSON.parse(process.argv[1]);
+
+  local ans res
+  ans=$(curl -Ss -A 'Firefox/66.0' -H "Accept-Language: en-US" -H "X-Requested-With: XMLHttpRequest" https://www.wetter.com/wetter_aktuell/nowcast_update/ --data-urlencode "lat=$lat" --data-urlencode "lng=$lng") || return $?
+  res=$(node -e 'const ans=JSON.parse(process.argv[1]);
     console.log(ans.text)
     function hexToRgb(hex) {
       if (hex.charAt(0) === "#") hex = hex.substring(1);
@@ -158,9 +162,10 @@ function fetchPrecipitation() {
 }
 
 function fetchWind() { # Usage: $0 <path on wetter.com>
-  local res=$(curl -sS "https://www.wetter.com$1")
+  local res parsed
+  res=$(curl -sS "https://www.wetter.com$1") || return $?
   #echo "$res" | pup '.icon-wind_arrow attr{title}' | sed -n '9,$p' | nl -v $(date +%H) | awk '{print $1 % 24 ":00\t" $2}'
-  local parsed=$(echo "$res" | pup '.hwg-col-wind-text json{}')
+  parsed=$(echo "$res" | pup '.hwg-col-wind-text json{}')
   node -e 'const ans=JSON.parse(process.argv[1]); for (wind of ans) { console.log(wind.text)}' "$parsed" | nl -v $(date +%H) | awk '{
     res=$1 % 24;
     if (res < 10)
