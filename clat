@@ -8,34 +8,52 @@ $usage
 		Ensure existence of linked files (.aux, .bib, other .tex, ...)
 "
 
+function die() {
+  mes=$1
+  shift
+  [[ -n "$mes" ]] && printf "$mes\n" "$@"
+  exit 1
+}
+
+function open_it() {
+  if hash open >/dev/null; then
+    open "${1:0:$((${#1}-4))}.pdf"
+  fi
+}
+
 if [[ $1 = -* ]]; then
   if [[ $1 = -h ]]; then
     printf "$help"
     exit 0
   else
-    printf "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-    exit 1
+    die "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
   fi
-elif [[ -n $1 ]]; then
+fi
+
+goal="${1:-main.tex}"
+[[ -n "$2" ]] && multiple=true || multiple=
+
+if [[ -r "$PWD/pdflatexmkrc" ]]; then
+ latexmk -pdf -r pdflatexmkrc "$goal" || die
+ open_it "$goal"
+elif [[ -n "$goal" ]]; then
  if [[ ! -r "$1" ]]; then
   echo "Please give an existing and readable file. See -h for more help."
   exit 1
  fi
- for file in $@; do
-   echo "$file:"
-   latex -interaction=batchmode "$file"
+ for file in "$@"; do
+   [[ -n $multiple ]] && echo "$file:"
+   latex -interaction=batchmode "$file" || die
    if cat "$file" | grep '^\\printbibliography' >/dev/null; then
-     biber "${file:0:$((${#file}-4))}"
+     biber "${file:0:$((${#file}-4))}" || die
    else
-     bibtex "${file:0:$((${#file}-3))}aux"
+     bibtex "${file:0:$((${#file}-3))}aux" || die
    fi
-   latex -interaction=batchmode "$file"
-   latex -interaction=batchmode "$file"
-   pdflatex -interaction=batchmode "$file"
+   latex -interaction=batchmode "$file" || die
+   latex -interaction=batchmode "$file" || die
+   pdflatex -interaction=batchmode "$file"  || die
+   open_it "$file"
  done
-elif [[ -r "$PWD/pdflatexmkrc" ]]; then
-  latexmk -pdf -r pdflatexmkrc
 else
- echo "Please give a file. See -h for more help."
- exit 1
+ die "Please give a valid tex file. See -h for more help."
 fi
