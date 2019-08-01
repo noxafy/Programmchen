@@ -75,6 +75,22 @@ alias latexwc="pbpaste | sed 's/^%.*//' | wc -w"
 alias ql="qlmanage -p"
 alias shutup="osascript -e 'Set volume output volume 0'"
 
+function cltex() {
+  local goal=$1
+  [[ -z "$goal" && -e "main.tex" ]] && goal="main.tex"
+  if [[ ! -e "$goal" || "$goal" != *.tex ]]; then
+    echo "Please give a valid tex file." && return 1
+  fi
+
+  local -i removed=0
+  local -a tokill=(aux bbl bcf blg dvi fdb_latexmk fls idx ilg ind log out out.ps run.xml toc)
+  for postfix in ${tokill[@]}; do
+    local file="${goal:0:$((${#goal}-4))}.$postfix"
+    [[ -e "$file" ]] && rm -v "$file" && ((removed++))
+  done
+  echo "$removed files removed"
+}
+
 #############################
 ### internet
 #############################
