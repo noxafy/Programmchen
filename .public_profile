@@ -52,12 +52,20 @@ function c() {
 function git_update() {
   local mes=$1
   shift
-  git stash save \
-   && git pull --rebase \
-   && git stash pop \
+
+  local res=$(git stash save)
+  local ec=$?
+  echo "$res"
+  [[ $ec -ne 0 ]] && return $ec
+
+  git pull --rebase
+
+  if [[ "No local changes to save" != "$res" ]]; then
+   git stash pop \
    && git add "$@" \
    && git commit -m "$mes" \
    && git push
+  fi
 }
 
 #############################
