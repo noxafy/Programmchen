@@ -1,6 +1,6 @@
 #!/bin/bash
 
-regex='(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9?\\+&@./#%=~_|-]*'
+regex='(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9ÄÖÜäöüß?\\+&@./#%=~_|-]*'
 openLink=true
 DEBUG=
 check_link=true
