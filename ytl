@@ -34,8 +34,10 @@ for ((cnt=1; $cnt <= ${#yts}; cnt++)); do
       else
         die "Out of range: $ans"
       fi
+    elif [[ $ans == "q" ]]; then
+      exit 0
     else
-      exit
+      exit 1
     fi
   fi
 done
