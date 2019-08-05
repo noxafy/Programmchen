@@ -495,7 +495,7 @@ function ocr() {
       echo "$res"
     fi
   else
-    echo "Usage: $(basename $0) [ \e[4mtesseract\e[0m \e[4moptions\e[0m \e[4m...\e[0m ] imagefile" >&2
+    echo "Usage: $(basename $0) [\e[4mtesseract options\e[0m \e[4m...\e[0m] imagefile" >&2
     echo "Print result of optical character recognition with tesseract to stdout." >&2
     echo "See tesseract --help-extra for more help." >&2
   fi
