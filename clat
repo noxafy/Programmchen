@@ -1,11 +1,11 @@
 #!/bin/bash
 
-usage="Usage: \e[1m$(basename $0)\e[0m -h | \e[4mfiles\e[0m \e[4m...\e[0m"
-help="Compiles one or multiple tex file multiple times, so bib and pdf is right.
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mfile\e[0m]"
+default_name="main.tex"
+help="Compiles a tex file multiple times, so that bib and pdf are right. Uses pdflatexmkrc if available.
 $usage
-	\e[1m-h\e[0m	Displays this message and exits.
-	\e[4mfiles\e[0m	.tex-files which sould get compiled.
-		Ensure existence of linked files (.aux, .bib, other .tex, ...)
+	\e[1m-h\e[0m	Display this message and exit.
+	\e[4mfile\e[0m	.tex-file to compile (default: $default_name).
 "
 
 function die() {
@@ -30,30 +30,27 @@ if [[ $1 = -* ]]; then
   fi
 fi
 
-goal="${1:-main.tex}"
+goal="${1:-$default_name}"
 [[ -n "$2" ]] && multiple=true || multiple=
 
 if [[ -r "$PWD/pdflatexmkrc" ]]; then
- latexmk -pdf -r pdflatexmkrc "$goal" || die
- open_it "$goal"
+  latexmk -pdf -r pdflatexmkrc "$goal" || die
+  open_it "$goal"
 elif [[ -n "$goal" ]]; then
- if [[ ! -r "$1" ]]; then
-  echo "Please give an existing and readable file. See -h for more help."
-  exit 1
- fi
- for file in "$@"; do
-   [[ -n $multiple ]] && echo "$file:"
-   latex -interaction=batchmode "$file" || die
-   if cat "$file" | grep '^\\printbibliography' >/dev/null; then
-     biber "${file:0:$((${#file}-4))}" || die
-   else
-     bibtex "${file:0:$((${#file}-3))}aux" || die
-   fi
-   latex -interaction=batchmode "$file" || die
-   latex -interaction=batchmode "$file" || die
-   pdflatex -interaction=batchmode "$file"  || die
-   open_it "$file"
- done
+  if [[ ! -r "$goal" ]]; then
+    echo "Please give an existing and readable file. See -h for more help."
+    exit 1
+  fi
+  latex -interaction=batchmode "$goal"
+  if cat "$goal" | grep '^\\printbibliography' >/dev/null; then
+    biber "${goal:0:$((${#goal}-4))}"
+  else
+    bibtex "${goal:0:$((${#goal}-3))}aux"
+  fi
+  latex -interaction=batchmode "$goal"
+  latex -interaction=batchmode "$goal"
+  pdflatex -interaction=batchmode "$goal"
+  open_it "$goal"
 else
  die "Please give a valid tex file. See -h for more help."
 fi
