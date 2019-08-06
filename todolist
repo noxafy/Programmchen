@@ -1,0 +1,20 @@
+# Help messages
+## Add dependencies to each help message.
+## help messages in imperative mood
+## For links: always -l, never -o
+## Use spaces instead of tabs in help messages
+## standard UNIX option and argument conventions?
+
+# Cleanup
+## remove unnecessary quotes, see e.g. rg '="\$\('
+## die function for all:
+function die() {
+  mes=$1
+  shift
+  [[ -n "$mes" ]] && printf "$mes\n" "$@"
+  exit 1
+}
+
+# Ideas
+## general ~/.config/* file for data (maps, sys_install)
+## cmd line fetcher of bibtex entries (springer, ieee, acm, elesiver, scholar)
