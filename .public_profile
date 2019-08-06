@@ -463,6 +463,11 @@ function pdfpages() {
   printf "%d pages found in %d files.\n" "$pages" "${#files}"
 }
 
+function pdfgrepc() {
+  [[ -z "$1" ]] && return 1
+  pdfgrep -c "$@" * | grep -v ':0' | tr ':' ' ' | awk '{print $2"\t"$1}' | sort -n
+}
+
 function zombiesAndStuff() {
   ps aux | awk ' $8 !~ /S/ {print $0}' | grep -v "ps aux"
 }
