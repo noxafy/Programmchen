@@ -1,0 +1,53 @@
+#!/bin/bash
+
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mmessage\e[0m \e[4mfiles\e[0m \e[4m...\e[0m]"
+help="Updates git repository reciprocal by pull --rebase, stashing away current changes, and commiting if message and files specified.
+$usage
+        \e[1m-h\e[0m	Display this message and exit.
+	\e[4mmessage\e[0m	Commit message. Obligatory for committing.
+        \e[4mfile\e[0m	Files to commit if they have changes.
+"
+
+function die() {
+  mes=$1
+  shift
+  [[ -n "$mes" ]] && printf "$mes\n" "$@"
+  exit 1
+}
+
+case $1 in
+  -h)
+    printf "$help"
+    exit 0
+    ;;
+  *)
+    mes=$1
+    [[ -n "$1" ]] && shift
+    ;;
+esac
+
+if [[ ! -d .git ]]; then
+  echo "This is not a git repository."
+  exit 1
+fi
+
+res=$(git stash save)
+ec=$?
+echo "$res"
+[[ $ec -eq 0 ]] || exit $ec
+
+git pull --rebase
+
+if [[ "No local changes to save" != "$res" ]]; then
+  git stash pop || exit $?
+
+  if [[ -n "$1" ]]; then # if file to commit given
+    doubled=$(printf "%s\n" "$@" && git diff --name-only) # stash removes from stage
+    doubled=$(printf "%s" "$doubled" | sort | uniq -d)
+    if [[ -n "$doubled" ]]; then
+      git add "$@" \
+      && git commit -m "$mes" \
+      && git push
+    fi
+  fi
+fi

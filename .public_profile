@@ -50,32 +50,6 @@ function c() {
   git commit -m "$*"
 }
 
-function git_update() {
-  local mes=$1
-  shift
-
-  local res=$(git stash save)
-  local ec=$?
-  echo "$res"
-  [[ $ec -eq 0 ]] || return $ec
-
-  git pull --rebase
-
-  if [[ "No local changes to save" != "$res" ]]; then
-    git stash pop || return $?
-
-    if [[ -n "$1" ]]; then # if file to commit given
-      local doubled=$(printf "%s\n" "$@" && git diff --name-only) # stash removes from stage
-      doubled=$(printf "%s" "$doubled" | sort | uniq -d)
-      if [[ -n "$doubled" ]]; then
-        git add "$@" \
-        && git commit -m "$mes" \
-        && git push
-      fi
-    fi
-  fi
-}
-
 #############################
 ### bashy
 #############################
