@@ -25,6 +25,7 @@ alias lsusers="dscl . list /Users | grep -v ^_"
 #############################
 #alias gd="PAGER=/usr/local/share/git-core/contrib/diff-highlight/diff-highlight git diff" # use with colors in ~/.gitconfig as described in https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/
 alias gd="PAGER= git diff --word-diff=color"
+alias gds="gd --staged"
 alias gst="git status"
 alias ga="git add"
 alias a="git add"
