@@ -2,6 +2,7 @@
 
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mfile\e[0m]"
 default_name="main.tex"
+goal=
 help="Compiles a tex file multiple times, so that bib and pdf are right. Uses pdflatexmkrc if available.
 $usage
 	\e[1m-h\e[0m	Display this message and exit.
@@ -15,10 +16,27 @@ function die() {
   exit 1
 }
 
+function cltex() {
+  local goal=$1
+  [[ -z "$goal" && -e "main.tex" ]] && goal="main.tex"
+  if [[ ! -e "$goal" || "$goal" != *.tex ]]; then
+    echo "Please give a valid tex file." && return 1
+  fi
+
+  local -i removed=0
+  local -a tokill=(aux bbl bcf blg dvi fdb_latexmk fls idx ilg ind lof log lot out out.ps run.xml toc)
+  for postfix in ${tokill[@]}; do
+    local file="${goal:0:$((${#goal}-4))}.$postfix"
+    [[ -e "$file" ]] && rm -v "$file" && ((removed++))
+  done
+  echo "$removed files removed"
+}
+
 function open_it() {
   if hash open >/dev/null; then
     open "${1:0:$((${#1}-4))}.pdf"
   fi
+  cltex "$1"
 }
 
 if [[ $1 = -* ]]; then
