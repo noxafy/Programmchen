@@ -53,7 +53,7 @@ function c() {
 }
 
 #############################
-### bashy
+### hacky
 #############################
 alias ec='echo $?'
 alias q=exit
@@ -81,6 +81,30 @@ function cltex() {
     [[ -e "$file" ]] && rm -v "$file" && ((removed++))
   done
   echo "$removed files removed"
+}
+
+function meta() {
+  if hash exiftool >/dev/null; then
+    if [[ -z "$1" ]]; then
+      echo "Please give a file to show its metadata."
+    else
+      exiftool "$1"
+    fi
+  else
+    echo "Please install exiftool before."
+  fi
+}
+
+function rmmeta() {
+  if hash exiftool >/dev/null; then
+    if [[ -z "$1" ]]; then
+      echo "Please give a file to remove metadata from."
+    else
+      exiftool -all= -overwrite_original "$1"
+    fi
+  else
+    echo "Please install exiftool before."
+  fi
 }
 
 #############################
