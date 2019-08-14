@@ -433,7 +433,7 @@ function backup() {
 function pdfpages() {
   local -a files=("$@")
   if [[ -z "$*" ]]; then
-    IFS=$'\n' files=($(fd -t f -d 1 '\.pdf')); unset IFS
+    IFS=$'\n' files=($(fd --no-ignore-vcs -t f -d 1 '\.pdf')); unset IFS
     [[ -z "$files" ]] && echo "No .pdf file found." && return 0
   fi
   local -i pages=$(echo $(mdls -name kMDItemNumberOfPages "${files[@]}" | sed "s/kMDItemNumberOfPages =/+/g") | cut -c "3-" | bc)
