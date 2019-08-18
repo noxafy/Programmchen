@@ -33,7 +33,7 @@ function cltex() {
 }
 
 function open_it() {
-  if hash open >/dev/null; then
+  if hash open &>/dev/null; then
     open "${1:0:$((${#1}-4))}.pdf"
   fi
   cltex "$1"

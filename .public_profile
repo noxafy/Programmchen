@@ -84,7 +84,7 @@ function cltex() {
 }
 
 function meta() {
-  if hash exiftool >/dev/null; then
+  if hash exiftool &>/dev/null; then
     if [[ -z "$1" ]]; then
       echo "Please give a file to show its metadata."
     else
@@ -96,7 +96,7 @@ function meta() {
 }
 
 function rmmeta() {
-  if hash exiftool >/dev/null; then
+  if hash exiftool &>/dev/null; then
     if [[ -z "$1" ]]; then
       echo "Please give a file to remove metadata from."
     else
