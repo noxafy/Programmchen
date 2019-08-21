@@ -32,6 +32,10 @@ alias a="git add"
 alias glt='git ls-tree -r --name-only "$(git rev-parse --short HEAD)"'
 alias glf='git log --graph --abbrev-commit --decorate --format=format:'\''%C(yellow)%h%C(reset) - %C(cyan)%aD (%ar)%C(reset)%C(white)%d%C(reset)%n'\'\''          %s%C(dim) - %aN <%aE>%C(reset)'\'' --all'
 alias gup=git_update
+alias grh^="git reset HEAD^"
+alias grh^^="git reset HEAD^^"
+alias grh^2="git reset HEAD^2"
+
 function c() {
   git status > /dev/null || return
   if [[ $(git config --show-origin user.email) != file:.git/config* ]]; then
