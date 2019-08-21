@@ -40,14 +40,15 @@ git pull --rebase
 
 if [[ "No local changes to save" != "$res" ]]; then
   git stash pop || exit $?
+fi
 
-  if [[ -n "$1" ]]; then # if file to commit given
-    doubled=$(printf "%s\n" "$@" && git diff --name-only) # stash removes from stage
-    doubled=$(printf "%s" "$doubled" | sort | uniq -d)
-    if [[ -n "$doubled" ]]; then
-      git add "$@" \
-      && git commit -m "$mes" \
-      && git push
-    fi
+if [[ -n "$1" ]]; then # if file to commit given
+  untracked=$(git ls-files -z --others --exclude-standard | xargs -0 -n 1 printf "%s\n")
+  doubled=$(printf "%s\n" "$@" && git diff --name-only && printf "%s" "$untracked") # stash removes from stage
+  toCommit=$(printf "%s" "$doubled" | sort | uniq -d)
+  if [[ -n "$toCommit" ]]; then
+    git add "$@" \
+    && git commit -m "$mes" \
+    && git push
   fi
 fi
