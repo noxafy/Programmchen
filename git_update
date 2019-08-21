@@ -22,7 +22,16 @@ case $1 in
     ;;
   *)
     mes=$1
-    [[ -n "$1" ]] && shift
+    if [[ -n "$1" ]]; then
+      if [[ -e "$1" ]]; then
+        echo "Commit message: $1"
+        if [[ -t 0 && -t 1 ]]; then
+          printf "Are you sure you want to continue? Press enter: "
+          read trash
+        fi
+      fi
+      shift
+    fi
     ;;
 esac
 
