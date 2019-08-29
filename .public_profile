@@ -24,8 +24,9 @@ alias lsusers="dscl . list /Users | grep -v ^_"
 ### git
 #############################
 alias gd="PAGER=/usr/local/share/git-core/contrib/diff-highlight/diff-highlight git diff" # use with colors in ~/.gitconfig as described in https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/
-#alias gd="PAGER= git diff --word-diff=color"
 alias gds="gd --staged"
+alias gdw="PAGER= git diff --word-diff=color"
+alias gdws="gdw --staged"
 alias gst="git status"
 alias ga="git add"
 alias a="git add"
@@ -43,13 +44,13 @@ function c() {
     local def_name=$(git config user.name)
     printf "user.name [%s]: " "$def_name"
     local name; read name
-    if [[ -z $name ]]; then name=$def_name; fi
+    [[ -z $name ]] && name=$def_name
     git config user.name "$name"
 
     local def_email=$(git config user.email)
     printf "user.email [%s]: " "$def_email"
     local email; read email
-    if [[ -z $email ]]; then email=$def_email; fi
+    [[ -z $email ]] && email=$def_email
     git config user.email "$email"
   fi
 
