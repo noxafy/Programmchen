@@ -245,6 +245,11 @@ fi
 
 #preparing key
 if [[ -n $key ]]; then
+  if [[ $key =~ ^www\..* ]]; then
+    [[ $DEBUG ]] && echo "Add \"https://\" to $key"
+    key="https://$key"
+  fi
+
   if [[ -z $check_link ]]; then
     [[ $DEBUG ]] && echo "Ignore checks."
     # don't check, just open all
@@ -259,10 +264,6 @@ if [[ -n $key ]]; then
     #guess a bit around
     if [[ $key =~ ^[a-zA-Z0-9-]*\.?[a-zA-Z0-9-]*\.[a-zA-Z0-9/-]*$ ]]; then
       tryFirst "$key"
-    fi
-    if [[ $key =~ ^www\..* ]]; then
-      [[ $DEBUG ]] && echo "Add \"https://\" to $key"
-      key="https://$key"
     fi
     regexed=$(echo "$key" | grep -oE "$regex")
     if [[ -n "$regexed" ]]; then
