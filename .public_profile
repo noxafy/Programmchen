@@ -218,6 +218,7 @@ function fetchWind() { # Usage: $0 <path on wetter.com>
 #############################
 alias bs="brew search"
 alias bi="brew info"
+alias bh="brew home"
 alias play="spotify play"
 alias pause="spotify pause"
 alias next="spotify next"
