@@ -366,7 +366,7 @@ function o() {
 }
 
 function cdf() {
-  local picked__dir=$(fd -t d | fzf --query="$1") || return $?
+  local picked__dir=$(fd -t d | grep -v '\.git/' | fzf --query="$1") || return $?
   cd "$picked__dir"
 }
 
