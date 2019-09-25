@@ -134,7 +134,7 @@ case $1 in
     ;;
   -c)
     pushd "$HOME" &> /dev/null
-    overall_size=$(calc_size IdeaProjects Documents Pictures Music Dropbox Desktop \
+    overall_size=$(calc_size IdeaProjects Documents Pictures Music Cloud Desktop \
                              Library/Thunderbird/Profiles Library/Dictionaries Library/Preferences/IntelliJIdea*)
     echo "You will need about $overall_size."
     popd &> /dev/null
@@ -207,7 +207,7 @@ ctt .m2/settings.xml .ssh .password-store .gnupg
 
 # read -p "Do you want to continue the backup with the time consuming folders? [y]: " trash
 
-ctt Dropbox IdeaProjects Downloads Documents Pictures Music Desktop
+ctt Cloud IdeaProjects Downloads Documents Pictures Music Desktop
 
 cd "Library" || die "cd to $HOME/Library failed"
 

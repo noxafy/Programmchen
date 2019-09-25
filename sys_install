@@ -36,8 +36,8 @@ if [[ ! -e $thisdir ]]; then
 fi
 
 # dirs
-nv_directory="$D/Apps/NV"
-templates="$D/Org/Vorlagen"
+nv_directory="$C/Apps/NV"
+templates="$C/Org/Vorlagen"
 # resources
 trading_icon="$IT/212/trading212.icns" # icon for Trading212.app
 trading_script="$IT/212/212listener.js" # listener for Trading212.app
@@ -70,6 +70,7 @@ brews=(
   fzf
   howdoi
   imagemagick   # installs convert
+  lorem
   lsd
   nano
   node
@@ -98,9 +99,9 @@ brightness
 #cheat		# Better version contained in bash snippets
 #chordii
 #chromedriver
-#coreutils
+coreutils
 diff-pdf        # needs xquartz
-#exiftool
+exiftool
 #expect		# Program that can automate interactive applications
 #fasttext	# Library for fast text representation and classification
 #ffmpeg #Required by audacity or mplayer?
@@ -115,13 +116,12 @@ googler
 hexedit
 #launch4j   # Cross-platform Java executable wrapper
 lf
-lorem
 mas #already installed
 maven
 maven-completion
 mplayer
 #mujs
-#mysql
+mysql
 nativefier
 pass #already installed
 plan9port
@@ -153,7 +153,8 @@ brewcasks=(
   the-unarchiver
 )
 
-brewcasks+=(android-file-transfer
+brewcasks+=
+#android-file-transfer
 #android-sdk
 #android-studio
 anki
@@ -161,7 +162,7 @@ anki
 bibdesk
 #blender
 calibre
-dropbox #already installed
+celestia
 #docker
 #freemind
 geogebra
@@ -171,7 +172,9 @@ java
 #jwzlyrics
 mactex
 #mp3tag
+musescore
 mpv
+#nextcloud #already installed
 #notational-velocity
 #onedrive
 #openoffice
@@ -206,6 +209,7 @@ masinstalls=(
 
 ### paid
 1247301872 # Logoist 3
+824171161 # Affinity Designer
 634148309 # Logic Pro X
 424389933 # Final Cut Pro
 634159523 # MainStage 3
@@ -635,19 +639,20 @@ fi
 # - install "RZUWsec"
 # provide optional network change (and connection test afterwards)
 
-# install dropbox
-if [[ ! -e /Applications/Dropbox.app/ ]]; then
-  #brew install dropbox
-  section "Dropbox installation"
-  brew cask install dropbox || die "brew cask install dropbox failed!"
-  #log in dropbox
-  letRead "Please log in to Dropbox"
-  open -g /Applications/Dropbox.app/
-  pc dropbox
+# install nextcloud
+if [[ ! -e /Applications/nextcloud.app/ ]]; then
+  #brew install nextcloud
+  section "Nextcloud app installation"
+  brew cask install nextcloud || die "brew cask install nextcloud failed!"
+  #log in nextcloud
+  letRead "Please log in to nextcloud"
+  open /Applications/nextcloud.app/
+  pu nextcloud
+  pc nextcloud
   pressEnterTo
   echo
 else
-  echo "Skipped Dropbox installation"
+  echo "Skipped nextcloud installation"
 fi
 
 # TODO
@@ -775,7 +780,7 @@ pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed!"
 if [[ ! -d IdeaProjects ]]; then
   c IdeaProjects Downloads/ Documents/ Pictures/ Music/
 else
-  echo "Skipped copying of IdeaProjects to $HOME/"
+  echo "Skipped copying of main folders to $HOME/"
 fi
 
 cd "Library" || die "cd to $HOME/Library/ failed!"
@@ -836,9 +841,9 @@ popd &> /dev/null || die "cd failed"
 echo
 
 section "nativefier application installations"
-# ensure required dropbox content synced
+# ensure required cloud content synced
 while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
-  printf "Please wait until required dropbox data is syncing "
+  printf "Please wait until required cloud data is syncing "
   sleep 1
   printf "."
   sleep 1
@@ -848,7 +853,7 @@ while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
   sleep 1
   printf "\r\e[K"
 done
-echo "All required dropbox data available"
+echo "All required cloud data available"
 
 #create WhatsApp and Trading212 app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
@@ -945,14 +950,6 @@ if [[ ! -e "$HOME/Library/Containers/com.microsoft.onenote.mac" ]]; then
   pressEnterTo
 else
   echo "Skipped OneNote login"
-fi
-
-if ! grep gmail.com $HOME/Library/Calendars/Calendar\ Cache > /dev/null; then
-  letRead "  - Google Calendar"
-  open /System/Library/PreferencePanes/InternetAccounts.prefPane || die "WTF. Apple has changed the preferences pane."
-  pressEnterTo
-else
-  echo "Skipped Google Calendar login"
 fi
 
 if [[ ! -e "$HOME/Library/Containers/com.atlassian.trello" ]]; then
