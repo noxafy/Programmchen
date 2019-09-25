@@ -56,6 +56,4 @@ esac
 
 value=$(echo "scale=4;$value/100" | bc)
 
-echo "brightness is currently not working. See: https://github.com/nriley/brightness/issues/21"
-exit 1
 brightness $value
