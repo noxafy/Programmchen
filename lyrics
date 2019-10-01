@@ -24,7 +24,7 @@ You can specify the song source in three ways:
 	3.  Give an \e[4murl\e[0m to one of the known lyrics sources.
 The implemented lyrics sources are: ${sites[@]}
 
-Dependency to \"recode\" and \"node\".
+Dependency to \"recode\", \"pup\" and \"node\".
 "
 
 # prevent sed error on bad encoded characters by reading as ascii (test for failing (greek text): https://www.musixmatch.com/lyrics/Vangelis-Kakouriotis/Na-M-Agapas)
@@ -63,9 +63,8 @@ function google {
     printf "\"%s\" " "${CURL[@]}" -GLm 10 ${GOOG_URL} --data-urlencode "q=$query" >&2
     echo >&2
   fi
-  stream2=$(echo "$stream" | grep -A 2 "result-url")
-  #echo "$stream2" >&2
-  res=$(echo "$stream2" | grep -o "href=\"https\?://\(www.\)\?${site}[^\"]*" | sed 's/href="//')
+  res=$(echo "$stream" | pup ".result-url attr{href}")
+  #echo "$res" >&2
   if [[ -n $(echo "$res" | grep "songtexte\.com") ]]; then
     res=$(echo "$res" | grep "/songtext/")
   elif [[ -n $(echo "$res" | grep "azlyrics\.com") ]]; then
