@@ -1,0 +1,109 @@
+#!/bin/bash
+
+fetchPage() {
+  res=$(curl -GsS https://www.datefix.de/de/kalender/5258 --data-urlencode "dfxp=$1" --data-urlencode 'form[region]=545' --data-urlencode 'form[ort]=Bielefeld' --data-urlencode 'cb=termine')
+  events=$(echo "$res" | pup '[itemtype="http://schema.org/Event"] json{}')
+
+  node -e "const ans = JSON.parse(process.argv[1]);
+
+  for (let event of ans) {
+    showEvent(event)
+  }
+
+  function stringifyDescription(description) {
+    let result = '';
+    if (description.href) {
+      result += description.href;
+    } else if (description.text) {
+      if (description.tag && description.tag == 'strong') {
+        result += '\x1b[1m' + description.text + '\x1b[0m';
+      } else {
+        result += description.text;
+      }
+    } else if (!description.children) {
+      // console.log(description)
+    }
+
+    if (description.children) {
+      for (let ch of description.children) {
+        if (ch.tag == 'br') continue;
+        if (result) result += '\n' 
+        result += stringifyDescription(ch);
+      }
+    }
+    return result;
+  }
+
+  function showEvent(event) {
+    let title = event.children[0].children[0].children[0].text;
+    if (title == 'Werbung') return;
+
+    let info = event.children[1].children[0].children[0].children;
+    if (!info) {
+      info = event.children[1].children[1].children[0].children;
+    }
+    let date = info[0].text;
+    let time = info[1].text || '| tba';
+
+    let info_place;
+    if (info[4].itemprop == 'location' && info[4].itemtype == 'http://schema.org/Place') {
+      info_place = info[4];
+    } else if (info[3].itemprop == 'location' && info[3].itemtype == 'http://schema.org/Place') {
+      info_place = info[3];
+    } else {
+      console.log('No place information found')
+    }
+
+    let lokal = info_place.children[0];
+    if (lokal.children) {
+      lokal = lokal.children[0].text;
+    } else {
+      lokal = lokal.text;
+    }
+
+    let ort = '';
+    let ort_ch = info_place.children[2].children;
+    if (ort_ch[1] && ort_ch[1].class == 'dfx-strasse') {
+      ort = ort_ch[1].children[0].text + ', ';
+    }
+    ort += ort_ch[0].children[0].text;
+    if (ort_ch[0].children[1]) {
+      ort += ' ' + ort_ch[0].children[1].text;
+    }
+
+    let descriptions;
+    if (info[5].itemprop == 'description') {
+      descriptions = info[5];
+    } else if (info[4].itemprop == 'description') {
+      descriptions = info[4];
+    } else {
+      console.log('No description found')
+    }
+    if (descriptions.children) {
+      console.log(title + ': ' + stringifyDescription(descriptions.children[0]));
+      descriptions.children.shift();
+
+      for (let description of descriptions.children) {
+        let result = stringifyDescription(description);
+        if (result) console.log(result);
+      }
+    } else {
+      console.log(title);
+    }
+
+    console.log(date + ' ' + time)
+    console.log(lokal + ', ' + ort)
+
+    console.log('*******************************************')
+  }" "$events" | recode html..latin1
+}
+
+page=1
+fetchPage $page
+while [[ $page -lt 30 ]]; do
+  ((page++))
+  read -p "Do you want to fetch the next page ($page)? [Press enter]"
+  printf "*******************************************"
+  fetchPage $page
+done
+echo "All pages fetched!"
