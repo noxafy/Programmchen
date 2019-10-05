@@ -1,7 +1,9 @@
 #!/bin/bash
 
 fetchPage() {
-  res=$(curl -GsS https://www.datefix.de/de/kalender/5258 --data-urlencode "dfxp=$1" --data-urlencode 'form[region]=545' --data-urlencode 'form[ort]=Bielefeld' --data-urlencode 'cb=termine')
+  echo "https://www.bielefeld-events.de/?dfxp=$1&form[ort]=Bielefeld&form[region]=545"
+  echo "*******************************************"
+  res=$(curl -GsS https://www.datefix.de/de/kalender/5258 --data-urlencode "dfxp=$1" --data-urlencode 'form[region]=545' --data-urlencode 'form[ort]=Bielefeld' --data-urlencode 'cb=termine') || exit $?
   events=$(echo "$res" | pup '[itemtype="http://schema.org/Event"] json{}')
 
   node -e "const ans = JSON.parse(process.argv[1]);
@@ -103,7 +105,7 @@ fetchPage $page
 while [[ $page -lt 30 ]]; do
   ((page++))
   read -p "Do you want to fetch the next page ($page)? [Press enter]"
-  printf "*******************************************"
+  printf "\e[A\r\e[K"
   fetchPage $page
 done
 echo "All pages fetched!"
