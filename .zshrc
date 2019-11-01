@@ -8,7 +8,7 @@ export ZDOTDIR=$ZSH
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
 # see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
+HIST_STAMPS="dd.mm.yyyy"
 
 COMPLETION_WAITING_DOTS="true"
 
