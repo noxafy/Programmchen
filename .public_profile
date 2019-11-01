@@ -139,7 +139,8 @@ function uridecode() {
   node -e 'console.log(decodeURIComponent(process.argv[1]))' "$*"
 }
 
-function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
+function fetch_dwd() { # german weather agency / usage: $0 "state" "city"
+# see https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/viewer/gemeinden.js?v=2
   local dwd_site=https://www.dwd.de/DE/wetter/warnungen_gemeinden/warntabellen/
   local dwd_url="${dwd_site}warntab_$1_node.html"
 
@@ -169,7 +170,14 @@ function fetch_dwd() { # german weather agency / usage: dwd "state" "city"
   fi
 }
 
-function fetchPrecipitation() {
+function fetch_dwd2() {
+  echo "ERROR: NIY"
+  # 1. fetch warnings from https://www.dwd.de/DWD/warnungen/warnapp_gemeinden/json/warnings_gemeinde.json
+  # 2. remove "warnWetter.loadWarnings(" and ");"
+  # 3. find right polygon for desired city (stuck here)
+}
+
+function fetchPrecipitation() { # wetter.com / usage: $0 $lat $lng
   local lat=$1 lng=$2
   [[ -z $lat || -z $lng || ! "$lat" =~ ^[0-9]+.[0-9]+$ || ! "$lng" =~ ^[0-9]+.[0-9]+$ ]] && {
     echo "Usage: $0 \e[4mlat\e[0m \e[4mlng\e[0m"
