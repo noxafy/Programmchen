@@ -63,6 +63,7 @@ function c() {
 alias ec='echo $?'
 alias q=exit
 alias rg="rg --hidden --glob '!.git/*'"
+alias g=grep
 alias h=howdoi
 alias mvninit="mvn archetype:generate"
 alias cal="gcal --starting-day=1 --with-week-number -q DE_BY -G"
