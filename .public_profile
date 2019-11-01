@@ -125,6 +125,7 @@ alias woff="wlan off"
 alias wi="wiki -l de"
 alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
+alias yt1080="youtube-dl -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'"
 
 function uriencode() {
   if hash node &>/dev/null; then
