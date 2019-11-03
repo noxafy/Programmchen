@@ -568,24 +568,6 @@ else
   echo "Skipped internet installation"
 fi
 
-# install dashboard apps
-# TODO: check with: defaults read com.apple.dashboard | grep "relativepath" | sed 's/.*= //;s/;$//'
-if [[ -d "$thisdir/dashboard" ]]; then
-  section "Dashboard app installation"
-  c dashboard
-  cd "dashboard"
-  for wgt in *; do
-    letRead "Please install: $wgt"
-    open "$wgt"
-    pressEnterTo
-  done
-  cd ..
-  rm -rf dashboard
-  echo
-else
-  echo "Skipped Dashboard apps (no directory \"dashboard\" available at $thisdir)"
-fi
-
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"

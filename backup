@@ -261,11 +261,6 @@ echo "Save to $target/files"
 echo " - Newsflow -> Settings -> Settings Wheel -> Export OPML (as \"Newsflow Subscriptions.xml\")"
 echo
 
-ensureTargetDir dashboard
-echo "Ensure existence in $target/dashboard"
-echo " - eCalc_Scientific.wdgt"
-echo " - iStat Pro.wdgt"
-
 ensureTargetDir installers
 echo "Ensure existence in $target/installers"
 echo " - Adobe Pro Installer"
