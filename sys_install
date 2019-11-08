@@ -45,23 +45,22 @@ firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 iterm_settings="$P/Prefs/com.googlecode.iterm2.plist"
 
-dockitems='nvALT
-Simplenote
+dockitems='Simplenote
 Wunderlist
+Firefox
 Thunderbird
 Newsflow
-Firefox
 Spotify
+Audacity
 "Microsoft OneNote"
 Anki
 calibre
-Audacity
 "IntelliJ IDEA"
 FreeFileSync
 FileZilla
-FileMerge
 "System\\U00adeinstellungen"
-iTerm'
+iTerm
+Podcasts'
 
 brews=(
   cloc
@@ -77,6 +76,7 @@ brews=(
   pdfgrep
   pup
   recode
+  rename
   ripgrep
   rsync
   testdisk	# Powerful free data recovery utility
@@ -102,31 +102,34 @@ brightness
 coreutils
 diff-pdf        # needs xquartz
 exiftool
-#expect		# Program that can automate interactive applications
-#fasttext	# Library for fast text representation and classification
+#expect		# automate interactive applications
+#fasttext	# fast text representation and classification
 #ffmpeg #Required by audacity or mplayer?
 #freeling	# Suite of language analyzers
-#fswatch
+#fswatch	# Monitor a directory for changes
 gcal
+#ghostscript	# pdf2ps, ps2pdf, and more
 git
 #geoipupdate
 go
 #gobject-introspection
 googler
 hexedit
+jupyterlab
 #launch4j   # Cross-platform Java executable wrapper
 lf
-mas #already installed
+#mas #already installed
 maven
 maven-completion
 mplayer
 #mujs
 mysql
 nativefier
-pass #already installed
+navi 		# Interactive cheatsheet tool
+#nbdime		# Jupyter Notebook Diff and Merge tools
+#pass #already installed
 plan9port
 #python@2 #someone depending on this?
-rename
 shpotify
 #sic		# Minimal multiplexing IRC client
 tesseract-lang
@@ -147,13 +150,13 @@ brewcasks=(
   go2shell
   google-chrome
   iterm2
-  nvalt
   qlstephen
   textmate
   the-unarchiver
 )
 
-brewcasks+=
+brewcasks+=(
+#anaconda
 #android-file-transfer
 #android-sdk
 #android-studio
@@ -162,7 +165,7 @@ anki
 bibdesk
 #blender
 calibre
-celestia
+#celestia
 #docker
 #freemind
 geogebra
@@ -172,10 +175,11 @@ java
 #jwzlyrics
 mactex
 #mp3tag
-musescore
 mpv
+musescore
 #nextcloud #already installed
 #notational-velocity
+#nvalt
 #onedrive
 #openoffice
 #osxfuse #maybe needed for plugging the external drive?
@@ -183,6 +187,7 @@ mpv
 skype
 soundflower
 spotify
+#stellarium
 #teamviewer
 telegram
 texstudio
@@ -201,7 +206,7 @@ masinstalls=(
 1278508951 # Trello
 
 ### Apple
-497799835 # XCode, already required by mas
+#497799835 # XCode, already required by mas
 408981434 # iMovie
 409183694 # Keynote
 409201541 # Pages
@@ -618,7 +623,7 @@ fi
 #TODO
 # install other wifis (requires "pass")
 # pass SSID | sed -n '2,$p' | awk '{$1=""; print $0}'
-# - install "RZUWsec"
+# - install "eduroam"
 # provide optional network change (and connection test afterwards)
 
 # install nextcloud
@@ -637,11 +642,7 @@ else
   echo "Skipped nextcloud installation"
 fi
 
-# TODO
-# install xcode
-# - install from app store
-# - sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-# - sudo xcodebuild -license^
+xcode-select --install
 
 if ! hash mas &>/dev/null; then
   section "mas installation"
