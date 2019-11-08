@@ -138,7 +138,7 @@ function printDescriptions() {
   cnt=0
   IFS=$'\n'
   for idx in "${!DESCRIPTIONS[@]}"; do
-    printf "%s: %s\n" "$((idx+1))" "${DESCRIPTIONS[$idx]}" # increment for zero-based to one-based conversion
+    printf "%s: %s \033[2m%s\033[0m\n" "$((idx+1))" "${DESCRIPTIONS[$idx]}" "${LINKS[$idx]}" # increment for zero-based to one-based conversion
   done
 }
 
