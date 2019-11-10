@@ -63,14 +63,27 @@ done
 
 function parseResults0() {
   local json=$(echo "$1" | pup --charset utf8 '.yt-lockup-content json{}')
+  if [[ -n $DEBUG ]]; then
+    echo "$json" >&2
+  fi
   node -e "
     const json = JSON.parse(process.argv[1]);
     for (let el of json) {
       const title = el.children[0].children;
       if ('$2' && title[0].text.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
       //console.error(title[0].text)
-      const info = el.children[1].children[0].children;
-      console.log(title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m')
+      if (el.children.length == 2) {
+        // Regular video
+        const info = el.children[1].children[0].children;
+        console.log(title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m')
+      } else if (el.children.length == 4) {
+        // Livestream
+        const live_txt = el.children[3].children[0].children[0].children[0].text
+        const viewer_cnt = el.children[2].children[0].children[0].text
+        console.log('\033[1m' + live_txt + ':\033[0m ' + title[0].text + ' \033[37m' + viewer_cnt + '\033[0m')
+      } else {
+        console.log('Unknown video type!')
+      }
       console.log('$youtube' + title[0].href)
     }" "$json" \
     | perl -MHTML::Entities -pe 'decode_entities($_);'
