@@ -207,7 +207,7 @@ ctt .m2/settings.xml .ssh .password-store .gnupg
 
 # read -p "Do you want to continue the backup with the time consuming folders? [y]: " trash
 
-ctt Cloud IdeaProjects Downloads Documents Pictures Music Desktop
+ctt Cloud IdeaProjects Downloads Documents Pictures Music Desktop Programmchen
 
 cd "Library" || die "cd to $HOME/Library failed"
 
