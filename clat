@@ -34,7 +34,7 @@ function cltex() {
 
 function open_it() {
   if hash open &>/dev/null; then
-    open "${1:0:$((${#1}-4))}.pdf"
+    open "${1:0:$((${#1}-4))}.pdf" || die "Could not open file: $goal"
   fi
   cltex "$1"
 }
@@ -65,9 +65,9 @@ elif [[ -n "$goal" ]]; then
   else
     bibtex "${goal:0:$((${#goal}-3))}aux"
   fi
-  latex -interaction=batchmode "$goal"
-  latex -interaction=batchmode "$goal"
-  pdflatex -interaction=batchmode "$goal"
+  latex "$goal" || die 'First latex compilation run failed'
+  latex "$goal" || die 'Second latex compilation run failed'
+  pdflatex "$goal" || die 'pdflatex compilation failed'
   open_it "$goal"
 else
  die "Please give a valid tex file. See -h for more help."
