@@ -143,5 +143,5 @@ function replace_git_name_and_mail() {
 # then, for author change (committer?): git commit -a --amend --author="someone <someone@example.com>"
 # https://stackoverflow.com/questions/1186535/how-to-modify-a-specified-commit
 
-# grep trough all git history
+# grep through all git history
 # PAGER= git grep <regexp> $(git rev-list --all)
