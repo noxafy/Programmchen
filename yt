@@ -72,11 +72,16 @@ function parseResults0() {
       const title = el.children[0].children;
       if ('$2' && title[0].text.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
       //console.error(title[0].text)
-      if (el.children.length == 2 || el.children.length == 3) { // some videos have subtitles
+      if (title[1] && title[1].text && el.children[1]
+        && el.children[1].children[0].children[1]
+        && el.children[1].children[0].children[1].text
+        && el.children[1].children[0].children[0].text) { // assume: if a (non-text) element exists it also has a .children[0] property
         // Regular video
         const info = el.children[1].children[0].children;
         console.log(title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m')
-      } else if (el.children.length == 4) {
+      } else if (el.children[3]
+        && el.children[3].children[0].children[0].children[0].text
+        && el.children[2].children[0].children[0].text) {
         // Livestream
         const live_txt = el.children[3].children[0].children[0].children[0].text
         const viewer_cnt = el.children[2].children[0].children[0].text
