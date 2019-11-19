@@ -43,7 +43,6 @@ trading_icon="$IT/212/trading212.icns" # icon for Trading212.app
 trading_script="$IT/212/212listener.js" # listener for Trading212.app
 firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
-iterm_settings="$P/Prefs/com.googlecode.iterm2.plist"
 
 dockitems='Simplenote
 Wunderlist
@@ -146,7 +145,7 @@ brewcasks=(
   firefox
   flux
   font-hack-nerd-font
-  freefilesync
+  #freefilesync #currently not available
   go2shell
   google-chrome
   iterm2
@@ -239,12 +238,12 @@ die() {
 c() {
   while [[ -n $1 ]]; do
     origin="$thisdir/$1"
+    target="$PWD/$1"
     shift
     if [[ ! -e "$origin" ]]; then
       echo "WARNING: Requested file or dir not available: $origin"
       continue;
     fi
-    target="$PWD/$1"
     if [[ -d "$target" && "$origin" == */ ]]; then
       printf "Copying contents of $origin to $target"
     else
@@ -324,20 +323,20 @@ supersection "Partly automatic part"
 echo
 
 #go home first
-pushd "$HOME" &> /dev/null || die "cd to $HOME failed!"
+pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 
 # check if .profile has been executed
 if [[ -z "$P" ]]; then
   section "Preferences installation"
 
   # install basic shell sources
-  c .bashrc .profile .zshrc
+  c .bashrc .profile
   printf "#dummy" > "$HOME/.public_profile" # dummy for preventing sourcing error and to be replaced later
   printf "#dummy" > "$HOME/.private_profile"
 
   # install the other shit
   if [[ ! -d .m2 ]]; then
-    mkdir .m2 || die "mkdir $HOME/.m2 failed!"
+    mkdir .m2 || die "mkdir $HOME/.m2 failed"
   fi
   c .m2/settings.xml .ssh .password-store .gnupg
 
@@ -345,7 +344,7 @@ if [[ -z "$P" ]]; then
   open "$thisdir/*.terminal"
 
   #keyboard layout
-  pushd "$HOME/Library" &> /dev/null || die "cd to $HOME/Library failed!"
+  pushd "$HOME/Library" &> /dev/null || die "cd to $HOME/Library failed"
   c "Keyboard Layouts/" # - keyboard layout
 
   # copy dictionaries
@@ -446,8 +445,8 @@ if [[ -z "$P" ]]; then
   )"
   defaults write com.apple.DictionaryServices DCSActiveDictionaries "(
     \"com.apple.dictionary.OxfordGerman\",
-    \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
+    \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
     \"com.apple.dictionary.AppleDictionary\",
     \"com.apple.dictionary.OAWT\",
@@ -575,18 +574,19 @@ fi
 
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
-  sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+  sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh); exit"
+  c .zshrc
   echo
 else
   echo "Skipped Oh my zsh installation"
 fi
 
 if ! hash brew &>/dev/null; then
-  section "Homebrew installation"
+  section "Homebrew installation (Admin rights required)"
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed"
   echo "Tapping caskrooms ..."
-  brew tap caskroom/cask || die "brew tap caskroom/cask failed"
-  brew tap caskroom/fonts || die "brew tap caskroom/fonts failed"
+  brew tap homebrew/cask || die "brew tap homebrew/cask failed"
+  brew tap homebrew/cask-fonts || die "brew tap homebrew/cask-fonts failed"
   echo
 else
   echo "Skipped brew installation"
@@ -630,7 +630,7 @@ fi
 if [[ ! -e /Applications/nextcloud.app/ ]]; then
   #brew install nextcloud
   section "Nextcloud app installation"
-  brew cask install nextcloud || die "brew cask install nextcloud failed!"
+  brew cask install nextcloud || die "brew cask install nextcloud failed"
   #log in nextcloud
   letRead "Please log in to nextcloud"
   open /Applications/nextcloud.app/
@@ -759,14 +759,14 @@ echo
 
 section "Copying of data folders"
 #move remaining files from backup
-pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed!"
+pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed"
 if [[ ! -d IdeaProjects ]]; then
   c IdeaProjects Downloads/ Documents/ Pictures/ Music/
 else
   echo "Skipped copying of main folders to $HOME/"
 fi
 
-cd "Library" || die "cd to $HOME/Library/ failed!"
+cd "Library" || die "cd to $HOME/Library/ failed"
 if [[ ! -d Thunderbird ]]; then
   c Thunderbird
 else
@@ -813,7 +813,7 @@ else
 fi
 
 ### place at /Applications
-cd "/Applications" || die "cd to /Applications failed!"
+cd "/Applications" || die "cd to /Applications failed"
 if [[ ! -d Minecraft ]]; then
   c Minecraft
 else
@@ -842,7 +842,7 @@ echo "All required cloud data available"
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
   echo "### Whatsapp Web.app installation"
   echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
-  nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed."
+  nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed"
   mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
   rm -rf WhatsApp Web-darwin-x64/
   echo
@@ -853,9 +853,9 @@ fi
 if [[ ! -e "/Applications/Trading212.app" ]]; then
   echo "### Trading212.app installation"
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
-  nativefier -i "$trading_icon" --inject "$trading_script" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed."
+  nativefier -i "$trading_icon" --inject "$trading_script" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed"
 
-  mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed."
+  mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed"
   rm -rf Trading212-darwin-x64/
 
   mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
@@ -895,23 +895,12 @@ echo
 supersection "Manual part"
 echo
 
-# - load iTerm prefs and custom profile from $P/Prefs
-if ! defaults read com.googlecode.iterm2  >/dev/null; then
-  printf "%s" "$iterm_settings" | pbcopy
-  letRead "Let's switch to iTerm!
-Open Settings and set settings folder to: $iterm_settings (copied to clipboard)"
-  open /Applications/iTerm.app/ || die "Please install iTerm and restart the script to continue."
-  pressEnterTo
-  processname=iTerm2
-  processes=$(ps aux | grep -i -- "$processname" | grep -v -e "$0" | grep -v "grep -i -- $processname") #|| die "Failed to fetch processes from ps aux."
-  if [[ -n "$processes" ]]; then
-    letRead "Hey, you didn't close iTerm! I will do it for you.."
-    for id in $(echo "$processes" | awk '{print $2}'); do
-      kill $id &>/dev/null
-    done
-  fi
-  letRead "Now you can close this window and start the script in iTerm if you want."
-  pressEnterTo
+# TODO: Flux
+
+if [[ ! -e "$HOME/Library/Preferences/com.googlecode.iterm2.plist" ]]; then
+  letRead "Let's switch to iTerm!"
+  open /Applications/iTerm.app/ || die "Please install iTerm and restart the script to continue"
+  exit
 else
   echo "Skipped iTerm switch"
 fi
@@ -921,7 +910,7 @@ echo "Please login to following applications:"
 
 if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
   letRead "  - Spotify"
-  open /Applications/Spotify.app/ || die "Please install Spotify and restart the script to continue."
+  open /Applications/Spotify.app/ || die "Please install Spotify and restart the script to continue"
   pressEnterTo
 else
   echo "Skipped Spotify login"
@@ -929,7 +918,7 @@ fi
 
 if [[ ! -e "$HOME/Library/Containers/com.microsoft.onenote.mac" ]]; then
   letRead "  - OneNote"
-  open /Applications/Microsoft\ OneNote.app/ || die "Please install OneNote and restart the script to continue."
+  open /Applications/Microsoft\ OneNote.app/ || die "Please install OneNote and restart the script to continue"
   pressEnterTo
 else
   echo "Skipped OneNote login"
@@ -937,7 +926,7 @@ fi
 
 if [[ ! -e "$HOME/Library/Containers/com.atlassian.trello" ]]; then
   letRead "  - Trello (use the opportunity to set global shortcut to cmd+alt+t !)"
-  open /Applications/Trello.app/ || die "Please install Trello and restart the script to continue."
+  open /Applications/Trello.app/ || die "Please install Trello and restart the script to continue"
   pressEnterTo
 else
   echo "Skipped Trello login"
@@ -958,13 +947,13 @@ fi
 
 if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles" ]]; then
   letRead "Go to Textmate Preferences and install bundles as you like."
-  open /Applications/TextMate.app/ || die "Please install TextMate and restart the script to continue."
+  open /Applications/TextMate.app/ || die "Please install TextMate and restart the script to continue"
   pressEnterTo
 else
   echo "Skipped Textmate bundles"
 fi
 
-if ls "$templates"/*.potx >/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
+if ls "$templates"/*.potx &>/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
   # maybe also available via: defaults read | grep /Templates.localized | grep Normal
   if pot_target=$(echo ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.localized) 2>/dev/null; then
     if ! ls "$pot_target"/*.potx >/dev/null; then
@@ -982,30 +971,30 @@ else
   echo "Skipped Power Point template copying. Power Point not installed or no template found at ${templates}"
 fi
 
-if ! defaults read net.elasticthreads.nv >/dev/null; then
+if ! defaults read net.elasticthreads.nv &>/dev/null; then
   printf "%s" "$nv_directory" | pbcopy
   letRead "Go to nvALT Preferences and set note directory to $nv_directory (copied to clipboard)
 Also log in to simplenote (yeah, pass in a new window..) and set a global shortcut here: cmd+alt+n"
-  open /Applications/nvALT.app/ || die "Please install nvALT and restart the script to continue."
+  open /Applications/nvALT.app/ || die "Please install nvALT and restart the script to continue"
   pressEnterTo
 fi
 
 if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
-  open /Applications/Firefox.app || die "Please install Firefox and restart the script to continue."
+  open /Applications/Firefox.app || die "Please install Firefox and restart the script to continue"
   letRead "Did not found the firefox bookmark folder. Starting Firefox now."
   pressEnterTo
 fi
 howtorestorebackup="https://support.mozilla.org/en-US/kb/restore-bookmarks-from-backup-or-move-them\#w_restoring-from-backups"
 if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
   letRead "Did not found bookmarks folder again. Import bookmarks manually from: $firefox_bookmark_backup"
-  open -a /Applications/Firefox.app "$howtorestorebackup"
+  echo "$howtorestorebackup"
   pressEnterTo
 else
   if [[ -z $(ls -A "$firefox_profile") ]]; then
     if [[ -f "$firefox_bookmark_backup" ]]; then
       letRead "Copying bookmarks backup into Firefox Bookmark folder: $firefox_profile"
       cp "$firefox_bookmark_backup" "$firefox_profile/"
-      open -a /Applications/Firefox.app "$howtorestorebackup"
+      echo "$howtorestorebackup"
       pressEnterTo
     else
       echo "WARNING: Firefox has no bookmarks yet, but no bookmark backup found: $firefox_bookmark_backup"
@@ -1017,7 +1006,7 @@ fi
 
 if [[ ! -e ~/Library/Containers/com.rockysandstudio.Newsflow ]]; then
   letRead "Import in Newsflow the OPML: $newsflow_opml_backup"
-  open /Applications/Newsflow.app/ || die "Please install Newsflow and restart the script to continue."
+  open /Applications/Newsflow.app/ || die "Please install Newsflow and restart the script to continue"
   pressEnterTo
 else
   echo "Skipped Newsflow OPML import"

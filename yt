@@ -72,7 +72,7 @@ function parseResults0() {
       const title = el.children[0].children;
       if ('$2' && title[0].text.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
       //console.error(title[0].text)
-      if (el.children.length == 2) {
+      if (el.children.length == 2 || el.children.length == 3) { // some videos have subtitles
         // Regular video
         const info = el.children[1].children[0].children;
         console.log(title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m')
