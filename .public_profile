@@ -6,8 +6,8 @@
 alias l=ll
 alias la="lsd -a" #="ls -A"
 alias ll="lsd -laF" #='ls -liAF'
-alias tl="tree -fasFhpN --du"
-alias td="tree -faphFN --du | grep --color=never /$"
+alias tl="tree -faFhpN --du"
+alias td="tree -faFhpNd --du"
 alias fd="fd -H"
 alias fdd="fd -t d"
 alias fdf="fd -t f"
