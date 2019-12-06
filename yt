@@ -119,7 +119,17 @@ function parseResults() {
 # fetch videos from youtube site $1, filtered by optional query $2
 function fetchVideos() {
   waitnet -s || exit 1
-  local src=$(curl -sS "$1")
+
+  # curl fetch
+  if [[ -n "$PROXY" ]]; then
+    #ip=$(curl -sS --socks5-hostname "$PROXY" ifconfig.me)
+    #echo "Using proxy ($ip)"
+    local src=$(curl -sS --socks5-hostname "$PROXY" -H "Accept-Language: de,en-US;q=0.7,en;q=0.3" "$1")
+  else
+    #echo "Using no proxy ($(curl -sS ifconfig.me))"
+    local src=$(curl -sS "$1")
+  fi
+
   if [[ -n $src ]]; then
     local content=$(echo "$src" | pup --charset utf8 '.yt-lockup-content')
 
