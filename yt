@@ -64,32 +64,47 @@ done
 function parseResults0() {
   local json=$(echo "$1" | pup --charset utf8 '.yt-lockup-content json{}')
   if [[ -n $DEBUG ]]; then
-    echo "$json" >&2
+    echo "$1" > "result_$(date +%s).html"
+    echo "$json" > "result_$(date +%s).json"
   fi
   node -e "
     const json = JSON.parse(process.argv[1]);
     for (let el of json) {
       const title = el.children[0].children;
-      if ('$2' && title[0].text.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
       //console.error(title[0].text)
+
+      // filter by query string
+      if ('$2' && title[0].text.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
+
+      // create link
+      let link = '$youtube' + title[0].href
+
+      // create description
+      let description
+
+      // Regular video
       if (title[1] && title[1].text && el.children[1]
         && el.children[1].children[0].children[1]
         && el.children[1].children[0].children[1].text
         && el.children[1].children[0].children[0].text) { // assume: if a (non-text) element exists it also has a .children[0] property
-        // Regular video
         const info = el.children[1].children[0].children;
-        console.log(title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m')
-      } else if (el.children[3]
+        description = title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m'
+      }
+      // Livestream
+      else if (el.children[3]
         && el.children[3].children[0].children[0].children[0].text
         && el.children[2].children[0].children[0].text) {
-        // Livestream
         const live_txt = el.children[3].children[0].children[0].children[0].text
         const viewer_cnt = el.children[2].children[0].children[0].text
-        console.log('\033[1m' + live_txt + ':\033[0m ' + title[0].text + ' \033[37m' + viewer_cnt + '\033[0m')
-      } else {
-        console.log('Unknown video type!')
+        description = '\033[1m' + live_txt + ':\033[0m ' + title[0].text + ' \033[37m' + viewer_cnt + '\033[0m'
       }
-      console.log('$youtube' + title[0].href)
+      else {
+        description = 'Unknown video type!'
+      }
+
+      // print out, remove newlines
+      console.log(description.replace(/\r?\n|\r/gm, ''))
+      console.log(link)
     }" "$json" \
     | perl -MHTML::Entities -pe 'decode_entities($_);'
 }
