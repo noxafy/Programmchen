@@ -82,4 +82,4 @@ function help() {
 }
 
 #for IntelliJ shell do
-#echo "source ~/.zshrc" >> /Applications/IntelliJ IDEA.app/Contents/plugins/terminal/.zshrc
+#echo "source ~/.zshrc" >> /Applications/IntelliJ\ IDEA.app/Contents/plugins/terminal/.zshrc
