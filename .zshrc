@@ -57,7 +57,7 @@ PROMPT='%(?..%F{red})%*%f %c$(git_prompt_info)%(!.%F{red}.)$%f '
 # see http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
 
 ### zsh things
-alias t="whence -avsm"
+alias t="whence -avs"
 
 function command_not_found_handler() {
   if type command_not_found >/dev/null 2>&1; then
