@@ -44,7 +44,7 @@ case $1 in
       cat "$P/asciiart/$1"
       exit 0
     fi
-    echo "Sorry, didn't find: $*"
+    echo "Sorry, couldn't find: $*"
     echo "Maybe you can add it to handle if it was a frequent misspelling."
     exit 1
     ;;
