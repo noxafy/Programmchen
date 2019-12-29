@@ -1,7 +1,7 @@
 
 if [[ ! -t 0 ]]; then
   # not interactive, but piped
-  echo "Sorry, didn't find: $*"
+  echo "Sorry, couldn't find: $*"
   exit 1
 fi
 
