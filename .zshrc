@@ -15,6 +15,7 @@ COMPLETION_WAITING_DOTS="true"
 plugins=(
   git
   npm
+  fd
 )
 
 source "$ZSH/oh-my-zsh.sh"

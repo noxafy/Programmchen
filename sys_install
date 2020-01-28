@@ -39,28 +39,29 @@ fi
 nv_directory="$C/Apps/NV"
 templates="$C/Org/Vorlagen"
 # resources
-trading_icon="$IT/212/trading212.icns" # icon for Trading212.app
-trading_script="$IT/212/212listener.js" # listener for Trading212.app
+trading_icon="$PROJ/212/js-listener/trading212.png" # icon for Trading212.app
+trading_script="$PROJ/212/js-listener/212listener.js" # listener for Trading212.app
 firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 
-dockitems='Simplenote
-Wunderlist
+# Dock items
+# Fetch with:
+# defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g'
+dockitems='Wunderlist
 Firefox
 Thunderbird
+"Google Chrome"
 Newsflow
 Spotify
-Audacity
 "Microsoft OneNote"
 Anki
 calibre
 "IntelliJ IDEA"
 FreeFileSync
 FileZilla
-"System\\U00adeinstellungen"
-iTerm
-Podcasts'
+"System\\U00adeinstellungen"'
 
+# brew essentials
 brews=(
   cloc
   fd
@@ -84,6 +85,7 @@ brews=(
   wiki
 )
 
+# extended / main only
 brews+=(
 #agedu		# Unix utility for tracking down wasted disk space
 #aspell
@@ -94,6 +96,7 @@ bash-snippets
 bfg
 brightness
 #bro		# Network security monitor
+#broot		# New way to see and navigate directory trees
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
 #cheat		# Better version contained in bash snippets
 #chordii
@@ -120,26 +123,30 @@ lf
 #mas #already installed
 maven
 maven-completion
+#monolith	# Saving complete web pages as a single HTML
 mplayer
 #mujs
 mysql
 nativefier
-navi 		# Interactive cheatsheet tool
+#navi 		# Interactive cheatsheet tool
 #nbdime		# Jupyter Notebook Diff and Merge tools
 #pass #already installed
+pastel		# Generate, analyze, convert and manipulate colors
 plan9port
 #python@2 #someone depending on this?
 shpotify
 #sic		# Minimal multiplexing IRC client
 tesseract-lang
 tldr		# Simplified and community-driven man pages
-trash		# CLI tool that moves files or folder to the trash
+tor
+#trash		# CLI tool that moves files or folder to the trash
 #wine
 #winetricks
 woff2
 #you-get
 youtube-dl)
 
+# essentials
 brewcasks=(
   disablemonitor
   firefox
@@ -154,6 +161,7 @@ brewcasks=(
   the-unarchiver
 )
 
+# extended / main only
 brewcasks+=(
 #anaconda
 #android-file-transfer
@@ -172,6 +180,7 @@ google-earth-pro
 intellij-idea
 java
 #jwzlyrics
+kodi
 mactex
 #mp3tag
 mpv
@@ -182,8 +191,10 @@ musescore
 #onedrive
 #openoffice
 #osxfuse #maybe needed for plugging the external drive?
+signal
 #sketch
 skype
+sonic-visualiser
 soundflower
 spotify
 #stellarium
@@ -760,11 +771,7 @@ echo
 section "Copying of data folders"
 #move remaining files from backup
 pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed"
-if [[ ! -d IdeaProjects ]]; then
-  c IdeaProjects Downloads/ Documents/ Pictures/ Music/
-else
-  echo "Skipped copying of main folders to $HOME/"
-fi
+c Downloads/ Documents/ Pictures/ Music/
 
 cd "Library" || die "cd to $HOME/Library/ failed"
 if [[ ! -d Thunderbird ]]; then
@@ -825,6 +832,8 @@ echo
 
 section "nativefier application installations"
 # ensure required cloud content synced
+[[ ! -e "$trading_icon" ]] && echo "Icon for Trading212 not found: $trading_icon"
+[[ ! -e "$trading_script" ]] && echo "Script for Trading212 not found: $trading_script"
 while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
   printf "Please wait until required cloud data is syncing "
   sleep 1
