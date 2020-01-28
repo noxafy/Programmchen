@@ -332,11 +332,11 @@ function _pick_and_execute() {
   fi
 
   local -a cmd=($(echo $1))
-  shift
   [[ -z $cmd ]] && {
     echo "No command given"
-    exit 1
+    return 1
   }
+  shift
 
   local -a args
   if [[ -z "$1" || "${@: -1}" == -* ]]; then
