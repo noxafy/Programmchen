@@ -70,8 +70,21 @@ function parseResults0() {
   node -e "
     const json = JSON.parse(process.argv[1]);
     for (let el of json) {
-      const title = el.children[0].children;
-      //console.error(title[0].text)
+      // variable for final string
+      let description
+
+      // get title node
+      let title;
+      for (child of el.children) {
+        if (child.class && child.class.includes('yt-lockup-title')) { // normally node [0]
+          title = child.children
+        }
+      }
+
+      if (!title) {
+        console.error('Error! This video has no title node (yt-lockup-title):')
+        console.error(el)
+      }
 
       // filter by query string
       if ('$2' && title[0].text.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
@@ -79,15 +92,22 @@ function parseResults0() {
       // create link
       let link = '$youtube' + title[0].href
 
-      // create description
-      let description
+      // get meta data node
+      let info;
+      for (child of el.children) {
+        if (child.class && child.class.includes('yt-lockup-meta')) { // normally node [1]
+          info = child.children[0].children
+        }
+      }
+
+      if (!info) {
+        console.error('Error! This video has no info node (yt-lockup-meta):')
+        console.error(el)
+      }
 
       // Regular video
-      if (title[1] && title[1].text && el.children[1]
-        && el.children[1].children[0].children[1]
-        && el.children[1].children[0].children[1].text
-        && el.children[1].children[0].children[0].text) { // assume: if a (non-text) element exists it also has a .children[0] property
-        const info = el.children[1].children[0].children;
+      if (title[1] && title[1].text
+        && info[1] && info[1].text && info[0].text) {
         description = title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m'
       }
       // Livestream
