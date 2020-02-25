@@ -210,7 +210,8 @@ firsttime=true
 while true; do
   case $ans in
   n)
-    $firsttime && printf "chocomp \"%s\"" "$filename" | pbcopy 2>&1 > /dev/null && echo "Copied to cilpboard."
+    cmd=$(printf "chocomp \"%s\"" "$filename")
+    $firsttime && printf "%s" "$cmd" | pbcopy 2>&1 > /dev/null && echo "Copied compile command to cilpboard: $cmd"
     exit 0
     ;;
   *)
