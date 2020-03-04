@@ -8,7 +8,7 @@ function die() {
 }
 
 [ ! -t 0 ] && die "Please start this script interactively."
-disks=$(diskutil list external)
+disks=$(diskutil list external physical)
 
 [[ -z "$disks" ]] && echo "No external device found." && exit 0
 
