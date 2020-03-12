@@ -259,6 +259,11 @@ function askForChoose() {
 if [[ "$site" = ${youtube}* ]]; then
   if [[ "$site" = */videos ]]; then
     fetchVideos "$site" "$query"
+
+    if [[ ! -t 1 ]]; then # not interactive
+      exit 0
+    fi
+
     askForChoose true
     while true; do
       askForChoose false
