@@ -1,0 +1,55 @@
+#!/bin/bash
+
+cache_dir="$HOME/.yt"
+tmp_file="$cache_dir/tmp"
+usage="Usage: \e[1m$(basename $0)\e[0m -h"
+help="Caching version of ytl, filtering for new videos from all \"subscribed\" channels.
+$usage
+        \e[1m-h\e[0m      Displays this message and exits.
+"
+regex='https://www\.youtube.com/watch\?v=[A-Za-z0-9ÄÖÜäöüß?\\+&@./#%=~_|-]*'
+
+case $1 in
+  -h|--help)
+    printf "$help"
+    exit 0
+    ;;
+esac
+
+function die() {
+  mes=$1
+  shift
+  printf "$mes\n" "$*"
+  exit 1
+}
+
+# get "subscriptions"
+shopt -s expand_aliases
+source ~/.profile  # index aliases
+declare -a yts=($(alias | grep "=\'yt\ " | sed 's/alias //g;s/=.*//g'))
+[[ 0 -eq "${#yts}" ]] && die "No matching alias found"
+
+# ensure cache dir
+if [[ ! -d "$cache_dir" ]]; then
+  mkdir "$cache_dir" || die "Failed to make cache dir: $cachedir"
+fi
+
+# update all
+for yt in "${yts[@]}"; do
+  echo "Update $yt ..."
+  linksfile="$cache_dir/$yt"
+  content=""
+  if [[ -e "$linksfile" ]]; then
+    content=$(< "$linksfile")
+  fi
+  eval $yt > "$tmp_file" || die "Fetching $yt failed"
+  yt_result=$(< "$tmp_file")
+  links=$(echo "$yt_result" | grep -oE "$regex")
+  for link in $links; do
+    if [[ "$content" != *"$link"* ]]; then
+      echo "$yt_result" | grep -e "$link"
+    fi
+  done
+  echo "$yt_result" > "$linksfile"
+  rm "$tmp_file"
+done
