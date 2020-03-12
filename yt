@@ -261,6 +261,7 @@ if [[ "$site" = ${youtube}* ]]; then
     fetchVideos "$site" "$query"
 
     if [[ ! -t 1 ]]; then # not interactive
+      printDescriptions
       exit 0
     fi
 
