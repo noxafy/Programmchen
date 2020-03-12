@@ -3,7 +3,7 @@
 usage="\e[1msys_install\e[0m -h | [-s]"
 help="An install script for mac reset.
 $usage
-	\e[1m-h\e[0m	Displays this message and exists.
+	\e[1m-h\e[0m	Displays this message and exits.
 
 Fast internet connection recommended.
 Warning: Leave in place!

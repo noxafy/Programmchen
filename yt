@@ -10,7 +10,7 @@ declare -a DESCRIPTIONS
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Some commandline interaction with YouTube.
 $usage
-	\e[1m-h\e[0m		Displays this message and exists.
+	\e[1m-h\e[0m		Displays this message and exits.
 	\e[1m-d\e[0m		Print some debug logs.
 	\e[4msite\e[0m		Videos site (from user or channel) to grep videos from.
 	\e[1m-u\e[0m \e[4muser\e[0m		Give a \e[4muser\e[0m name to grep videos from.

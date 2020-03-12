@@ -7,7 +7,7 @@ usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s] \e[4mtime\e[0m [ [-m] \e[4mmes\
 help="Sends a notification to the system at given \e[4mtime\e[0m with given or default \e[4mmessage\e[0m and shows
 the remaining time in the shell. If no \e[4mtime\e[0m given, it sends the notification instantly.
 $usage
-	\e[1m-h\e[0m	Displays this help message and exists.
+	\e[1m-h\e[0m	Displays this help message and exits.
 	\e[1m-s\e[0m	Do not display the remaining time (for running in background, also detected automatically).
 	\e[4mtime\e[0m	Can be
 		 - an integer, so it will be interpreted as seconds to count down
