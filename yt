@@ -160,7 +160,7 @@ function parseResults() {
 
 # fetch videos from youtube site $1, filtered by optional query $2
 function fetchVideos() {
-  waitnet -s || exit 1
+  waitnet -s >&2 || exit 1
 
   # curl fetch
   if [[ -n "$PROXY" ]]; then
@@ -270,7 +270,7 @@ if [[ "$site" = ${youtube}* ]]; then
       askForChoose false
     done
   else
-    [[ -n "$query" ]] && echo "Warning: query [${query}] will be ignored"
+    [[ -n "$query" ]] && echo "Warning: query will be ignored: $query" >&2
     if [[ -z $DEBUG ]]; then
       f -i "$site"
     else
