@@ -36,13 +36,16 @@ fi
 
 # update all
 for yt in "${yts[@]}"; do
-  echo "Update $yt ..."
+  echo "Updating $yt"
   linksfile="$cache_dir/$yt"
   content=""
   if [[ -e "$linksfile" ]]; then
     content=$(< "$linksfile")
   fi
-  eval $yt > "$tmp_file" || die "Fetching $yt failed"
+  eval $yt > "$tmp_file" || {
+    echo "Error: Fetching $yt failed"
+    continue
+  }
   yt_result=$(< "$tmp_file")
   links=$(echo "$yt_result" | grep -oE "$regex")
   for link in $links; do
