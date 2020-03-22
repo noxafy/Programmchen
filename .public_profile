@@ -114,6 +114,13 @@ function rmmeta() {
   fi
 }
 
+function filecnt() {
+  \fd -I0Ht d -d 1 | while IFS= read -r -d '' f; do
+    printf "$f: "
+    \fd -IH -t f '.*' "$f" | wc -l
+  done | awk '{print $NF"\t"$0}' | sed -E 's/:.*$//g' | sort -nr
+}
+
 #############################
 ### internet
 #############################
