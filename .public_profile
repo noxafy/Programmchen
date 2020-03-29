@@ -530,3 +530,7 @@ function ocr() {
     echo "See tesseract --help-extra for more help." >&2
   fi
 }
+
+function secinmp4() {
+  fd -0 mp4 | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc
+}
