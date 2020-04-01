@@ -150,6 +150,12 @@ $res" | less
     res=$(echo "$res" | sed 's/.*<p class="mxm-lyrics__content ">//'| sed 's/<\/p>.*//')
   fi
 
+  if [[ -n $VERBOSE ]]; then
+    result_file="lyrics_result_$(date +%s).html"
+    echo "$res" > "$result_file"
+    echo "Saved result to $result_file"
+  fi
+
   #further beautifying
   res=$(echo "$res" | node -e 'process.stdin.resume(); process.stdin.setEncoding("utf8");
        var content = "";
