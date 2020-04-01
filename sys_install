@@ -455,15 +455,15 @@ if [[ -z "$P" ]]; then
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/0c32ebe1de94a069aca537b10f718806c5ad50c1.asset/AssetData/Spanish - English.dictionary\"
   )"
   defaults write com.apple.DictionaryServices DCSActiveDictionaries "(
-    \"com.apple.dictionary.OxfordGerman\",
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
     \"com.apple.dictionary.AppleDictionary\",
     \"com.apple.dictionary.OAWT\",
     \"com.apple.dictionary.NOAD\",
-    \"com.apple.dictionary.OTE\",
     \"com.apple.dictionary.de.DDDSI\",
+    \"com.apple.dictionary.OxfordGerman\",
+    \"com.apple.dictionary.OTE\",
     \"com.apple.dictionary.OxfordFrench\",
     \"com.apple.dictionary.OxfordItalian\",
     \"com.apple.dictionary.OxfordSpanish\",
@@ -1039,9 +1039,9 @@ echo "Last, but not least, check if:
     - Apple Dictionary.dictionary
     - Oxford American Writer's Thesaurus.dictionary
     - New Oxford American Dictionary.dictionary
-    - Oxford Thesaurus of English.dictionary
     - Duden Dictionary Data Set I.dictionary
     - German - English.dictionary
+    - Oxford Thesaurus of English.dictionary
     - French - English.dictionary
     - Italian - English.dictionary
     - Spanish - English.dictionary
