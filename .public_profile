@@ -445,7 +445,7 @@ function po() {
   [[ -z $res ]] && echo "No online link found for: $*" && return 1
   res=$(echo "$res" | cut -c 4-)
 
-  if which f >/dev/null; then
+  if [[ "$res" != *".app" ]] && which f >/dev/null; then
     f "$res"
   else
     open "$res"
