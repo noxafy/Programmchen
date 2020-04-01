@@ -1,0 +1,31 @@
+#/bin/bash
+
+link=$1
+base=$(dirname "$link")
+dir=$(basename "$link")
+dir=${dir%.*}
+mkdir $dir
+cd $dir
+
+video_src=$(curl -sS "$link" | grep -A 1 720 | tail -1)
+video_src="$base/$video_src"
+echo "Video src is: $video_src"
+
+video_parts=$(curl -sS "$video_src" | grep ts)
+video_parts=$(for line in $video_parts; do echo "$base/$line"; done)
+printf "Downloading %d parts:\n" $(echo "$video_parts" | wc -l)
+wget -q --show-progress $video_parts
+
+echo "Merge into $dir.ts"
+touch "$dir.ts"
+for part_link in $video_parts; do
+  file=$(basename "$part_link")
+  cat $file >> "$dir.ts"
+done
+
+mv "$dir.ts" ..
+cd ..
+rm -r "$dir"
+ffmpeg -i "$dir.ts" -acodec copy -vcodec copy -loglevel warning "$dir.mp4"
+rm "$dir.ts"
+echo "Download of $dir.mp4 finished!"
