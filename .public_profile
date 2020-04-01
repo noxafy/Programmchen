@@ -73,6 +73,7 @@ alias vwc='pbpaste | wc'
 alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias ql="qlmanage -p"
 alias shutup="osascript -e 'Set volume output volume 0'"
+alias apropos="2>/dev/null apropos"
 
 function cltex() {
   local goal=$1
