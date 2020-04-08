@@ -74,6 +74,8 @@ alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias ql="qlmanage -p"
 alias shutup="osascript -e 'Set volume output volume 0'"
 alias apropos="2>/dev/null apropos"
+alias j="jupyter notebook"
+alias s="sage -n jupyter"
 
 function cltex() {
   local goal=$1
@@ -136,6 +138,7 @@ alias wi="wiki -l de"
 alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 alias yt1080="youtube-dl -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'"
+alias be="bielefeld_events"
 
 function uriencode() {
   if hash node &>/dev/null; then
