@@ -771,7 +771,7 @@ echo
 section "Copying of data folders"
 #move remaining files from backup
 pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed"
-c Downloads/ Documents/ Movies/ Music/ Pictures/
+c Desktop/ Downloads/ Documents/ Music/ Pictures/
 
 cd "Library" || die "cd to $HOME/Library/ failed"
 if [[ ! -d Thunderbird ]]; then
