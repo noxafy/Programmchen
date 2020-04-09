@@ -39,6 +39,7 @@ fi
 nv_directory="$C/Apps/NV"
 templates="$C/Org/Vorlagen"
 # resources
+duolingo_icon="$IT/duolingo.jpg" # icon for Duolingo.app
 trading_icon="$PROJ/212/js-listener/trading212.png" # icon for Trading212.app
 trading_script="$PROJ/212/js-listener/212listener.js" # listener for Trading212.app
 firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
@@ -829,11 +830,12 @@ fi
 popd &> /dev/null || die "cd failed"
 echo
 
-section "nativefier application installations"
+section "nativefier app creations"
 # ensure required cloud content synced
+[[ ! -e "$duolingo_icon" ]] && echo "Icon for Duolingo not found: $duolingo_icon"
 [[ ! -e "$trading_icon" ]] && echo "Icon for Trading212 not found: $trading_icon"
 [[ ! -e "$trading_script" ]] && echo "Script for Trading212 not found: $trading_script"
-while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
+while [[ ! ( -e "$duolingo_icon" && -e "$trading_icon" && -e "$trading_script" ) ]]; do
   printf "Please wait until required cloud data is syncing "
   sleep 1
   printf "."
@@ -846,25 +848,38 @@ while [[ ! ( -e "$trading_icon" && -e "$trading_script" ) ]]; do
 done
 echo "All required cloud data available"
 
-#create WhatsApp and Trading212 app with nativefier
+# create Duolingo.app with nativefier
+if [[ ! -e "/Applications/Duolingo.app" ]]; then
+  echo "### Duolingo.app installation"
+  echo "Installing Duolingo.app with nativefier from https://www.duolingo.com/learn"
+  nativefier -n "Duolingo" -i "$duolingo_icon" "https://www.duolingo.com/learn" || die "Creating Duolingo.app failed"
+  mv "Duolingo-darwin-x64/Duolingo.app" /Applications/
+  rm -rf "Duolingo-darwin-x64"
+  echo
+else
+  echo "Skipped creation of Duolingo.app with nativefier"
+fi
+
+# create WhatsAppWeb.app with nativefier
 if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
   echo "### Whatsapp Web.app installation"
   echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
   nativefier -n "WhatsApp Web" "http://web.whatsapp.com/" || die "Creating Whatsapp Web.app failed"
   mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
-  rm -rf WhatsApp Web-darwin-x64/
+  rm -rf "WhatsApp Web-darwin-x64"
   echo
 else
   echo "Skipped creation of Whatsapp Web.app with nativefier"
 fi
 
+# create Trading212.app with nativefier
 if [[ ! -e "/Applications/Trading212.app" ]]; then
   echo "### Trading212.app installation"
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
   nativefier -i "$trading_icon" --inject "$trading_script" -n "Trading212" 'https://www.trading212.com/' || die "Creating Trading212.app failed"
 
   mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed"
-  rm -rf Trading212-darwin-x64/
+  rm -rf "Trading212-darwin-x64"
 
   mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
   if [[ -e "$mainpath" ]]; then
@@ -938,6 +953,14 @@ if [[ ! -e "$HOME/Library/Containers/com.atlassian.trello" ]]; then
   pressEnterTo
 else
   echo "Skipped Trello login"
+fi
+
+if [[ ! -e "$HOME/Library/Preferences/com.electron.duolingo.plist" ]]; then
+  letRead "  - Duolingo"
+  open /Applications/Duolingo.app/ || die "Please install Duolingo with nativfier and restart the script to continue"
+  pressEnterTo
+else
+  echo "Skipped Duolingo login"
 fi
 
 echo
