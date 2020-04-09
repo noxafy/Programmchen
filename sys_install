@@ -47,12 +47,13 @@ newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 # Dock items
 # Fetch with:
 # defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g'
-dockitems='Wunderlist
+dockitems='Atom
+Wunderlist
+Duolingo
 Firefox
 Thunderbird
-"Google Chrome"
-Newsflow
 Spotify
+Audacity
 "Microsoft OneNote"
 Anki
 calibre
@@ -87,9 +88,8 @@ brews=(
 
 # extended / main only
 brews+=(
-#agedu		# Unix utility for tracking down wasted disk space
+agedu		# Unix utility for tracking down wasted disk space
 #aspell
-#automake
 bash
 bash-completion
 bash-snippets
@@ -106,7 +106,7 @@ diff-pdf        # needs xquartz
 exiftool
 #expect		# automate interactive applications
 #fasttext	# fast text representation and classification
-#ffmpeg #Required by audacity or mplayer?
+ffmpeg
 #freeling	# Suite of language analyzers
 #fswatch	# Monitor a directory for changes
 gcal
@@ -118,7 +118,7 @@ go
 googler
 hexedit
 jupyterlab
-#launch4j   # Cross-platform Java executable wrapper
+#launch4j   	# Cross-platform Java executable wrapper
 lf
 #mas #already installed
 maven
@@ -132,7 +132,7 @@ nativefier
 #nbdime		# Jupyter Notebook Diff and Merge tools
 #pass #already installed
 pastel		# Generate, analyze, convert and manipulate colors
-plan9port
+#plan9port
 #python@2 #someone depending on this?
 shpotify
 #sic		# Minimal multiplexing IRC client
@@ -144,7 +144,9 @@ tor
 #winetricks
 woff2
 #you-get
-youtube-dl)
+youtube-dl
+zeek 		#Network security monitor
+)
 
 # essentials
 brewcasks=(
@@ -154,8 +156,8 @@ brewcasks=(
   font-hack-nerd-font
   #freefilesync #currently not available
   go2shell
-  google-chrome
   iterm2
+  mpv
   qlstephen
   textmate
   the-unarchiver
@@ -168,32 +170,31 @@ brewcasks+=(
 #android-sdk
 #android-studio
 anki
+atom
 #axure-rp
-bibdesk
+#bibdesk
 #blender
 calibre
 #celestia
 #docker
-#freemind
 geogebra
 google-earth-pro
 intellij-idea
 java
 #jwzlyrics
-kodi
+#kodi
 mactex
 #mp3tag
-mpv
 musescore
 #nextcloud #already installed
 #notational-velocity
 #nvalt
-#onedrive
 #openoffice
 #osxfuse #maybe needed for plugging the external drive?
+#sage
 signal
 #sketch
-skype
+#skype
 sonic-visualiser
 soundflower
 spotify
@@ -209,9 +210,7 @@ masinstalls=(
 ### Free
 890805912 # Newsflow
 595191960 # CopyClip
-#404010395 # TextWrangler
 1061963639 # VirtualDJ 8
-692867256 # Simplenote
 410628904 # Wunderlist
 1278508951 # Trello
 
