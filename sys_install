@@ -310,20 +310,24 @@ pressEnterTo() {
   fi
   read -p "Please press [Enter] to ${message}: " trash
   #printf "\e[A\r\e[K"
+  echo
 }
 
 section() {
-  echo "#########################"
+  echo
+  echo "#################################"
   echo "### $*"
-  echo "#########################"
+  echo "#################################"
 }
 
 supersection() {
+  echo
   echo "####################################################"
   echo "####################################################"
   echo "### $*"
   echo "####################################################"
   echo "####################################################"
+  echo
 }
 
 ########################################################################################################
@@ -331,13 +335,14 @@ supersection() {
 ########################################################################################################
 # In this part, the script can do mostly on its own, but needs hands-on from time to time
 supersection "Partly automatic part"
-echo
 
 #go home first
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 
 # check if .profile has been executed
 if [[ -z "$P" ]]; then
+  echo "Welcome to your new computer! We will start now setting up everything you need."
+
   section "Preferences installation"
 
   # install basic shell sources
@@ -578,7 +583,6 @@ if ! ping -t 3 -c 1 8.8.8.8 >& /dev/null; then # no internet connection
       sleep 1
     done
   fi
-  echo
 else
   echo "Skipped internet installation"
 fi
@@ -587,7 +591,6 @@ if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh); exit"
   c .zshrc
-  echo
 else
   echo "Skipped Oh my zsh installation"
 fi
@@ -598,7 +601,6 @@ if ! hash brew &>/dev/null; then
   echo "Tapping caskrooms ..."
   brew tap homebrew/cask || die "brew tap homebrew/cask failed"
   brew tap homebrew/cask-fonts || die "brew tap homebrew/cask-fonts failed"
-  echo
 else
   echo "Skipped brew installation"
 fi
@@ -606,13 +608,13 @@ fi
 if ! hash pass &>/dev/null; then
   section "pass installation"
   brew install pass || die "brew install pass failed"
-  echo
 else
   echo "Skipped pass installation"
 fi
 
 # copy .private_profile from pass
 if [[ ! -e ~/.private_profile || $(cat ~/.private_profile) == "#dummy" ]]; then
+  section "Copy files from pass"
   echo "Copying .private_profile from pass"
   pass .private_profile > ~/.private_profile
 
@@ -626,7 +628,6 @@ fi
 if [[ ! -e ~/.gitconfig ]]; then
   echo "Copying .gitconfig from pass"
   pass .gitconfig > ~/.gitconfig
-  echo
 else
   echo "Skipped copying .gitconfig from pass"
 fi
@@ -648,7 +649,6 @@ if [[ ! -e /Applications/nextcloud.app/ ]]; then
   pu nextcloud
   pc nextcloud
   pressEnterTo
-  echo
 else
   echo "Skipped nextcloud installation"
 fi
@@ -662,7 +662,6 @@ if ! hash mas &>/dev/null; then
     letRead "Please sign in to App Store!"
     open /Applications/App\ Store.app/
     pressEnterTo
-    echo
   done
   echo "mas account: $(mas account)"
 else
@@ -706,14 +705,12 @@ else
   echo "All casks installed with no obvious problems."
 fi
 
-echo
 ########################################################################################################
 ##### Full automatic part (place as much as possible here)
 ########################################################################################################
 # In this part, there is *no* need for user intervention at all
 # no use of pressEnterTo function, die only in severe error cases
 supersection "Full automatic part"
-echo
 
 #app store
 section "App Store apps installation"
@@ -721,7 +718,7 @@ failedapps=""
 masls=$(mas list | awk '{print $1}')
 for app in ${masinstalls[@]}; do
   if [[ -z $(echo "$masls" | grep $app) ]]; then
-    echo "Installing $cask ..."
+    echo "Installing $app ..."
     mas install $app
     if [[ $? -ne 0 ]]; then
       echo "Failed installing $app $(mas info $app | sed -n 1p)"
@@ -739,7 +736,6 @@ if [[ -n "$failedapps" ]]; then
 else
   echo "All apps installed with no obvious problems."
 fi
-echo
 
 #brew install
 section "brew installs"
@@ -766,10 +762,9 @@ if [[ -n "$failedformulas" ]]; then
 else
   echo "All formulas installed with no obvious problems."
 fi
-echo
 
 section "Copying of data folders"
-#move remaining files from backup
+# move remaining files from backup
 pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed"
 c Desktop/ Downloads/ Documents/ Music/ Pictures/
 
@@ -828,7 +823,6 @@ else
 fi
 
 popd &> /dev/null || die "cd failed"
-echo
 
 section "nativefier app creations"
 # ensure required cloud content synced
@@ -909,16 +903,11 @@ else
   echo "Skipped creation of Trading212.app with nativefier"
 fi
 
-echo
-
 ####################################################
 ### Manual part
 ####################################################
 # In this part, the script is just instructing, at most helping out a bit
 supersection "Manual part"
-echo
-
-# TODO: Flux
 
 if [[ ! -e "$HOME/Library/Preferences/com.googlecode.iterm2.plist" ]]; then
   letRead "Let's switch to iTerm!"
@@ -963,7 +952,6 @@ else
   echo "Skipped Duolingo login"
 fi
 
-echo
 section "Settings"
 
 current_dockitems=$(defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g')
@@ -1031,7 +1019,7 @@ else
       echo "WARNING: Firefox has no bookmarks yet, but no bookmark backup found: $firefox_bookmark_backup"
     fi
   else
-    echo "Skipped copying firefox bookmarks, because booksmark backups are already present at: \"$firefox_profile\""
+    echo "Skipped copying firefox bookmarks, because booksmark backups are already present [\"$firefox_profile\"]"
   fi
 fi
 
@@ -1043,18 +1031,19 @@ else
   echo "Skipped Newsflow OPML import"
 fi
 
+section "Final"
 echo "Last, but not least, check if:
 ### Dependencies
-  - ffmpeg is required by audacity or mplayer
-  - python@2 is required by something
-  - you need osxfuse for the external drive
+  - If python@2 is required by something
+  - You need osxfuse for the external drive
 ### Settings
-  - intellij is logged in
-  - global shortcut (and other settings) for iTerm is applied
-  - go2shell is set up right (cd %PATH%; printf \"\e[F\e[K\")
-  - check all system prefs: open /Applications/System\ Preferences.app/
-  - are os shortcuts set?
-  - dictionaries are installed correctly
+  - IntelliJ is logged in
+  - Global shortcut (and other settings) for iTerm is applied
+  - Go2shell is set up right (cd %PATH%; printf \"\e[F\e[K\")
+  - Check all system prefs: open /Applications/System\ Preferences.app/
+  - OS shortcuts set?
+  - Flux is set up correctly
+  - Dictionaries are installed correctly
     - Wikipedia.wikipediadictionary
     - Deutsch-Englisch.dictionary
     - OpenThesaurus Deutsch.dictionary
@@ -1069,10 +1058,14 @@ echo "Last, but not least, check if:
     - Spanish - English.dictionary
     - Russian - English.dictionary
 
-And in the end, you might think of installing
-  - adobe pro (contains key)
-  - microsoft programs (see pdf in Documents)
-  - wine (jardinains, siedler5, finale)
+And last but not least, you might think of installing
+  - Adobe Pro (contains key)
+  - Microsoft Office (see pdf in Documents)
+  - wine (jardinains, siedler5, finale, ...)
+  - GanttProject [https://www.ganttproject.biz/download/free]
+  - FreeFileSync (see if on brew available again; https://freefilesync.org/download.php)
+  - Audacity (https://www.audacityteam.org/download/mac/)
+  - FileZilla (https://filezilla-project.org/download.php?type=client)
 
 Thanks for your attention!"
 
