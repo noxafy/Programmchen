@@ -536,5 +536,5 @@ function ocr() {
 }
 
 function secinvideo() {
-  \fd -H -0 "(avi|flv|mkv|mov|mp4|mpeg4?|ts|webm|wmv)$" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc
+  \fd -t f -H -0 "\.(avi|flv|mkv|mov|mp4|mpeg4?|ts|webm|wmv)$" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc
 }
