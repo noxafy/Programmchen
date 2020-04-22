@@ -538,3 +538,23 @@ function ocr() {
 function secinvideo() {
   \fd -t f -H -0 "\.(avi|flv|mkv|mov|mp4|mpeg4?|ts|webm|wmv)$" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc
 }
+
+function vltomp4() {
+  resdir="./results_mp4"
+  if [[ ! -e "$resdir" ]]; then
+    mkdir "$resdir"
+  elif [[ ! -d "$resdir" ]]; then
+    echo "Please remove $PWD/$resdir"
+    return 1
+  fi
+
+  for f in "$@"; do
+    resf=$(basename "$f")
+    resf=${resf%.*}
+    resf="$resdir/${resf}.mp4"
+    [[ -e "$resf" ]] && continue
+
+    echo "Convert $f to $resf"
+    ffmpeg -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf"
+  done
+}
