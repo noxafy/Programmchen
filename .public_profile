@@ -557,5 +557,10 @@ function vltomp4() {
 
     echo "Convert $f to $resf"
     ffmpeg -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf"
+    if hash trash &>/dev/null; then
+      trash "$f" && echo "Original file moved to trash"
+      mv "$resf" .
+    fi
   done
+  rm -r "$resdir"
 }
