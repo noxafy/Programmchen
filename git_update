@@ -35,10 +35,10 @@ case $1 in
     ;;
 esac
 
-if [[ ! -d .git ]]; then
+git rev-parse --show-toplevel &> /dev/null || {
   echo "This is not a git repository."
   exit 1
-fi
+}
 
 res=$(git stash save)
 ec=$?
