@@ -541,26 +541,32 @@ function secinvideo() {
 }
 
 function vltomp4() {
-  resdir="./results_mp4"
+  resdir="${TMPDIR}results_mp4/"
   if [[ ! -e "$resdir" ]]; then
     mkdir "$resdir"
   elif [[ ! -d "$resdir" ]]; then
-    echo "Please remove $PWD/$resdir"
+    echo "Please remove $resdir"
     return 1
   fi
 
   for f in "$@"; do
     resf=$(basename "$f")
     resf=${resf%.*}
-    resf="$resdir/${resf}.mp4"
-    [[ -e "$resf" ]] && continue
+    if [[ -e "$f" ]] && ! hash trash &>/dev/null; then
+      resf="${ref} converted"
+    fi
+    resf="$resdir${resf}.mp4"
+    if [[ -e "$resf" ]]; then
+      echo "Already done: $f (goal exists: $resf)"
+      continue
+    fi
 
     echo "Convert $f to $resf"
     ffmpeg -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf"
-    if hash trash &>/dev/null; then
+    if [[ -e "$f" ]] && hash trash &>/dev/null; then
       trash "$f" && echo "Original file moved to trash"
-      mv "$resf" .
     fi
+    mv "$resf" .
   done
   rm -r "$resdir"
 }
