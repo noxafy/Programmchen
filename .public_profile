@@ -552,19 +552,18 @@ function vltomp4() {
   for f in "$@"; do
     resf=$(basename "$f")
     resf=${resf%.*}
-    if [[ -e "$f" ]] && ! hash trash &>/dev/null; then
-      resf="${ref} converted"
-    fi
-    resf="$resdir${resf}.mp4"
+    [[ -e "$f" ]] && resf="${resf} converted"
     if [[ -e "$resf" ]]; then
       echo "Already done: $f (goal exists: $resf)"
       continue
     fi
+    resf="$resdir${resf}.mp4"
 
     echo "Convert $f to $resf"
-    ffmpeg -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf"
+    ffmpeg -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf" || continue
     if [[ -e "$f" ]] && hash trash &>/dev/null; then
       trash "$f" && echo "Original file moved to trash"
+      mv "$resf" "${resf% converted.*}.mp4"
     fi
     mv "$resf" .
   done
