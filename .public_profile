@@ -537,7 +537,15 @@ function ocr() {
 }
 
 function secinvideo() {
-  \fd -t f -H -0 "\.(avi|flv|mkv|mov|mp4|mpeg4?|ts|webm|wmv)$" "$@" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc
+  local files
+  if [[ -f $1 ]]; then
+    for f in $@; do
+      files+="$f"$'\0'
+    done
+  else
+    files=$(\fd -t f -H -0 "\.(avi|flv|mkv|mov|mp4|mpeg4?|ts|webm|wmv)$" "$@")
+  fi
+  printf "%s" "$files" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc
 }
 
 function vltomp4() {
