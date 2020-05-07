@@ -1,12 +1,18 @@
 #!/bin/bash
 
-DEBUG=""
+DEBUG=
+PRINTALL=
+storage_dir="$HOME/.yt"
+tmp_file="$cache_dir/tmp"
 youtube="https://www.youtube.com"
 site=""
 query=""
 CURL=(curl -sS -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
+declare ID
 declare -a LINKS
 declare -a DESCRIPTIONS
+declare OUTPUTS
+declare -a NEW_ELEMENTS
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Some commandline interaction with YouTube.
 $usage
@@ -41,11 +47,13 @@ while [[ -n $1 ]]; do
     shift
     [[ -z "$1" ]] && die "Please give a user name with option -u. See -h for more help."
     site="${youtube}/user/${1}/videos"
+    ID=$1
     ;;
   -c)
     shift
     [[ -z "$1" ]] && die "Please give a channel with option -c. See -h for more help."
     site="${youtube}/channel/${1}/videos"
+    ID=$1
     ;;
   -*)
     die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
@@ -204,17 +212,36 @@ function fetchVideos() {
   fi
 }
 
-function printDescriptions() {
+function setupOutputs() {
   cnt=0
   IFS=$'\n'
-  for idx in "${!DESCRIPTIONS[@]}"; do
-    printf "%s: %s \033[2m%s\033[0m\n" "$((idx+1))" "${DESCRIPTIONS[$idx]}" "${LINKS[$idx]}" # increment for zero-based to one-based conversion
+  for idx in "${!DESCRIPTIONS[@]}"; do # an array is basically a dictionary with index as key; get keys with ${!arr[@]}
+    OUTPUTS+=$(printf "%s: %s \033[2m%s\033[0m" "$((idx+1))" "${DESCRIPTIONS[$idx]}" "${LINKS[$idx]}")$'\n' # increment for zero-based to one-based conversion; why does newline in printf not work?
   done
+  if [[ -n $DEBUG ]]; then
+    echo "***** OUTPUTS ******"
+    echo "$OUTPUTS"
+    echo "***** OUTPUTS ******"
+  fi
+}
+
+function updateLocalStorage() {
+  local linksfile="$storage_dir/$ID"
+  local content=
+  if [[ -e "$linksfile" ]]; then
+    content=$(< "$linksfile")
+  fi
+  for link in "${LINKS[@]}"; do
+    if [[ "$content" != *"$link"* ]]; then
+      NEW_ELEMENTS+=($(echo "$OUTPUTS" | grep -e "$link"))
+    fi
+  done
+  echo "$OUTPUTS" > "$linksfile"
 }
 
 function askForChoose() {
   if [[ $1 = true ]]; then
-    printDescriptions
+    printf "%s" "$OUTPUTS"
   fi
 
   if [[ ${#DESCRIPTIONS[@]} -eq 1 ]]; then
@@ -260,8 +287,11 @@ if [[ "$site" = ${youtube}* ]]; then
   if [[ "$site" = */videos ]]; then
     fetchVideos "$site" "$query"
 
+    setupOutputs
+    updateLocalStorage
+
     if [[ ! -t 1 ]]; then # not interactive
-      printDescriptions
+      printOutputs
       exit 0
     fi
 
