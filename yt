@@ -1,23 +1,22 @@
 #!/bin/bash
 
-DEBUG=
-PRINTALL=
-storage_dir="$HOME/.yt"
-tmp_file="$cache_dir/tmp"
 youtube="https://www.youtube.com"
 site=""
 query=""
 CURL=(curl -sS -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
-declare ID
+DEBUG=
+PRINTALL=
+STORAGE_DIR="$HOME/.yt"
+STORAGE_FILE=w
 declare -a LINKS
 declare -a DESCRIPTIONS
-declare OUTPUTS
-declare -a NEW_ELEMENTS
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
+OUTPUTS=
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d] [-a] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Some commandline interaction with YouTube.
 $usage
 	\e[1m-h\e[0m		Displays this message and exits.
-	\e[1m-d\e[0m		Print some debug logs.
+        \e[1m-a\e[0m            Print all results from the first page.
+        \e[1m-d\e[0m            Print some debug logs.
 	\e[4msite\e[0m		Videos site (from user or channel) to grep videos from.
 	\e[1m-u\e[0m \e[4muser\e[0m		Give a \e[4muser\e[0m name to grep videos from.
 	\e[1m-c\e[0m \e[4mchannel\e[0m	Give a \e[4mchannel\e[0m to grep videos from.
@@ -40,6 +39,9 @@ while [[ -n $1 ]]; do
     printf "$help"
     exit 0
     ;;
+  -a)
+    PRINTALL=true
+    ;;
   -d)
     DEBUG=true
     ;;
@@ -47,13 +49,13 @@ while [[ -n $1 ]]; do
     shift
     [[ -z "$1" ]] && die "Please give a user name with option -u. See -h for more help."
     site="${youtube}/user/${1}/videos"
-    ID=$1
+    STORAGE_FILE="$STORAGE_DIR/$1"
     ;;
   -c)
     shift
     [[ -z "$1" ]] && die "Please give a channel with option -c. See -h for more help."
     site="${youtube}/channel/${1}/videos"
-    ID=$1
+    STORAGE_FILE="$STORAGE_DIR/$1"
     ;;
   -*)
     die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
@@ -71,7 +73,7 @@ while [[ -n $1 ]]; do
 done
 
 function parseResults0() {
-  local json=$(echo "$1" | pup --charset utf8 '.yt-lockup-content json{}')
+  local json=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content json{}')
   if [[ -n $DEBUG ]]; then
     result_name="result_$(date +%s)"
     echo "Curl result saved in ${result_name}.html and ${result_name}.json" >&2
@@ -142,9 +144,9 @@ function parseResults0() {
 
 function parseResults() {
   local tmp_results=$(parseResults0 "$1" "$2")
-  local tmp_descriptions=$(echo "$tmp_results" | sed -n 'p;n')
+  local tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
   IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
-  local tmp_links=$(echo "$tmp_results" | sed -n '1d;p;n')
+  local tmp_links=$(printf "%s" "$tmp_results" | sed -n '1d;p;n')
   IFS=$'\n' LINKS=(${tmp_links})
 
   if [[ -n $DEBUG ]]; then
@@ -181,19 +183,19 @@ function fetchVideos() {
   fi
 
   if [[ -n $src ]]; then
-    local content=$(echo "$src" | pup --charset utf8 '.yt-lockup-content')
+    local content=$(printf "%s" "$src" | pup --charset utf8 '.yt-lockup-content')
 
     # trouble shooting
     if [[ -z "$content" ]]; then
-      local channel_empty=$(echo "$src" | pup '.channel-empty-message')
+      local channel_empty=$(printf "%s" "$src" | pup '.channel-empty-message')
       [[ -n "$channel_empty" ]] && {
         if [[ $1 = */user/* ]]; then
-          die "Bad username: %s\n" $(echo "$1" | sed -e 's/.*\/user\///' -e 's/\/videos//')
+          die "Bad username: %s\n" $(printf "%s" "$1" | sed -e 's/.*\/user\///' -e 's/\/videos//')
         else
           die "Channel does not exist: $1"
         fi
       }
-      local title=$(echo "$src" | pup --charset utf8 'title text{}')
+      local title=$(printf "%s" "$src" | pup --charset utf8 'title text{}')
       die "No content found: $title: $1"
     fi
 
@@ -201,9 +203,9 @@ function fetchVideos() {
 
     if [[ ${#DESCRIPTIONS[@]} != ${#LINKS[@]} ]]; then
       printf "WTF-Error: %d descriptions, but %d links!\n" ${#DESCRIPTIONS[@]} ${#LINKS[@]}
-      echo "DESCRIPTIONS:"
+      printf "DESCRIPTIONS:\n"
       printf '%s\n' "${DESCRIPTIONS[@]}"
-      echo "LINKS:"
+      printf "LINKS:\n"
       printf '%s\n' "${LINKS[@]}"
       die
     fi
@@ -212,38 +214,44 @@ function fetchVideos() {
   fi
 }
 
-function setupOutputs() {
+function setupOutputsVariable() {
+  OUTPUTS=
   cnt=0
   IFS=$'\n'
   for idx in "${!DESCRIPTIONS[@]}"; do # an array is basically a dictionary with index as key; get keys with ${!arr[@]}
     OUTPUTS+=$(printf "%s: %s \033[2m%s\033[0m" "$((idx+1))" "${DESCRIPTIONS[$idx]}" "${LINKS[$idx]}")$'\n' # increment for zero-based to one-based conversion; why does newline in printf not work?
   done
-  if [[ -n $DEBUG ]]; then
-    echo "***** OUTPUTS ******"
-    echo "$OUTPUTS"
-    echo "***** OUTPUTS ******"
-  fi
 }
 
-function updateLocalStorage() {
-  local linksfile="$storage_dir/$ID"
+function filterLinks() {
   local content=
-  if [[ -e "$linksfile" ]]; then
-    content=$(< "$linksfile")
+  if [[ -e "$STORAGE_FILE" ]]; then
+    content=$(< "$STORAGE_FILE")
   fi
-  for link in "${LINKS[@]}"; do
-    if [[ "$content" != *"$link"* ]]; then
-      NEW_ELEMENTS+=($(echo "$OUTPUTS" | grep -e "$link"))
-    fi
-  done
-  echo "$OUTPUTS" > "$linksfile"
+
+  if [[ -z $PRINTALL ]]; then
+    # filter DESCRIPTIONS and LINKS to contain only new elements
+    for idx in "${!LINKS[@]}"; do
+      if [[ "$content" == *"${LINKS[$idx]}"* ]]; then
+        unset 'LINKS[$idx]'
+        unset 'DESCRIPTIONS[$idx]'
+      fi
+    done
+    # rebuild indicies
+    local -a NEW_LINKS
+    local -a NEW_DESCRIPTIONS
+    for idx in "${!LINKS[@]}"; do
+      NEW_LINKS+=("${LINKS[$idx]}")
+      NEW_DESCRIPTIONS+=("${DESCRIPTIONS[$idx]}")
+    done
+    LINKS=("${NEW_LINKS[@]}")
+    DESCRIPTIONS=("${NEW_DESCRIPTIONS[@]}")
+    unset NEW_LINKS
+    unset NEW_DESCRIPTIONS
+  fi
 }
 
 function askForChoose() {
-  if [[ $1 = true ]]; then
-    printf "%s" "$OUTPUTS"
-  fi
-
   if [[ ${#DESCRIPTIONS[@]} -eq 1 ]]; then
     printf "Only one result found. Do you want to open it? (y/n) [y]: "
     read ans
@@ -252,7 +260,7 @@ function askForChoose() {
         if [[ -z $DEBUG ]]; then
           f -i "${LINKS[0]}"
         else
-          echo "f -i ${LINKS[0]}"
+          printf "f -i %s\n" "${LINKS[0]}"
         fi
       ;;
       *)
@@ -270,47 +278,67 @@ function askForChoose() {
         if [[ -z $DEBUG ]]; then
           f "$link"
         else
-          echo "f $link"
+          printf "f %s" "$link"
         fi
         [[ $ans -eq 0 ]] && exit 0
       else
         die "Wrong answer. Integer is zero or too high: $ans."
       fi
     else
-      echo "Nothing opened."
+      printf "Nothing opened.\n"
       exit 0
     fi
   fi
 }
 
+function updateLocalStorage() {
+  printf "%s" "$OUTPUTS" > "$STORAGE_FILE"
+}
+
 if [[ "$site" = ${youtube}* ]]; then
   if [[ "$site" = */videos ]]; then
     fetchVideos "$site" "$query"
+    setupOutputsVariable
 
-    setupOutputs
+    if [[ -z $PRINTALL ]]; then
+      filterLinks
+    fi
     updateLocalStorage
+    if [[ -z $PRINTALL ]]; then
+      setupOutputsVariable
+    fi
 
-    if [[ ! -t 1 ]]; then # not interactive
-      printOutputs
+    if [[ ${#DESCRIPTIONS[@]} -eq 0 ]]; then
+      if [[ -z $PRINTALL ]]; then
+        printf "No new videos!\n"
+      else
+        printf "No videos found!\n"
+      fi
       exit 0
     fi
 
-    askForChoose true
+    if [[ ! -t 1 ]]; then # not interactive
+      printf "%s" "$OUTPUTS"
+      exit 0
+    fi
+
+    printf "%s" "$OUTPUTS"
+    askForChoose
     while true; do
-      askForChoose false
+      askForChoose
     done
   else
-    [[ -n "$query" ]] && echo "Warning: query will be ignored: $query" >&2
+    [[ -n "$query" ]] && printf "Warning: query will be ignored: %s\n" "$query" >&2
     if [[ -z $DEBUG ]]; then
       f -i "$site"
     else
-      echo "f -i $site"
+      printf "f -i %s\n" "$site"
     fi
   fi
 else
   if [[ -z $DEBUG ]]; then
     f yt "$site $query"
   else
-    echo "f yt $site $query"
+    printf "f yt %s %s\n" "$site" "$query"
   fi
 fi
