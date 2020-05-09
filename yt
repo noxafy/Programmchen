@@ -6,6 +6,7 @@ query=""
 CURL=(curl -sS -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 DEBUG=
 PRINTALL=
+OPEN=
 STORAGE_DIR="$HOME/.yt"
 STORAGE_FILE=w
 declare -a LINKS
@@ -56,6 +57,9 @@ while [[ -n $1 ]]; do
     [[ -z "$1" ]] && die "Please give a channel with option -c. See -h for more help."
     site="${youtube}/channel/${1}/videos"
     STORAGE_FILE="$STORAGE_DIR/$1"
+    ;;
+  -o)
+    OPEN=true
     ;;
   -*)
     die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
@@ -296,6 +300,14 @@ function updateLocalStorage() {
 }
 
 if [[ "$site" = ${youtube}* ]]; then
+  if [[ -n $OPEN ]]; then
+    if [[ -z $DEBUG ]]; then
+      f -i "$site"
+    else
+      printf "f -i %s\n" "$site"
+    fi
+    exit 0
+  fi
   if [[ "$site" = */videos ]]; then
     fetchVideos "$site" "$query"
     setupOutputsVariable
@@ -336,9 +348,11 @@ if [[ "$site" = ${youtube}* ]]; then
     fi
   fi
 else
+  # since $site is just the first given non-option argument, handle it here as query as well
+  query="$site $query"
   if [[ -z $DEBUG ]]; then
-    f yt "$site $query"
+    f yt "$query"
   else
-    printf "f yt %s %s\n" "$site" "$query"
+    printf "f yt %s\n" "$query"
   fi
 fi
