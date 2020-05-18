@@ -74,9 +74,10 @@ alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias ql="qlmanage -p"
 alias shutup="osascript -e 'Set volume output volume 0'"
 alias apropos="2>/dev/null apropos"
-alias j="jupyter notebook"
+alias j="jupyter-notebook"
 alias s="sage -n jupyter"
 alias y=youtube-dl
+alias pip="python -m pip"
 
 function cltex() {
   local goal=$1
