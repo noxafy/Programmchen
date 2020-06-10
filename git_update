@@ -57,7 +57,18 @@ if [[ -n "$1" ]]; then # if file to commit given
   toCommit=$(printf "%s" "$doubled" | sort | uniq -d)
   if [[ -n "$toCommit" ]]; then
     git add "$@" \
-    && git commit -m "$mes" \
-    && git push
+    && git commit -m "$mes"
+  fi
+fi
+
+if [[ -n $(git status | grep "ahead") ]]; then
+  if [[ -t 0 ]]; then
+    printf "git push now? [y]: "
+    read ans
+    case $ans in
+      ""|y)
+        git push
+        ;;
+    esac
   fi
 fi
