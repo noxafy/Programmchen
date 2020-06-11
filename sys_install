@@ -10,6 +10,7 @@ Warning: Leave in place!
 "
 
 # TODO: Clone repos, especially $P, and ln .* files to ~
+# TODO: install pip configuration: ipython, jupyter, ipykernel, numpy, keras, sklearn, pandas(, matplotlib?)
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
@@ -49,7 +50,6 @@ newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 # Fetch with:
 # defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g'
 dockitems='Atom
-Wunderlist
 Duolingo
 Firefox
 Thunderbird
@@ -101,8 +101,7 @@ brightness
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
 #cheat		# Better version contained in bash snippets
 #chordii
-#chromedriver
-coreutils
+#coreutils	# GNU File, Shell, and Text utilities
 diff-pdf        # needs xquartz
 exiftool
 #expect		# automate interactive applications
@@ -118,7 +117,6 @@ go
 #gobject-introspection
 googler
 hexedit
-jupyterlab
 #launch4j   	# Cross-platform Java executable wrapper
 lf
 #mas #already installed
