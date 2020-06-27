@@ -46,7 +46,7 @@ fi
 compdef _path_commands fip
 compdef _functions fif
 compdef _aliases fia
-function _tex_files() { _arguments "1: :($(echo *.tex))"; }
+function _tex_files() { _arguments "1: :($(echo *.tex))" "2: :($(echo *.tex))" }
 compdef _tex_files clat
 
 ### theme
