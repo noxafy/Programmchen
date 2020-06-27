@@ -3,9 +3,11 @@
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mfile\e[0m]"
 default_name="main.tex"
 goal=
+SHORT=
 help="Compiles a tex file multiple times, so that bib and pdf are right. Uses pdflatexmkrc if available.
 $usage
 	\e[1m-h\e[0m	Display this message and exit.
+	\e[1m-s\e[0m	Compile only one time with pdflatex.
 	\e[4mfile\e[0m	.tex-file to compile (default: $default_name).
 "
 
@@ -39,14 +41,25 @@ function open_it() {
   cltex "$1"
 }
 
-if [[ $1 = -* ]]; then
-  if [[ $1 = -h ]]; then
-    printf "$help"
-    exit 0
-  else
-    die "Wrong argument: %s\n$usage -- See -h for more help.\n" "$1"
-  fi
-fi
+while [[ $1 == -* ]]; do
+  case $1 in
+    -h|--help)
+      printf "$help"
+      exit 0
+      ;;
+    -s)
+      SHORT=true
+      ;;
+    --)
+      break;
+      ;;
+    -*)
+      die "Wrong argument: %s\n$usage -- See -h for more help."
+"$1"
+      ;;
+  esac
+  shift
+done
 
 goal="${1:-$default_name}"
 [[ -n "$2" ]] && multiple=true || multiple=
@@ -59,15 +72,16 @@ elif [[ -n "$goal" ]]; then
     echo "Please give an existing and readable file. See -h for more help."
     exit 1
   fi
-  latex -interaction=batchmode "$goal"
-  if cat "$goal" | grep '^\\printbibliography' >/dev/null; then
-    biber "${goal:0:$((${#goal}-4))}"
-  else
-    bibtex "${goal:0:$((${#goal}-3))}aux"
+  pdflatex "$goal" || die 'First latex compilation run failed'
+  if [[ -z $SHORT ]]; then
+    if cat "$goal" | grep '^\\printbibliography' >/dev/null; then
+      biber "${goal:0:$((${#goal}-4))}"
+    else
+      bibtex "${goal:0:$((${#goal}-3))}aux"
+    fi
+    pdflatex "$goal" || die 'Second latex compilation run failed'
+    pdflatex "$goal" || die 'Third latex compilation run failed'
   fi
-  latex "$goal" || die 'First latex compilation run failed'
-  latex "$goal" || die 'Second latex compilation run failed'
-  pdflatex "$goal" || die 'pdflatex compilation failed'
   open_it "$goal"
 else
  die "Please give a valid tex file. See -h for more help."
