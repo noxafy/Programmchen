@@ -3,12 +3,12 @@
 youtube="https://www.youtube.com"
 site=""
 query=""
-CURL=(curl -sS -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
+CURL=(curl -sSi -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 DEBUG=
 PRINTALL=
 OPEN=
 STORAGE_DIR="$HOME/.yt"
-STORAGE_FILE=w
+STORAGE_FILE=
 declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
@@ -21,7 +21,8 @@ $usage
 	\e[1m-d\e[0m		Print some debug logs.
 	\e[4msite\e[0m		Videos site (from user or channel) to grep videos from.
 	\e[1m-u\e[0m \e[4muser\e[0m		Give a \e[4muser\e[0m name to grep videos from.
-	\e[1m-c\e[0m \e[4mchannel\e[0m	Give a \e[4mchannel\e[0m to grep videos from.
+	\e[1m-c\e[0m \e[4mname\e[0m		Give a channel's \e[4mname\e[0m to grep videos from.
+	\e[1m-i\e[0m \e[4mID\e[0m		Give a channel's \e[4mID\e[0m ID to grep videos from.
 	\e[4mseries\e[0m		Filters for special series containing \e[4mseries\e[0m (case insensitive).
 	\e[4mquery\e[0m		Search a specified query on YouTube.
 "
@@ -53,7 +54,13 @@ while [[ -n $1 ]]; do
     ;;
   -c)
     shift
-    [[ -z "$1" ]] && die "Please give a channel with option -c. See -h for more help."
+    [[ -z "$1" ]] && die "Please give a channel's name  with option -c. See -h for more help."
+    site="${youtube}/c/${1}/videos"
+    STORAGE_FILE="$STORAGE_DIR/$1"
+    ;;
+  -i)
+    shift
+    [[ -z "$1" ]] && die "Please give a channel ID with option -i. See -h for more help."
     site="${youtube}/channel/${1}/videos"
     STORAGE_FILE="$STORAGE_DIR/$1"
     ;;
@@ -76,13 +83,55 @@ while [[ -n $1 ]]; do
 done
 
 function parseResults0() {
-  local json=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content json{}')
+  json_file="${STORAGE_FILE}.json"
+  printf "%s" "$1" > $json_file
   if [[ -n $DEBUG ]]; then
-    result_name="result_$(date +%s)"
-    echo "Curl result saved in ${result_name}.html and ${result_name}.json" >&2
-    echo "$1" > "${result_name}.html"
-    echo "$json" > "${result_name}.json"
-  fi
+    echo "Json file saved in ${json_file}" >&2
+	fi
+  node -e "const filepath = process.argv[1];
+      const fs = require('fs');
+      const json = JSON.parse(fs.readFileSync(filepath));
+      let content = json.contents.twoColumnBrowseResultsRenderer.tabs.filter(el => el.tabRenderer?.content)[0].tabRenderer.content
+      let gridRenderer = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].gridRenderer
+
+      for (let item of gridRenderer.items) {
+        let v = item.gridVideoRenderer
+
+        // get data
+        let title = v.title.simpleText  // fallback: v.title.accessibility.accessibilityData.label
+        // filter query
+        if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
+
+        let description
+        // Regular video
+        if (v.viewCountText.simpleText) {
+          let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+          let views = v.viewCountText.simpleText
+          let time = v.publishedTimeText.simpleText
+
+          description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+        }
+        // Livestream
+        else if (v.viewCountText.runs) {
+          let views = v.viewCountText.runs[0].text
+          description = '\033[1mLive:\033[0m ' + title + ' \033[37m' + views + '\033[0m'
+        } else {
+          console.error('Unknown video type!')
+        }
+
+        // create link
+        let link = '$youtube' + v.navigationEndpoint.commandMetadata.webCommandMetadata.url
+
+        // print out, remove newlines
+        console.log(description.replace(/\r?\n|\r/gm, ''))
+        console.log(link)
+      }" "$json_file" | perl -MHTML::Entities -pe 'decode_entities($_);'
+  [[ -n $DEBUG ]] || rm $json_file
+}
+
+function parseResults1() {
+  echo "Last time used: $(date +%s)" > ${STORAGE_DIR}/parser_v1
+  local json=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content json{}')
   node -e "
     const json = JSON.parse(process.argv[1]);
     for (let el of json) {
@@ -141,12 +190,19 @@ function parseResults0() {
       // print out, remove newlines
       console.log(description.replace(/\r?\n|\r/gm, ''))
       console.log(link)
-    }" "$json" \
-    | perl -MHTML::Entities -pe 'decode_entities($_);'
+    }" "$json" | perl -MHTML::Entities -pe 'decode_entities($_);'
 }
 
 function parseResults() {
-  local tmp_results=$(parseResults0 "$1" "$2")
+  # find place of content in html
+	local v1=$(printf "%s" "$1" | grep 'window\["ytInitialData"\]' | sed 's/    window\["ytInitialData"\] = //' | sed 's/;$//')
+  if [[ -n "$v1" ]]; then
+    local tmp_results=$(parseResults0 "$v1" "$2")
+  else
+	  local v2=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content')
+    [[ -z "$v2" ]] && die "Couldn't parse html"
+    local tmp_results=$(parseResults1 "$v2" "$2")
+  fi
   local tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
   IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
   local tmp_links=$(printf "%s" "$tmp_results" | sed -n '1d;p;n')
@@ -175,6 +231,11 @@ function parseResults() {
 function fetchVideos() {
   waitnet -s >&2 || exit 1
 
+  if [[ -n $DEBUG ]]; then
+    printf '"%s" ' "${CURL[@]}" >&2
+    printf "%s\n" "$1" >&2
+  fi
+
   # curl fetch
   if [[ -n "$PROXY" ]]; then
     #ip=$(curl -sS --socks5-hostname "$PROXY" ifconfig.me)
@@ -185,35 +246,39 @@ function fetchVideos() {
     local src=$("${CURL[@]}" "$1")
   fi
 
-  if [[ -n $src ]]; then
-    local content=$(printf "%s" "$src" | pup --charset utf8 '.yt-lockup-content')
+  if [[ -n $DEBUG ]]; then
+    result_name="${STORAGE_FILE}_$(date +%s)"
+    echo "Curl result saved in ${result_name}" >&2
+    echo "$src" > "${result_name}"
+  fi
 
-    # trouble shooting
-    if [[ -z "$content" ]]; then
-      local channel_empty=$(printf "%s" "$src" | pup '.channel-empty-message')
-      [[ -n "$channel_empty" ]] && {
-        if [[ $1 = */user/* ]]; then
-          die "Bad username: %s\n" $(printf "%s" "$1" | sed -e 's/.*\/user\///' -e 's/\/videos//')
-        else
-          die "Channel does not exist: $1"
-        fi
-      }
-      local title=$(printf "%s" "$src" | pup --charset utf8 'title text{}')
-      die "No content found: $title: $1"
-    fi
+  http_status=$(echo "$src" | sed -n '1p')
+  case "$http_status" in
+    *200*)
+      ;;
+    *404*|*303*)
+      if [[ $1 = */user/* ]]; then
+        die "Bad username: %s\n" $(printf "%s" "$1" | sed -e 's/.*\/user\///' -e 's/\/videos//')
+      else
+        die "Channel does not exist: $1"
+      fi
+      return
+      ;;
+    *)
+      echo "Uncaught HTTP Error: $http_status"
+      return
+      ;;
+  esac
 
-    parseResults "$content" "$2"
+  parseResults "$src" "$2"
 
-    if [[ ${#DESCRIPTIONS[@]} != ${#LINKS[@]} ]]; then
-      printf "WTF-Error: %d descriptions, but %d links!\n" ${#DESCRIPTIONS[@]} ${#LINKS[@]}
-      printf "DESCRIPTIONS:\n"
-      printf '%s\n' "${DESCRIPTIONS[@]}"
-      printf "LINKS:\n"
-      printf '%s\n' "${LINKS[@]}"
-      die
-    fi
-  else
-    die "Fetching from $1 failed."
+  if [[ ${#DESCRIPTIONS[@]} != ${#LINKS[@]} ]]; then
+    printf "WTF-Error: %d descriptions, but %d links!\n" ${#DESCRIPTIONS[@]} ${#LINKS[@]}
+    printf "DESCRIPTIONS:\n"
+    printf '%s\n' "${DESCRIPTIONS[@]}"
+    printf "LINKS:\n"
+    printf '%s\n' "${LINKS[@]}"
+    die
   fi
 }
 
@@ -301,6 +366,7 @@ function updateLocalStorage() {
 if [[ "$site" = ${youtube}* ]]; then
   if [[ -n $OPEN ]]; then
     if [[ -z $DEBUG ]]; then
+      echo "open $site"
       f -i "$site"
     else
       printf "f -i %s\n" "$site"
