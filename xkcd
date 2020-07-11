@@ -1,0 +1,70 @@
+#!/bin/bash
+
+saveto=
+comic=
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s \e[4mdir\e[0m] [--] [\e[4mcomic\e[0m]"
+help="Fetches comics from xkcd.
+$usage
+        \e[1m-h\e[0m          Displays this message and exits.
+        \e[1m-s\e[0m \e[4mdir\e[0m      Save the current image to \e[4mdir\e[0m
+        \e[4mcomic\e[0m       The comic code to fetch. Defaults to the current
+"
+
+function die() {
+  mes=$1
+  shift
+  printf "$mes\n" "$*"
+  exit 1
+}
+
+while [[ $1 == -* ]]; do
+  case $1 in
+    -h|--help)
+      printf "$help"
+      exit 0
+      ;;
+#    -d)
+#      DEBUG=true
+#      ;;
+    -s)
+      shift
+      [[ -z $1 ]] && die "Please give a directory where to save the comic with argument -s."
+      saveto=$1
+      ;;
+    --)
+      break;
+      ;;
+    -*)
+      die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
+      ;;
+    *)
+      break;
+      ;;
+  esac
+  shift
+done
+
+comic=$1
+
+if ! hash imgcat || ! hash jq; then
+  echo "Dependencies required: imgcat, jq"
+fi
+
+waitnet -s || die
+
+if [[ -z comic ]]; then
+  link=https://xkcd.com/info.0.json
+else
+  link=https://xkcd.com/$comic/info.0.json
+fi
+
+json=$(curl -sS "$link")
+img=$(echo "$json" | jq -r ".img")
+
+if [[ -z $saveto ]]; then
+  curl -sS "$img" | imgcat && echo "$json" | jq -r ".alt"
+else
+  wget -P "$saveto" "$img"
+  json_file=$(basename "$img").json
+  echo $json > "${saveto}/$json_file"
+fi
