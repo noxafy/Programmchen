@@ -141,8 +141,17 @@ alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 alias yt1080="youtube-dl -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'"
 alias ytul="alias | grep \"=\'yt\ \" | sed 's/alias //g;s/=.*//g'"
-alias ytu='for y in $(ytul); do echo "$y"; eval $y | cat; done'
 alias be="bielefeld_events"
+
+function ytu() {
+  setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
+  yts=($(ytul))
+  for y in "${yts[@]}"; do
+    echo "$y\n$(eval $y)" &
+  done
+  wait
+  setopt MONITOR
+}
 
 function uriencode() {
   if hash node &>/dev/null; then
