@@ -84,3 +84,5 @@ function help() {
 
 #for IntelliJ shell do
 #echo "source ~/.zshrc" >> /Applications/IntelliJ\ IDEA.app/Contents/plugins/terminal/.zshrc
+# If zsh is slow, try
+# mv ~/.oh-my-zsh/lib/spectrum.zsh ~/.oh-my-zsh/lib/spectrum.zsh_disabled
