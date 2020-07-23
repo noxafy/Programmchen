@@ -12,6 +12,8 @@ $usage
 	\e[1m-c\e[0m	Calculate the space needed for the backup.
 "
 
+# TODO: backup ~/Library/Application Support/Anki2
+
 ####################################################
 ### Functions
 ####################################################

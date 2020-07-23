@@ -10,7 +10,9 @@ Warning: Leave in place!
 "
 
 # TODO: Clone repos, especially $P, and ln .* files to ~
-# TODO: install pip configuration: ipython, jupyter, ipykernel, numpy, keras, sklearn, pandas(, matplotlib?)
+# TODO: install pip configuration: notebook, tensorflow, matplotlib, ipywidgets, sklearn # ipython, numpy, scipy, keras
+# TODO: what about: jupyter, ipykernel, pandas
+# TODO: download and link https://iterm2.com/utilities/imgcat
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
