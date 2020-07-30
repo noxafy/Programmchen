@@ -144,6 +144,7 @@ alias ytul="alias | grep \"=\'yt\ \" | sed 's/alias //g;s/=.*//g'"
 alias be="bielefeld_events"
 
 function ytu() {
+  waitnet -s || return
   setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
   yts=($(ytul))
   for y in "${yts[@]}"; do
