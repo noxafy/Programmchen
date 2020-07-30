@@ -473,7 +473,7 @@ function po() {
 ### misc stuff
 #############################
 alias showUnixTime="/usr/local/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
-alias weekday="case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo \"Invalid week day number: $(date +%u)\";; esac"
+alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
 alias lsusers="dscl . list /Users | grep -v ^_"
 
 function backup() {
