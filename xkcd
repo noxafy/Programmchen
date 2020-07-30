@@ -62,7 +62,7 @@ json=$(curl -sS "$link")
 img=$(echo "$json" | jq -r ".img")
 
 if [[ -z $saveto ]]; then
-  curl -sS "$img" | imgcat && echo "$json" | jq -r ".alt"
+  imgcat -u "$img" && echo "$json" | jq -r ".alt"
 else
   wget -P "$saveto" "$img"
   json_file=$(basename "$img").json
