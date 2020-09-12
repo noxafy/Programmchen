@@ -476,6 +476,15 @@ alias showUnixTime="/usr/local/bin/bash -c 'while true; do printf \"\\r\\e[K\$EP
 alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
 alias lsusers="dscl . list /Users | grep -v ^_"
 
+function isprime() {
+  if [[ ${#1} -le 17 ]] && (($1 < 18014398509481984)); then # 2^54
+    python "$P"/isprime.py $1
+  else
+    #echo "Let's harness sage..."
+    sage -c "print(is_prime($1))"
+  fi
+}
+
 function backup() {
   local target=$(git config --global custom.backup)
   if [[ -z $target ]]; then
