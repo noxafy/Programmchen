@@ -87,7 +87,7 @@ function parseResults0() {
   printf "%s" "$1" > $json_file
   if [[ -n $DEBUG ]]; then
     echo "Json file saved in ${json_file}" >&2
-	fi
+  fi
   node -e "const filepath = process.argv[1];
       const fs = require('fs');
       const json = JSON.parse(fs.readFileSync(filepath));
@@ -98,7 +98,14 @@ function parseResults0() {
         let v = item.gridVideoRenderer
 
         // get data
-        let title = v.title.simpleText  // fallback: v.title.accessibility.accessibilityData.label
+        let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
+        title = title.substring(0, title.lastIndexOf(' von'))
+        if (!title) {
+          // slightly panic
+          console.error('Error! This video has no title node (item.gridVideoRenderer.title.simpleText):')
+          console.error(JSON.stringify(item))
+        }
+
         // filter query
         if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
 
@@ -130,7 +137,7 @@ function parseResults0() {
 }
 
 function parseResults1() {
-  echo "Last time used: $(date +%s)" > ${STORAGE_DIR}/parser_v1
+  echo "Last time used: $(date)" > ${STORAGE_DIR}/parser_v1
   local json=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content json{}')
   node -e "
     const json = JSON.parse(process.argv[1]);
