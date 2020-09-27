@@ -558,7 +558,21 @@ function ocr() {
   fi
 }
 
+function img_x() {
+  local divide=$1
+  shift
+
+  for img in $@; do
+    local height=$(sips -g pixelHeight "$img" | grep -o ': \d\d\d\d' | grep -o "\d\d\d\d")
+    height=$(echo "${height}/$divide" | bc)
+    sips -s format jpeg --resampleHeight "$height" "$img" --out "${img%.*}.jpg"
+  done
+}
+alias img_2="img_x 2"
+alias img_4="img_x 4"
+
 function secinvideo() {
+
   local files
   if [[ -f $1 ]]; then
     for f in $@; do
