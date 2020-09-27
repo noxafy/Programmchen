@@ -4,7 +4,7 @@ usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mfile\e[0m]"
 default_name="main.tex"
 goal=
 SHORT=
-help="Compiles a tex file multiple times, so that bib and pdf are right. Uses pdflatexmkrc if available.
+help="Compiles a tex file. Complies multiple times if a bib file is existent, so that literature section is right. Uses pdflatexmkrc if available.
 $usage
 	\e[1m-h\e[0m	Display this message and exit.
 	\e[1m-s\e[0m	Compile only one time with pdflatex.
@@ -54,8 +54,7 @@ while [[ $1 == -* ]]; do
       break;
       ;;
     -*)
-      die "Wrong argument: %s\n$usage -- See -h for more help."
-"$1"
+      die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
       ;;
   esac
   shift
@@ -63,6 +62,10 @@ done
 
 goal="${1:-$default_name}"
 [[ -n "$2" ]] && multiple=true || multiple=
+
+if ! ls | grep '.bib$' &>/dev/null; then
+  SHORT=true
+fi
 
 if [[ -r "$PWD/pdflatexmkrc" ]]; then
   latexmk -pdf -r pdflatexmkrc "$goal" || die
