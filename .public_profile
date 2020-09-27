@@ -594,8 +594,10 @@ function vltomp4() {
     if [[ -e "$f" ]] && hash trash &>/dev/null; then
       trash "$f" && echo "Original file moved to trash"
       mv "$resf" "${resf% converted.*}.mp4"
+      mv "${resf% converted.*}.mp4" .
+    else
+      mv "$resf" .
     fi
-    mv "$resf" .
   done
   rm -r "$resdir"
 }
