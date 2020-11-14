@@ -63,7 +63,7 @@ done
 goal="${1:-$default_name}"
 [[ -n "$2" ]] && multiple=true || multiple=
 
-if ! ls | grep '.bib$' &>/dev/null; then
+if ! cat "$goal" | grep '\\ref' &>/dev/null; then
   SHORT=true
 fi
 
