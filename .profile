@@ -13,6 +13,7 @@ export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 export ANDROID_HOME=$ANDROID_SDK_ROOT
 export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node deps versioning
 #export PATH="$JAVA_HOME/bin:$PATH"
+alias python=python3.8
 
 #############################
 ### prefs
