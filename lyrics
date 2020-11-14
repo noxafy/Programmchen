@@ -150,6 +150,10 @@ $res" | less
     res=$(echo "$res" | sed 's/.*<p class="mxm-lyrics__content ">//'| sed 's/<\/p>.*//')
   fi
 
+  if [[ -n $(echo "$1" | grep "songtexte\.com") ]]; then
+    res=$(echo "$res" | grep -v ']]>\*\/' | grep -v '();' | grep -v 'musixmatch' | grep -v 'Writer(s)')
+  fi
+
   if [[ -n $DEBUG ]]; then
     result_file="lyrics_result_$(date +%s).html"
     echo "$res" > "$result_file"
