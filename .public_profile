@@ -17,7 +17,7 @@ elif [[ -r {-1} ]]; then \
   printf '\e[37m'; file {-1} | tr -d '\n'; printf ' ('; stat -f '%z' {-1} | tr -d '\n'; printf ' Bytes)'; printf '\e[0m\n'; cat {-1}; \
 else \
   echo 'Invalid file name: ' {}; \
-fi\" --preview-window=right:hidden"
+fi\" --preview-window=right" #--preview-window=right:hidden
 alias lsusers="dscl . list /Users | grep -v ^_"
 
 #############################
