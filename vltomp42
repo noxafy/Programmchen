@@ -1,0 +1,21 @@
+#!/bin/bash
+
+resdir="results_mp4/"
+if [[ ! -e "$resdir" ]]; then
+	mkdir "$resdir"
+elif [[ ! -d "$resdir" ]]; then
+	echo "Please remove $resdir"
+	return 1
+fi
+
+for f in "$@"; do
+	name=$(basename "$f")
+	name=${name%.*}
+  goal="$resdir${name}.mp4"
+	if [[ -e "$goal" ]]; then
+		echo "Already done: $f (goal exists: $goal)"
+		continue
+	fi
+	echo "Convert $f to $goal"
+	ffmpeg -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$goal" || continue
+done
