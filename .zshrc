@@ -59,6 +59,7 @@ PROMPT='%(?..%F{red})%*%f %c$(git_prompt_info)%(!.%F{red}.)$%f '
 
 ### zsh things
 alias t="whence -avs"
+unalias gsd
 
 function command_not_found_handler() {
   if type command_not_found >/dev/null 2>&1; then
