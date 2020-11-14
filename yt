@@ -7,22 +7,24 @@ CURL=(curl -sSi -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
 DEBUG=
 PRINTALL=
 OPEN=
+FILE=
 STORAGE_DIR="$HOME/.yt"
 STORAGE_FILE=
 declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -f \e[4mfile\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Some commandline interaction with YouTube.
 $usage
 	\e[1m-h\e[0m		Displays this message and exits.
 	\e[1m-a\e[0m		Print all results from the first page.
 	\e[1m-o\e[0m		Just opens the generated link with \e[1mf\[0m.
 	\e[1m-d\e[0m		Print some debug logs.
-	\e[4msite\e[0m		Videos site (from user or channel) to grep videos from.
+	\e[4msite\e[0m		Youtube user or channel site to grep videos from.
 	\e[1m-u\e[0m \e[4muser\e[0m		Give a \e[4muser\e[0m name to grep videos from.
 	\e[1m-c\e[0m \e[4mname\e[0m		Give a channel's \e[4mname\e[0m to grep videos from.
 	\e[1m-i\e[0m \e[4mID\e[0m		Give a channel's \e[4mID\e[0m ID to grep videos from.
+        \e[1m-f\e[0m \e[4mfile\e[0m         Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
 	\e[4mseries\e[0m		Filters for special series containing \e[4mseries\e[0m (case insensitive).
 	\e[4mquery\e[0m		Search a specified query on YouTube.
 "
@@ -63,6 +65,12 @@ while [[ -n $1 ]]; do
     [[ -z "$1" ]] && die "Please give a channel ID with option -i. See -h for more help."
     site="${youtube}/channel/${1}/videos"
     STORAGE_FILE="$STORAGE_DIR/$1"
+    ;;
+  -f)
+    shift
+    [[ -z "$1" || ! -e "$1" ]] && die "Please give a file with curl fetch results with option -f. See -h for more help."
+    STORAGE_FILE="$STORAGE_DIR/"$(basename "$1")
+    FILE="$1"
     ;;
   -o)
     OPEN=true
@@ -202,12 +210,16 @@ function parseResults1() {
 
 function parseResults() {
   # find place of content in html
-	local v1=$(printf "%s" "$1" | grep 'window\["ytInitialData"\]' | sed 's/    window\["ytInitialData"\] = //' | sed 's/;$//')
+  local v1=$(printf "%s" "$1" | grep -m 1 '[ "]ytInitialData' | sed 's/.*ytInitialData = //' | sed 's/.*ytInitialData"] = //' | sed 's/<\/script>.*//' | sed 's/;$//')
   if [[ -n "$v1" ]]; then
     local tmp_results=$(parseResults0 "$v1" "$2")
-  else
-	  local v2=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content')
-    [[ -z "$v2" ]] && die "Couldn't parse html"
+  else # try old version
+    local v2=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content')
+    if [[ -z "$v2" ]]; then
+      result_name="${STORAGE_FILE}_error_$(date +%s)"
+#      printf "%s" "$1" >> "${result_name}"
+      die "Couldn't parse html!" #Curl result saved in ${result_name}"
+    fi
     local tmp_results=$(parseResults1 "$v2" "$2")
   fi
   local tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
@@ -255,8 +267,8 @@ function fetchVideos() {
 
   if [[ -n $DEBUG ]]; then
     result_name="${STORAGE_FILE}_$(date +%s)"
-    echo "Curl result saved in ${result_name}" >&2
     echo "$src" > "${result_name}"
+    echo "Curl result saved in ${result_name}" >&2
   fi
 
   http_status=$(echo "$src" | sed -n '1p')
@@ -419,6 +431,12 @@ if [[ "$site" = ${youtube}* ]]; then
       printf "f -i %s\n" "$site"
     fi
   fi
+elif [[ -n "$FILE" ]]; then
+  results=$(cat "$FILE")
+  parseResults "$results" "$query"
+  setupOutputsVariable
+  filterLinks
+  printf "%s" "$OUTPUTS"
 else
   # since $site is just the first given non-option argument, handle it here as query as well
   query="$site $query"
