@@ -612,6 +612,7 @@ function vltomp4() {
       mv "${resf% converted.*}.mp4" .
     else
       mv "$resf" .
+      printf "Saved as $PWD/%s" "$(basename $resf)"
     fi
   done
   rm -r "$resdir"
