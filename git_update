@@ -45,11 +45,7 @@ ec=$?
 echo "$res"
 [[ $ec -eq 0 ]] || exit $ec
 
-git pull --rebase
-
-if [[ "No local changes to save" != "$res" ]]; then
-  git stash pop || exit $?
-fi
+git pull --rebase || exit $?
 
 if [[ -n "$1" ]]; then # if file to commit given
   untracked=$(git ls-files -z --others --exclude-standard | xargs -0 -n 1 printf "%s\n")
@@ -57,7 +53,7 @@ if [[ -n "$1" ]]; then # if file to commit given
   toCommit=$(printf "%s" "$doubled" | sort | uniq -d)
   if [[ -n "$toCommit" ]]; then
     git add "$@" \
-    && git commit -m "$mes"
+    && git commit -m "$mes" || exit $?
   fi
 fi
 
@@ -67,8 +63,12 @@ if [[ -n $(git status | grep "ahead") ]]; then
     read ans
     case $ans in
       ""|y)
-        git push
+        git push || exit $?
         ;;
     esac
   fi
+fi
+
+if [[ "No local changes to save" != "$res" ]]; then
+  git stash pop || exit $?
 fi
