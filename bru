@@ -61,5 +61,6 @@ if [[ -n $extendedUpgrade ]]; then
   runCmd brew cleanup
   runCmd brew doctor
 #  hash mas &>/dev/null && runCmd mas upgrade
+  softwareupdate --all --install
 fi
 end
