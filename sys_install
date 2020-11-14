@@ -52,11 +52,12 @@ newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 # Fetch with:
 # defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g'
 dockitems='Atom
+CuriosityStream
 Duolingo
 Firefox
+Safari
 Thunderbird
 Spotify
-Audacity
 "Microsoft OneNote"
 Anki
 calibre
@@ -71,8 +72,10 @@ brews=(
   fd
   fortune
   fzf
+  heksa
   howdoi
   imagemagick   # installs convert
+  jq
   lorem
   lsd
   nano
@@ -91,6 +94,7 @@ brews=(
 
 # extended / main only
 brews+=(
+airshare
 agedu		# Unix utility for tracking down wasted disk space
 #aspell
 bash
@@ -102,6 +106,7 @@ brightness
 #broot		# New way to see and navigate directory trees
 #chafa		# Versatile and fast Unicode/ASCII/ANSI graphics renderer
 #cheat		# Better version contained in bash snippets
+#choose		# reads from stdin, lets user choose one line, prints that line to stdout, exits
 #chordii
 #coreutils	# GNU File, Shell, and Text utilities
 diff-pdf        # needs xquartz
@@ -120,11 +125,11 @@ go
 googler
 hexedit
 #launch4j   	# Cross-platform Java executable wrapper
-lf
+#lf		# Terminal visual file manager
 #mas #already installed
-maven
-maven-completion
-#monolith	# Saving complete web pages as a single HTML
+#maven
+#maven-completion
+monolith	# Saving complete web pages as a single HTML
 mplayer
 #mujs
 mysql
@@ -132,6 +137,7 @@ nativefier
 #navi 		# Interactive cheatsheet tool
 #nbdime		# Jupyter Notebook Diff and Merge tools
 #pass #already installed
+pandoc		# markup format conversion
 pastel		# Generate, analyze, convert and manipulate colors
 #plan9port
 #python@2 #someone depending on this?
@@ -141,12 +147,13 @@ tesseract-lang
 tldr		# Simplified and community-driven man pages
 tor
 #trash		# CLI tool that moves files or folder to the trash
-#wine
+trimage
+#wine		# use wine-stable in brew casks
 #winetricks
 woff2
 #you-get
 youtube-dl
-zeek 		#Network security monitor
+#zeek 		# passive network traffic analyzer
 )
 
 # essentials
@@ -167,44 +174,56 @@ brewcasks=(
 # extended / main only
 brewcasks+=(
 #anaconda
-#android-file-transfer
+android-file-transfer
 #android-sdk
 #android-studio
 anki
 atom
+#avira-antivirus
 #axure-rp
-#bibdesk
+background-music
+#balenaetcher 		# utility for writing image files
+bibdesk
 #blender
 calibre
 #celestia
+discord
 #docker
+drawio
+#eul 			# clear and simple status monitoring
+#font-times-newer-roman	# slightly wider times font
 geogebra
+#gephi			# Utility to visualize and explore GraphViz graphs
 google-earth-pro
+#graphsketcher		# draw graphs
 intellij-idea
 java
 #jwzlyrics
 #kodi
 mactex
+#mathpix-snipping-tool  #nice, but only 50 pics/month
 #mp3tag
 musescore
 #nextcloud #already installed
 #notational-velocity
 #nvalt
 #openoffice
-#osxfuse #maybe needed for plugging the external drive?
-#sage
+#osxfuse 		#maybe needed for plugging the external drive?
+sage
 signal
 #sketch
 #skype
-sonic-visualiser
+#sonic-visualiser
 soundflower
 spotify
 #stellarium
 #teamviewer
 telegram
-texstudio
+#texstudio
 thunderbird
+#tor-browser
 ukelele
+wine-stable
 xquartz)
 
 masinstalls=(
@@ -212,11 +231,10 @@ masinstalls=(
 890805912 # Newsflow
 595191960 # CopyClip
 1061963639 # VirtualDJ 8
-410628904 # Wunderlist
 1278508951 # Trello
 
 ### Apple
-#497799835 # XCode, already required by mas
+#497799835 # XCode
 408981434 # iMovie
 409183694 # Keynote
 409201541 # Pages
@@ -411,7 +429,7 @@ if [[ -z "$P" ]]; then
   echo "Dock settings"
   # "com.apple.dock" = {
   defaults write com.apple.dock autohide 1
-  defaults write com.apple.dock largesize 55
+  defaults write com.apple.dock largesize 50
   defaults write com.apple.dock magnification 1
   defaults write com.apple.dock minimize-to-application 1
   defaults write com.apple.dock orientation left
@@ -798,7 +816,7 @@ if [[ ! -e ~/.public_profile \
 
   if [[ -z ${P+x} ]]; then
     echo "Variable \$P not set!"
-  echo "Please link \$P/.profile to \$HOME manually"
+    echo "Please link \$P/.profile to \$HOME manually"
     exit 1
   fi
 
