@@ -48,7 +48,7 @@ die() {
 }
 
 # This is used to get the url for the lyrics
-function google {
+function google() {
   local site=$1
   shift
   local query="$* site:${site}"
@@ -201,6 +201,7 @@ $res" | less
       | grep -v "Jetzt Songtext hinzufügen" \
       | grep -v "Laden des Songtextes wird vorbereitet ..." \
       | perl -pe 's/^[ \t]+//' \
+      | sed -e 's/\r/\n/' \
       | sed '/^$/N;/^\n$/D');
 
   if [[ -z $res ]]; then
@@ -249,6 +250,11 @@ function finishIt() {
   echo "$res"
   #... and one newline after
   if [[ ! "$res" =~ [[:space:]]$ ]]; then
+    echo
+  #else
+  #  printf "%s" "$res" | tail -c 3 | hexdump
+  fi
+  if [[ -t 1 ]]; then
     echo
   fi
   exit 0
