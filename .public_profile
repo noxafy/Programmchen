@@ -334,27 +334,38 @@ function _pick() {
   fi
 
   local picked
-  picked=$(/usr/local/bin/fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right)
+  picked=$(/usr/local/bin/fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
   local exit_code=$?
+  if [[ $(printf "%s" "$picked" | wc -l) -gt 0 ]]; then # result found
+    query=$(printf "%s" "$picked" | head -1)
+    picked=$(printf "%s" "$picked" | tail -1)
+  else
+    query=$picked
+  fi
 
   [[ "${q_dirname:${#q_dirname}-1:1}" != "/" ]] && q_dirname="$q_dirname/"
   case $exit_code in
     0) # found
-      echo "$q_dirname$picked"
+      printf "%s" "$q_dirname$picked"
       ;;
     1) # not found
-      echo "$q_dirname$query"
+      printf "%s" "$q_dirname$query"
       ;;
     *)
-      return $exit_code
       ;;
   esac
+  return $exit_code
 }
 
 function _pick_and_execute() {
   local file_only=false
   if [[ "-f" == $1 ]]; then
     file_only=true
+    shift
+  fi
+  local writer=false
+  if [[ "-w" == $1 ]]; then
+    writer=true
     shift
   fi
 
@@ -375,8 +386,23 @@ function _pick_and_execute() {
   fi
 
   local picked
-  picked=$(_pick $file_only "$query") || return $?
-  "${cmd[@]}" "${args[@]}" "$picked"
+  picked=$(_pick $file_only "$query")
+  local exit_code=$?
+  case $exit_code in
+    0) # found
+      "${cmd[@]}" "${args[@]}" "$picked"
+      ;;
+    1) # not found
+      if $writer; then
+        "${cmd[@]}" "${args[@]}" "$picked"
+      else
+        return $exit_code
+      fi
+      ;;
+    *)
+      return $exit_code
+      ;;
+  esac
 }
 
 function e() {
@@ -384,19 +410,19 @@ function e() {
 }
 
 function n() {
-  _pick_and_execute -f nano "$@"
+  _pick_and_execute -f -w nano "$@"
 }
 
 function sn() {
-  _pick_and_execute -f "sudo nano" "$@"
+  _pick_and_execute -f -w "sudo nano" "$@"
 }
 
 function m() {
-  _pick_and_execute mate "$@"
+  _pick_and_execute mate -w "$@"
 }
 
 function sm() {
-  _pick_and_execute "sudo mate" "$@"
+  _pick_and_execute -w "sudo mate" "$@"
 }
 
 function o() {
