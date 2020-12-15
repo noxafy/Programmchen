@@ -149,6 +149,8 @@ function ytu() {
   waitnet -s || return
   setopt NO_MONITOR # LOCAL_OPTIONS NO_NOTIFY
   yts=($(ytul))
+  [[ -n "$PROXY" ]] && echo "Using proxy ($PROXY)"
+  yts=($(ytul))
   for y in "${yts[@]}"; do
     echo "$y\n$(eval $y)" &
   done
@@ -418,7 +420,7 @@ function sn() {
 }
 
 function m() {
-  _pick_and_execute mate -w "$@"
+  _pick_and_execute -w mate "$@"
 }
 
 function sm() {
