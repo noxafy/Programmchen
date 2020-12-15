@@ -10,9 +10,11 @@ Warning: Leave in place!
 "
 
 # TODO: Clone repos, especially $P, and ln .* files to ~
-# TODO: install pip configuration: notebook, tensorflow, matplotlib, ipywidgets, sklearn # ipython, numpy, scipy, keras
+# TODO: install pip configuration: notebook tensorflow matplotlib ipywidgets sklearn # ipython, numpy, scipy, keras
 # TODO: what about: jupyter, ipykernel, pandas
 # TODO: download and link https://iterm2.com/utilities/imgcat
+# TODO: Safari bookmarks
+# TODO: Firefox extensions, Greasemonkey & Custom Right-Click Menu scripts
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
@@ -83,6 +85,7 @@ brews=(
   node
   pdfgrep
   pup
+  python@3.8
   recode
   rename
   ripgrep
@@ -141,7 +144,7 @@ nativefier
 pandoc		# markup format conversion
 pastel		# Generate, analyze, convert and manipulate colors
 #plan9port
-#python@2 #someone depending on this?
+pueue
 shpotify
 #sic		# Minimal multiplexing IRC client
 tesseract-lang
@@ -149,6 +152,7 @@ tldr		# Simplified and community-driven man pages
 tor
 #trash		# CLI tool that moves files or folder to the trash
 trimage
+#unrar		# Extract, view, and test RAR archives
 #wine		# use wine-stable in brew casks
 #winetricks
 woff2
@@ -565,6 +569,8 @@ if [[ -z "$P" ]]; then
   defaults write -g AppleShowAllExtensions 1
   defaults write -g KeyRepeat 2
   defaults write -g InitialKeyRepeat 15
+
+  defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -int 0
 
   #let user choose layout and restart terminal & install script
   echo "The computer will reboot now to apply the settings. After that, please start this script again."
