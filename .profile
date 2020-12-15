@@ -11,9 +11,10 @@ export JAVA_HOME=$(/usr/libexec/java_home)
 #export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_152.jdk/Contents/Home
 export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 export ANDROID_HOME=$ANDROID_SDK_ROOT
+export PATH="/usr/local/opt/python/libexec/bin:$PATH" # current python version
+export PATH="/usr/local/opt/python@3.8/libexec/bin:$PATH" # wanted python version
 export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node deps versioning
 #export PATH="$JAVA_HOME/bin:$PATH"
-alias python=python3.8
 
 #############################
 ### prefs

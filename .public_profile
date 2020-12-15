@@ -74,9 +74,9 @@ alias wctex="pbpaste | sed 's/^%.*//' | wc -w"
 alias ql="qlmanage -p"
 alias shutup="osascript -e 'Set volume output volume 0'"
 alias apropos="2>/dev/null apropos"
-alias j="jupyter-notebook"
+alias py=python
+alias j="python -m notebook" #guarantee same python version #jupyter-notebook
 alias s="sage -n jupyter"
-alias pip="python -m pip"
 alias spip="sage -python -m pip"
 alias ipy=ipython
 
