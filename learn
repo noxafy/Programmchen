@@ -33,7 +33,7 @@ while [[ $* ]]; do
         pages=$1
       fi
       ;;
-    -h)
+    -h|--help)
       printf "$help"
       exit 0
       ;;
