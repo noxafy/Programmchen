@@ -24,7 +24,9 @@ tell() {
 while [[ $* ]]; do
   case $1 in
     [1-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9])
-      if [[ $actPage == 0 ]]; then
+      if [[ $pages -ne 1000 ]]; then
+        sec=$1
+      elif [[ $actPage == 0 ]]; then
         actPage=$1
       elif [[ $actPage -gt $1 ]]; then
         printf "The actual page number cannot be higher than the number of pages.\n"
@@ -61,14 +63,12 @@ while [[ $* ]]; do
   shift
 done
 
-if [[ $actPage == 0 ]]; then
-    actPage=1
-fi
+[[ $actPage == 0 ]] && actPage=1
 
-#dependency
-if [[ -z $(which note) ]]; then
-	printf "Please get dependency for \"note\" first!"
-	exit 1
+# dependency test
+if ! hash note &>/dev/null; then
+  echo "Please get \"note\" first (dependency)!"
+  exit 1
 fi
 
 if [[ $pages -ne 1000 ]]; then
