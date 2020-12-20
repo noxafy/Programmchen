@@ -201,7 +201,7 @@ $res" | less
       | grep -v "Jetzt Songtext hinzufügen" \
       | grep -v "Laden des Songtextes wird vorbereitet ..." \
       | perl -pe 's/^[ \t]+//' \
-      | sed -e 's/\r/\n/' \
+      | sed 's/\r$//' \
       | sed '/^$/N;/^\n$/D');
 
   if [[ -z $res ]]; then
