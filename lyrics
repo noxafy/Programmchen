@@ -248,14 +248,13 @@ function finishIt() {
     echo
   fi
   echo "$res"
-  #... and one newline after
-  if [[ ! "$res" =~ [[:space:]]$ ]]; then
-    echo
-  #else
-  #  printf "%s" "$res" | tail -c 3 | hexdump
-  fi
+  #... and one newline after if interactive
   if [[ -t 1 ]]; then
-    echo
+    if [[ ! "$res" =~ [[:space:]]$ ]]; then
+      echo
+    fi
+    #printf "%s" "$res" | tail -c 3 | hexdump
+    #[[ -t 1 ]] && echo
   fi
   exit 0
 }
