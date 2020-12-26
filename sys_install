@@ -9,12 +9,6 @@ Fast internet connection recommended.
 Warning: Leave in place!
 "
 
-# TODO: Clone repos, especially $P, and ln .* files to ~
-# TODO: install pip configuration: notebook tensorflow matplotlib ipywidgets sklearn # ipython, numpy, scipy, keras
-# TODO: what about: jupyter, ipykernel, pandas
-# TODO: download and link https://iterm2.com/utilities/imgcat
-# TODO: Safari bookmarks
-# TODO: Firefox extensions, Greasemonkey & Custom Right-Click Menu scripts
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
@@ -41,7 +35,6 @@ if [[ ! -e $thisdir ]]; then
 fi
 
 # dirs
-nv_directory="$C/Apps/NV"
 templates="$C/Org/Vorlagen"
 # resources
 duolingo_icon="$IT/duolingo.jpg" # icon for Duolingo.app
@@ -49,7 +42,10 @@ graphing_icon="$IT/graphing calculator.jpg" # icon for Graphing Calculator.app
 trading_icon="$PROJ/212/js-listener/trading212.png" # icon for Trading212.app
 trading_script="$PROJ/212/js-listener/212listener.js" # listener for Trading212.app
 firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
+safari_bookmark_backup="$thisdir/Safari/Bookmarks.plist"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
+
+py_ver=python@3.8
 
 # Dock items
 # Fetch with:
@@ -85,7 +81,7 @@ brews=(
   node
   pdfgrep
   pup
-  python@3.8
+  $py_ver
   recode
   rename
   ripgrep
@@ -149,7 +145,7 @@ shpotify
 #sic		# Minimal multiplexing IRC client
 tesseract-lang
 tldr		# Simplified and community-driven man pages
-tor
+#tor
 #trash		# CLI tool that moves files or folder to the trash
 trimage
 #unrar		# Extract, view, and test RAR archives
@@ -167,7 +163,6 @@ brewcasks=(
   firefox
   flux
   font-hack-nerd-font
-  #freefilesync #currently not available
   go2shell
   iterm2
   mpv
@@ -253,6 +248,19 @@ masinstalls=(
 634159523 # MainStage 3
 434290957 # Motion
 424390742 # Compressor
+)
+
+pips=(
+notebook # jupyter
+tensorflow
+matplotlib
+ipywidgets
+sklearn
+scipy
+numpy
+pandas
+ipython
+ipykernel
 )
 
 #variables
@@ -372,6 +380,8 @@ if [[ -z "$P" ]]; then
   c .bashrc .profile
   printf "#dummy" > "$HOME/.public_profile" # dummy for preventing sourcing error and to be replaced later
   printf "#dummy" > "$HOME/.private_profile"
+  P=$(cat .profile | grep P= | sed "s/export P=//")
+  mkdir "$P" # dummy
 
   # install the other shit
   if [[ ! -d .m2 ]]; then
@@ -612,6 +622,7 @@ else
   echo "Skipped internet installation"
 fi
 
+# install oh-my-zsh
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
   sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh); exit"
@@ -620,6 +631,7 @@ else
   echo "Skipped Oh my zsh installation"
 fi
 
+# install brew
 if ! hash brew &>/dev/null; then
   section "Homebrew installation (Admin rights required)"
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed"
@@ -630,6 +642,7 @@ else
   echo "Skipped brew installation"
 fi
 
+# install pass
 if ! hash pass &>/dev/null; then
   section "pass installation"
   brew install pass || die "brew install pass failed"
@@ -667,7 +680,7 @@ fi
 if [[ ! -e /Applications/nextcloud.app/ ]]; then
   #brew install nextcloud
   section "Nextcloud app installation"
-  brew cask install nextcloud || die "brew cask install nextcloud failed"
+  brew install nextcloud || die "brew install nextcloud failed"
   #log in nextcloud
   letRead "Please log in to nextcloud"
   open /Applications/nextcloud.app/
@@ -680,6 +693,7 @@ fi
 
 xcode-select --install
 
+# install mas
 if ! hash mas &>/dev/null; then
   section "mas installation"
   brew install mas || die "brew install mas failed"
@@ -706,13 +720,14 @@ fi
 echo
 section "brew cask installs"
 #brew cask install
+echo "Some casks might require your password"
 failedcasks=
 echo "Looking up installed brew casks ..."
-brewcaskls=$(brew cask ls)
+brewcaskls=$(brew ls --cask)
 for cask in ${brewcasks[@]}; do
   if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
     echo "Installing cask $cask ..."
-    brew cask install $cask
+    brew install $cask
     if [[ $? -ne 0 ]]; then
       echo "Failed installing $cask"
       failedcasks+="$cask "
@@ -722,9 +737,9 @@ for cask in ${brewcasks[@]}; do
   fi
 done
 if [[ -n "$failedcasks" ]]; then
-  echo "Retry following cask installs:"
+  echo "Retry following cask installs later:"
   for cask in $failedcasks; do
-    echo "brew cask install $cask"
+    echo "    brew install $cask"
   done
 else
   echo "All casks installed with no obvious problems."
@@ -754,9 +769,9 @@ for app in ${masinstalls[@]}; do
   fi
 done
 if [[ -n "$failedapps" ]]; then
-  echo "Retry following app installs:"
+  echo "Retry following app installs later:"
   for app in $failedapps; do
-    echo "mas install $app"
+    echo "    mas install $app"
   done
 else
   echo "All apps installed with no obvious problems."
@@ -766,7 +781,7 @@ fi
 section "brew installs"
 failedformulas=
 echo "Looking up installed brew formulas ..."
-brewls=$(brew ls)
+brewls=$(brew ls --formula)
 for formula in ${brews[@]}; do
   if [[ -z $(echo "$brewls" | grep $formula) ]]; then
     echo "Installing formula $formula ..."
@@ -780,12 +795,39 @@ for formula in ${brews[@]}; do
   fi
 done
 if [[ -n "$failedformulas" ]]; then
-  echo "Retry following formula installs:"
+  echo "Retry following formula installs later:"
   for formula in $failedformulas; do
-    echo "brew install $formula"
+    echo "    brew install $formula"
   done
 else
   echo "All formulas installed with no obvious problems."
+fi
+
+#pip installs #python should now be installed using brew
+section "pip installs"
+pip_exec=/usr/local/opt/$py_ver/libexec/bin/pip
+failedpackages=
+echo "Looking up installed pip packages ..."
+pipls=$($pip_exec list)
+for package in ${pips[@]}; do
+  if [[ -z $(echo "$pipls" | grep $package) ]]; then
+    echo "Installing package $package ..."
+    $pip_exec install $package
+    if [[ $? -ne 0 ]]; then
+      echo "Failed installing $package"
+      failedpackages+="$package "
+    fi
+  else
+    echo "Skipped already installed package: $package"
+  fi
+done
+if [[ -n "$failedpackages" ]]; then
+  echo "Retry following package installs later:"
+  for formula in $failedpackages; do
+    echo "    pip install $failedpackages"
+  done
+else
+  echo "All pip packages installed with no obvious problems."
 fi
 
 section "Copying of data folders"
@@ -793,7 +835,7 @@ section "Copying of data folders"
 pushd "$HOME" &> /dev/null || die "cd to $HOME/ failed"
 c Desktop/ Downloads/ Documents/ Music/ Pictures/
 
-cd "Library" || die "cd to $HOME/Library/ failed"
+pushd "Library" &> /dev/null || die "cd to $HOME/Library/ failed"
 if [[ ! -d Thunderbird ]]; then
   c Thunderbird
 else
@@ -806,26 +848,29 @@ if [[ ! -n $(ls Preferences/IntelliJIdea* 2> /dev/null) ]]; then
 else
   echo "Skipped copying of content of Preferences to $HOME/Library/Preferences/"
 fi
+popd &> /dev/null || die "cd failed" # HOME again
+
+if [[ ! -e "$P"/.zshrc ]]; then
+  git clone git@github.com:noxafy/Programmchen.git
+fi
+
+if [[ ! -e "$P"/imgcat ]]; then
+  wget https://iterm2.com/utilities/imgcat
+fi
 
 if [[ ! -e ~/.public_profile \
-   || $(cat ~/.public_profile) == "#dummy" \
    || ! -e ~/.profile \
    || ! -e ~/.zshrc \
    || ! -e ~/.bashrc \
    || ! -e ~/.nanorc ]]; then
   section "Linking dotfiles to $HOME"
+
   function hardLink() {
     filename=$(basename "$1")
     filedir=$(dirname "$1")
     echo "Linking $filename from $filedir"
     ln -f "$1" ~
   }
-
-  if [[ -z ${P+x} ]]; then
-    echo "Variable \$P not set!"
-    echo "Please link \$P/.profile to \$HOME manually"
-    exit 1
-  fi
 
   hardLink "$P"/.profile
   hardLink "$P"/.zshrc
@@ -853,8 +898,9 @@ section "nativefier app creations"
 # ensure required cloud content synced
 [[ ! -e "$duolingo_icon" ]] && echo "Icon for Duolingo not found: $duolingo_icon"
 [[ ! -e "$trading_icon" ]] && echo "Icon for Trading212 not found: $trading_icon"
+[[ ! -e "$graphing_icon" ]] && echo "Icon for Graphing Calculator not found: $graphing_icon"
 [[ ! -e "$trading_script" ]] && echo "Script for Trading212 not found: $trading_script"
-while [[ ! ( -e "$duolingo_icon" && -e "$trading_icon" && -e "$trading_script" ) ]]; do
+while [[ ! ( -e "$duolingo_icon" && -e "$trading_icon" && -e "$trading_script" && -e "$graphing_icon") ]]; do
   printf "Please wait until required cloud data is syncing "
   sleep 1
   printf "."
@@ -1009,6 +1055,12 @@ else
   echo "Skipped Textmate bundles"
 fi
 
+if [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
+  letRead "Install Microsoft Office"
+  open https://www.microsoft.com/education/products/office
+  pressEnterTo
+fi
+
 if ls "$templates"/*.potx &>/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
   # maybe also available via: defaults read | grep /Templates.localized | grep Normal
   if pot_target=$(echo ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.localized) 2>/dev/null; then
@@ -1027,37 +1079,47 @@ else
   echo "Skipped Power Point template copying. Power Point not installed or no template found at ${templates}"
 fi
 
-if ! defaults read net.elasticthreads.nv &>/dev/null; then
-  printf "%s" "$nv_directory" | pbcopy
-  letRead "Go to nvALT Preferences and set note directory to $nv_directory (copied to clipboard)
-Also log in to simplenote (yeah, pass in a new window..) and set a global shortcut here: cmd+alt+n"
-  open /Applications/nvALT.app/ || die "Please install nvALT and restart the script to continue"
-  pressEnterTo
-fi
-
-if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
-  open /Applications/Firefox.app || die "Please install Firefox and restart the script to continue"
+if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default) 2>/dev/null; then
+  open /Applications/Firefox.app || die "Please install Firefox and restart the script to continue" # creates a profile
   letRead "Did not found the firefox bookmark folder. Starting Firefox now."
   pressEnterTo
 fi
 howtorestorebackup="https://support.mozilla.org/en-US/kb/restore-bookmarks-from-backup-or-move-them\#w_restoring-from-backups"
-if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
+if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default) 2>/dev/null; then
   letRead "Did not found bookmarks folder again. Import bookmarks manually from: $firefox_bookmark_backup"
   echo "$howtorestorebackup"
   pressEnterTo
 else
-  if [[ -z $(ls -A "$firefox_profile") ]]; then
+  if [[ -z $(ls -A "$firefox_profile/bookmarkbackups") ]]; then
     if [[ -f "$firefox_bookmark_backup" ]]; then
-      letRead "Copying bookmarks backup into Firefox Bookmark folder: $firefox_profile"
-      cp "$firefox_bookmark_backup" "$firefox_profile/"
+      letRead "Copying bookmarks backup into Firefox Bookmark folder: $firefox_profile/bookmarkbackups"
+      cp "$firefox_bookmark_backup" "$firefox_profile/bookmarkbackups/"
       echo "$howtorestorebackup"
+      pressEnterTo
+      letRead "Install extensions:"
+      cat "$IT"/Firefox/extensions
+      pressEnterTo
+      letRead "Import extensions settings"
+      o "$IT"/Firefox/
       pressEnterTo
     else
       echo "WARNING: Firefox has no bookmarks yet, but no bookmark backup found: $firefox_bookmark_backup"
     fi
   else
-    echo "Skipped copying firefox bookmarks, because booksmark backups are already present [\"$firefox_profile\"]"
+    echo "Skipped copying firefox bookmarks, and guided extension install, because bookmark backups are already present [\"$firefox_profile/bookmarkbackups\"]"
   fi
+fi
+
+safari_bookmarks_file="$HOME/Library/Safari/Bookmarks.plist"
+if [[ ! -e "$safari_bookmarks_file" ]]; then
+  letRead "Install Safari bookmarks"
+  if [[ -f "$safari_bookmark_backup" ]]; then
+    cp "$safari_bookmark_backup" "$safari_booksmarks_file"
+  else
+    echo "WARNING: No Safari bookmark backup found: $safari_bookmark_backup"
+  fi
+else
+  echo "Skipped installing Safari bookmarks"
 fi
 
 if [[ ! -e ~/Library/Containers/com.rockysandstudio.Newsflow ]]; then
@@ -1071,7 +1133,6 @@ fi
 section "Final"
 echo "Last, but not least, check if:
 ### Dependencies
-  - If python@2 is required by something
   - You need osxfuse for the external drive
 ### Settings
   - IntelliJ is logged in
@@ -1097,14 +1158,13 @@ echo "Last, but not least, check if:
 
 And last but not least, you might think of installing
   - Adobe Pro (contains key)
-  - Microsoft Office (see pdf in Documents)
+  - Microsoft Office ([https://www.microsoft.com/en-us/education/products/office])
   - wine (jardinains, siedler5, finale, ...)
-  - GanttProject [https://www.ganttproject.biz/download/free]
-  - FreeFileSync (see if on brew available again; https://freefilesync.org/download.php)
-  - Audacity (https://www.audacityteam.org/download/mac/)
-  - FileZilla (https://filezilla-project.org/download.php?type=client)
-
-Thanks for your attention!"
+  - FreeFileSync ([https://freefilesync.org/download.php])
+  - Audacity ([https://www.audacityteam.org/download/mac/])
+  - FileZilla ([https://filezilla-project.org/download.php?type=client])
+  - MenuMeters (e.g. [https://github.com/yujitach/MenuMeters])
+"
 
 supersection "The End"
 popd &> /dev/null
