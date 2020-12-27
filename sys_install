@@ -206,7 +206,8 @@ thunderbird
 #tor-browser
 ukelele
 wine-stable
-xquartz)
+xquartz
+)
 
 masinstalls=(
 ### Free
@@ -315,7 +316,7 @@ letRead() {
 }
 
 pressEnterTo() {
-  local message;
+  local message
   if [[ -n "$1" ]]; then
     message=$1
   else
@@ -606,16 +607,16 @@ fi
 # install oh-my-zsh
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
-  sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh); exit"
   c .zshrc
+  sh -c "KEEP_ZSHRC=yes $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 else
-  echo "Skipped Oh my zsh installation"
+  echo "Skipped oh-my-zsh installation"
 fi
 
 # install brew
 if ! hash brew &>/dev/null; then
   section "Homebrew installation (Admin rights required)"
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" || die "Installing brew failed"
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || die "Installing brew failed"
   echo "Tapping caskrooms ..."
   brew tap homebrew/cask || die "brew tap homebrew/cask failed"
   brew tap homebrew/cask-fonts || die "brew tap homebrew/cask-fonts failed"
@@ -824,6 +825,9 @@ fi
 
 if [[ ! -e "$P"/imgcat ]]; then
   wget https://iterm2.com/utilities/imgcat
+  chmod +x "$P"/imgcat
+  wget https://iterm2.com/utilities/it2check
+  chmod +x "$P"/it2check
 fi
 
 if [[ ! -e ~/.public_profile \
@@ -960,7 +964,7 @@ fi
 # In this part, the script is just instructing, at most helping out a bit
 supersection "Manual part"
 
-if [[ ! -e "$HOME/Library/Preferences/com.googlecode.iterm2.plist" ]]; then
+if hash it2check &> /dev/null && ! it2check; then
   letRead "Let's switch to iTerm!"
   open /Applications/iTerm.app/ || die "Please install iTerm and restart the script to continue"
   exit
@@ -1133,7 +1137,7 @@ fi
 
 echo "Last, but not least, check if:
 ### Dependencies
-  - You need osxfuse for the external drive
+  - osxfuse is needed for the external drive
 ### Settings
   - IntelliJ is logged in
   - Global shortcut (and other settings) for iTerm is applied
