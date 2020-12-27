@@ -47,24 +47,6 @@ newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 
 py_ver=python@3.8
 
-# Dock items
-# Fetch with:
-# defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g'
-dockitems='Atom
-CuriosityStream
-Duolingo
-Firefox
-Safari
-Thunderbird
-Spotify
-"Microsoft OneNote"
-Anki
-calibre
-"IntelliJ IDEA"
-FreeFileSync
-FileZilla
-"System\\U00adeinstellungen"'
-
 # brew essentials
 brews=(
   cloc
@@ -1038,7 +1020,9 @@ fi
 section "Settings"
 
 current_dockitems=$(defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g')
-if [[ "$dockitems" != "$current_dockitems" ]]; then
+if [[ $(echo -n "$current_dockitems" | wc -l) -lt 7 ]]; then
+  echo "Fetching dockitems from pass"
+  dockitems=$(pass dockitems)
   letRead "Arrange the Dock with the following items in the given order:"
   open /Applications/
   letRead "$dockitems"

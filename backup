@@ -172,6 +172,8 @@ echo "####################################################"
 # update .gitconfig and .private_profile into pass
 saveToPass ~/.gitconfig
 saveToPass ~/.private_profile
+echo "Save dockitems into pass"
+defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g' | pass insert -m dockitems > /dev/null || die "Copying dockitems into pass failed"
 
 if [[ -z "$target" ]]; then
   if [[ -d "$default_target" ]]; then
