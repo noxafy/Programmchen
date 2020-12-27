@@ -225,6 +225,9 @@ ctt Preferences/IntelliJIdea* # IntelliJ config folder
 ctt Preferences/com.googlecode.iterm2.plist
 ctt Preferences/com.zipzapmac.Go2Shell.plist
 
+ensureTargetDir Safari
+ctt Safari/Bookmarks.plist
+
 # firefox bookmark backup
 if firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
   cd "$firefox_profile" || die "cd to $firefox_profile failed"
