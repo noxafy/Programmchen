@@ -718,13 +718,10 @@ for cask in ${brewcasks[@]}; do
     echo "Skipped already installed cask: $cask"
   fi
 done
-if [[ -n "$failedcasks" ]]; then
-  echo "Retry following cask installs later:"
-  for cask in $failedcasks; do
-    echo "    brew install $cask"
-  done
-else
+if [[ -z "$failedcasks" ]]; then
   echo "All casks installed with no obvious problems."
+else
+  echo "Following casks could not be installed: $failedcasks"
 fi
 
 ########################################################################################################
@@ -750,13 +747,10 @@ for app in ${masinstalls[@]}; do
     echo "Skipped already installed app: $app"
   fi
 done
-if [[ -n "$failedapps" ]]; then
-  echo "Retry following app installs later:"
-  for app in $failedapps; do
-    echo "    mas install $app"
-  done
-else
+if [[ -z "$failedapps" ]]; then
   echo "All apps installed with no obvious problems."
+else
+  echo "Following apps could not be installed: $failedapps"
 fi
 
 #brew install
@@ -776,13 +770,10 @@ for formula in ${brews[@]}; do
     echo "Skipped already installed formula: $formula"
   fi
 done
-if [[ -n "$failedformulas" ]]; then
-  echo "Retry following formula installs later:"
-  for formula in $failedformulas; do
-    echo "    brew install $formula"
-  done
-else
+if [[ -z "$failedformulas" ]]; then
   echo "All formulas installed with no obvious problems."
+else
+  echo "Following formulas could not be installed: $failedformulas"
 fi
 
 #pip installs #python should now be installed using brew
@@ -803,13 +794,10 @@ for package in ${pips[@]}; do
     echo "Skipped already installed package: $package"
   fi
 done
-if [[ -n "$failedpackages" ]]; then
-  echo "Retry following package installs later:"
-  for formula in $failedpackages; do
-    echo "    pip install $failedpackages"
-  done
-else
+if [[ -z "$failedpackages" ]]; then
   echo "All pip packages installed with no obvious problems."
+else
+  echo "Following packages could not be installed: $failedpackages"
 fi
 
 section "Copying of data folders"
@@ -1115,6 +1103,32 @@ else
 fi
 
 section "Final"
+if [[ -n "$failedcasks" ]]; then
+  echo "# Some brew casks failed to install. Retry installing them later:"
+  for cask in $failedcasks; do
+    echo "    brew install $cask"
+  done
+fi
+if [[ -n "$failedapps" ]]; then
+  echo "# Some apps failed to install. Retry installing them later:"
+  for app in $failedapps; do
+    echo "    mas install $app"
+  done
+fi
+if [[ -n "$failedformulas" ]]; then
+  echo "# Some brew formulas failed to install. Retry installing them later:"
+  for formula in $failedformulas; do
+    echo "    brew install $formula"
+  done
+fi
+if [[ -n "$failedpackages" ]]; then
+  echo "# Some python packages failed to install. Retry installing them later:"
+  for formula in $failedpackages; do
+    echo "    pip install $failedpackages"
+  done
+fi
+
+
 echo "Last, but not least, check if:
 ### Dependencies
   - You need osxfuse for the external drive
