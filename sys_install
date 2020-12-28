@@ -712,7 +712,7 @@ failedcasks=
 echo "Looking up installed brew casks ..."
 brewcaskls=$(brew ls --cask)
 for cask in ${brewcasks[@]}; do
-  if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
+  if [[ -z $(echo "$brewcaskls" | grep -e "$cask") ]]; then
     echo "Installing cask $cask ..."
     brew install --cask $cask
     if [[ $? -ne 0 ]]; then
@@ -741,7 +741,7 @@ section "App Store apps installation"
 failedapps=""
 masls=$(mas list | awk '{print $1}')
 for app in ${masinstalls[@]}; do
-  if [[ -z $(echo "$masls" | grep $app) ]]; then
+  if [[ -z $(echo "$masls" | grep -e "$app") ]]; then
     echo "Installing $app ..."
     mas install $app
     if [[ $? -ne 0 ]]; then
@@ -766,7 +766,7 @@ failedformulas=
 echo "Looking up installed brew formulas ..."
 brewls=$(brew ls --formula)
 for formula in ${brews[@]}; do
-  if [[ -z $(echo "$brewls" | grep $formula) ]]; then
+  if [[ -z $(echo "$brewls" | grep -e "$formula") ]]; then
     echo "Installing formula $formula ..."
     brew install $formula
     if [[ $? -ne 0 ]]; then
@@ -791,10 +791,10 @@ failedpackages=
 echo "Looking up installed pip packages ..."
 pipls=$($pip_exec list)
 for package in ${pips[@]}; do
-  if [[ -z $(echo "$pipls" | grep $package) ]]; then
+  if [[ -z $(echo "$pipls" | grep -e "$package") ]]; then
     echo "Installing package $package ..."
     $pip_exec install $package
-    if [[ $? -ne 0 ]]; then
+    if [[ $? != 0 ]]; then
       echo "Failed installing $package"
       failedpackages+="$package "
     fi
