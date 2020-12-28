@@ -156,10 +156,10 @@ brewcasks=(
 
 # casks needing the password
 brewcasks+=(
-  backgroup-music
+  background-music
   google-earth-pro
   mactex
-  soundflower
+  #soundflower
   wine-stable
   xquartz
 )
@@ -497,17 +497,6 @@ if [[ -z "$P" ]]; then
     \"com.apple.dictionary.OxfordSpanish\",
     \"com.apple.dictionary.OxfordRussian\"
   )"
-
-  echo "Shortcuts settings"
-  # defaults read | grep -A 5 NSUserKeyEquivalents
-  defaults write com.apple.Preview NSUserKeyEquivalents '{ "Text hervorheben" = "@h"; }'
-  defaults write com.apple.Terminal NSUserKeyEquivalents '{ "Standardgr\\U00f6\\U00dfe wiederherstellen" = "@$r"; }'
-  defaults write com.apple.TextEdit NSUserKeyEquivalents '{ Einsetzen = "@v";
-        "Einsetzen und Stil anpassen" = "@~^v";  }'
-  defaults write com.microsoft.onenote.mac NSUserKeyEquivalents '{ "Einf\\U00fcgen" = "@$v";
-        "Einf\\U00fcgen und an Formatierung anpassen" = "@v";
-        "Sprache f\\U00fcr Korrekturhilfen festlegen..." = "@l"; }'
-  defaults write org.audacityteam.audacity NSUserKeyEquivalents '{ "Audio exportieren ..." = "@$s"; }'
 
   echo "Preview settings"
 	defaults write com.apple.Preview "NSToolbar Configuration CommonToolbar_v5.1" '{
@@ -1155,30 +1144,13 @@ if [[ -n "$failedpackages" ]]; then
 fi
 
 
-echo "Last, but not least, check if:
-### Dependencies
-  - osxfuse is needed for the external drive
+echo "Last settings:
 ### Settings
-  - IntelliJ is logged in
-  - Global shortcut (and other settings) for iTerm is applied
-  - Go2shell is set up right (cd %PATH%; printf \"\e[F\e[K\")
-  - Check all system prefs: open /Applications/System\ Preferences.app/
-  - OS shortcuts set?
-  - Flux is set up correctly
-  - Dictionaries are installed correctly
-    - Wikipedia.wikipediadictionary
-    - Deutsch-Englisch.dictionary
-    - OpenThesaurus Deutsch.dictionary
-    - Apple Dictionary.dictionary
-    - Oxford American Writer's Thesaurus.dictionary
-    - New Oxford American Dictionary.dictionary
-    - Duden Dictionary Data Set I.dictionary
-    - German - English.dictionary
-    - Oxford Thesaurus of English.dictionary
-    - French - English.dictionary
-    - Italian - English.dictionary
-    - Spanish - English.dictionary
-    - Russian - English.dictionary
+  - System settings
+  - Flux setup
+  - Firefox settings
+  - Safari settings
+  - Application shortcuts
 
 And last but not least, you might think of installing
   - Adobe Pro (contains key)
