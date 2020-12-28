@@ -106,7 +106,7 @@ go
 #gobject-introspection
 googler
 hexedit
-java
+openjdk
 #launch4j   	# Cross-platform Java executable wrapper
 #lf		# Terminal visual file manager
 #mas #already installed
