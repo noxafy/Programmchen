@@ -106,6 +106,7 @@ go
 #gobject-introspection
 googler
 hexedit
+java
 #launch4j   	# Cross-platform Java executable wrapper
 #lf		# Terminal visual file manager
 #mas #already installed
@@ -153,6 +154,16 @@ brewcasks=(
   the-unarchiver
 )
 
+# casks needing the password
+brewcasks+=(
+  backgroup-music
+  google-earth-pro
+  mactex
+  soundflower
+  wine-stable
+  xquartz
+)
+
 # extended / main only
 brewcasks+=(
 #anaconda
@@ -163,7 +174,6 @@ anki
 atom
 #avira-antivirus
 #axure-rp
-background-music
 #balenaetcher 		# utility for writing image files
 bibdesk
 #blender
@@ -176,13 +186,10 @@ drawio
 #font-times-newer-roman	# slightly wider times font
 geogebra
 #gephi			# Utility to visualize and explore GraphViz graphs
-google-earth-pro
 #graphsketcher		# draw graphs
 intellij-idea
-java
 #jwzlyrics
 #kodi
-mactex
 #mathpix-snipping-tool  #nice, but only 50 pics/month
 #mp3tag
 musescore
@@ -196,7 +203,6 @@ signal
 #sketch
 #skype
 #sonic-visualiser
-soundflower
 spotify
 #stellarium
 #teamviewer
@@ -205,8 +211,6 @@ telegram
 thunderbird
 #tor-browser
 ukelele
-wine-stable
-xquartz
 )
 
 masinstalls=(
@@ -359,20 +363,24 @@ if [[ -z "$P" ]]; then
   section "Preferences installation"
 
   # install basic shell sources
-  c .bashrc .profile
+  c .bashrc .profile .zshrc
   printf "#dummy" > "$HOME/.public_profile" # dummy for preventing sourcing error and to be replaced later
   printf "#dummy" > "$HOME/.private_profile"
   P=$(cat .profile | grep P= | sed "s/export P=//")
-  mkdir "$P" # dummy
+  mkdir "$(eval echo $P)" # dummy
 
   # install the other shit
   if [[ ! -d .m2 ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed"
   fi
   c .m2/settings.xml .ssh .password-store .gnupg
+  chmod 700 .gnupg .password-store .ssh
+  chmod 600 .password-store/**/*.gpg
+  chmod 600 .ssh/*
+  chmod 600 .gnupg/*
 
   #install terminal layouts
-  open "$thisdir/*.terminal"
+  #open "$thisdir/*.terminal" # $IT/Settings/Terminal/*.terminalχ
 
   #keyboard layout
   pushd "$HOME/Library" &> /dev/null || die "cd to $HOME/Library failed"
@@ -568,7 +576,7 @@ if [[ -z "$P" ]]; then
   echo "The computer will reboot now to apply the settings. After that, please start this script again."
   printf "\e[4mHint\e[0m: Just set your favourite terminal layout to default.\n"
   printf "\e[4mHint2\e[0m: Activate secure text entry.\n"
-  printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. (Maybe only after restart?)"
+  printf "\e[4mHint3\e[0m: Switch keyboard layout as desired. (Maybe only after restart?)\n"
   pressEnterTo restart
   letRead "sudo shutdown -r now ..."
   sudo shutdown -r now
@@ -604,11 +612,17 @@ else
   echo "Skipped internet installation"
 fi
 
+if ! xcode-select -p &> /dev/null; then
+  xcode-select --install || die "xcode-select --install failed"
+  pressEnterTo
+else
+  echo "Skipped XCode command line developer tools installation"
+fi
+
 # install oh-my-zsh
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
-  c .zshrc
-  sh -c "KEEP_ZSHRC=yes $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  sh -c "KEEP_ZSHRC=yes $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh); exit" || die "oh-my-zsh installation falied"
 else
   echo "Skipped oh-my-zsh installation"
 fi
@@ -616,7 +630,7 @@ fi
 # install brew
 if ! hash brew &>/dev/null; then
   section "Homebrew installation (Admin rights required)"
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || die "Installing brew failed"
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || die "Installing brew failed" # intel version writes only and exclusively to /usr/local and ~/Library/Caches/Homebrew
   echo "Tapping caskrooms ..."
   brew tap homebrew/cask || die "brew tap homebrew/cask failed"
   brew tap homebrew/cask-fonts || die "brew tap homebrew/cask-fonts failed"
@@ -672,31 +686,35 @@ else
   echo "Skipped nextcloud installation"
 fi
 
-xcode-select --install
-
 # install mas
 if ! hash mas &>/dev/null; then
   section "mas installation"
   brew install mas || die "brew install mas failed"
-  while [[ -z $(mas account) ]]; do
-    letRead "Please sign in to App Store!"
-    open /Applications/App\ Store.app/
-    pressEnterTo
-  done
-  echo "mas account: $(mas account)"
 else
   echo "Skipped mas installation"
 fi
+
+if hash mas &> /dev/null && ! mas account &> /dev/null; then
+  letRead "Please sign in to App Store!"
+  open /System/Applications/App\ Store.app/
+  pressEnterTo
+  printf "mas account: %s\n" $(mas account)
+fi
+
+# TODO: move casks with password here
 
 # install chordpro
 if ! hash chordpro &>/dev/null; then
   section "Chordpro installation"
   #sudo cpan chordpro
-  sudo cpan install chordpro
+  sudo cpan install chordpro || die "installing chordpro failed"
   echo
 else
   echo "Skipped chordpro installation"
 fi
+
+# TODO: install java
+# sudo ln -sfn /usr/local/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
 
 echo
 section "brew cask installs"
@@ -708,7 +726,7 @@ brewcaskls=$(brew ls --cask)
 for cask in ${brewcasks[@]}; do
   if [[ -z $(echo "$brewcaskls" | grep $cask) ]]; then
     echo "Installing cask $cask ..."
-    brew install $cask
+    brew install --cask $cask
     if [[ $? -ne 0 ]]; then
       echo "Failed installing $cask"
       failedcasks+="$cask "
@@ -752,6 +770,8 @@ else
   echo "Following apps could not be installed: $failedapps"
 fi
 
+# TOOD: move casks without password here
+
 #brew install
 section "brew installs"
 failedformulas=
@@ -778,6 +798,7 @@ fi
 #pip installs #python should now be installed using brew
 section "pip installs"
 pip_exec=/usr/local/opt/$py_ver/libexec/bin/pip
+$pip_exec -V
 failedpackages=
 echo "Looking up installed pip packages ..."
 pipls=$($pip_exec list)
@@ -820,14 +841,14 @@ fi
 popd &> /dev/null || die "cd failed" # HOME again
 
 if [[ ! -e "$P"/.zshrc ]]; then
-  git clone git@github.com:noxafy/Programmchen.git
+  git clone git@github.com:noxafy/Programmchen.git || die "Cloning Programmchen failed"
 fi
 
 if [[ ! -e "$P"/imgcat ]]; then
-  wget https://iterm2.com/utilities/imgcat
-  chmod +x "$P"/imgcat
-  wget https://iterm2.com/utilities/it2check
-  chmod +x "$P"/it2check
+  pushd "$P" &>/dev/null
+  wget https://iterm2.com/utilities/imgcat && chmod +x "$P"/imgcat
+  wget https://iterm2.com/utilities/it2check && chmod +x "$P"/it2check
+  popd &>/dev/null
 fi
 
 if [[ ! -e ~/.public_profile \
@@ -1010,9 +1031,8 @@ fi
 section "Settings"
 
 current_dockitems=$(defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g')
-if [[ $(echo -n "$current_dockitems" | wc -l) -lt 7 ]]; then
-  echo "Fetching dockitems from pass"
-  dockitems=$(pass dockitems)
+dockitems=$(pass dockitems)
+if [[ "$current_dockitems" != "$dockitems" ]]; then
   letRead "Arrange the Dock with the following items in the given order:"
   open /Applications/
   letRead "$dockitems"
