@@ -186,6 +186,11 @@ fi
 echo "Set target to: $target"
 echo
 
+if [[ ! -e "$target" ]]; then
+  echo "Backup dir does not yet exist. mkdir -p $target"
+  mkdir -p "$target"
+fi
+
 backup_dir="$HOME/backup"
 if [[ -n $(ls -A "$target") ]]; then
   echo "Backing up current backup (calculating size ..."

@@ -528,7 +528,11 @@ function backup() {
   done
   echo "Detected $drive!"
   while [[ ! -w "$target" ]]; do
-    sleep 1 # wait for mounting
+    sleep 3 # wait for mounting
+    if [[ ! -e "$target" ]]; then
+      echo "Create backup dir $target"
+      mkdir -p "$target" &>/dev/null # just in case
+    fi
   done
   echo "Starting backup script now."
   echo
