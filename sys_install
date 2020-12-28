@@ -981,6 +981,12 @@ else
   echo "Skipped iTerm switch"
 fi
 
+if [[ ! -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
+  letRead "Install Microsoft Office"
+  open https://www.microsoft.com/education/products/office
+  pressEnterTo
+fi
+
 section "Logins"
 echo "Please login to following applications:"
 
@@ -1035,12 +1041,6 @@ if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles" ]]; then
   pressEnterTo
 else
   echo "Skipped Textmate bundles"
-fi
-
-if [[ ! -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
-  letRead "Install Microsoft Office"
-  open https://www.microsoft.com/education/products/office
-  pressEnterTo
 fi
 
 if ls "$templates"/*.potx &>/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
