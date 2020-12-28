@@ -30,7 +30,7 @@ source "$ZSH/oh-my-zsh.sh"
 
 ENABLE_CORRECTION="true"
 autoload -U +X bashcompinit && bashcompinit
-autoload -U +X compinit && compinit
+#autoload -U +X compinit && compinit
 source ~/.profile
 
 ### completions

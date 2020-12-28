@@ -90,7 +90,7 @@ brightness
 #cheat		# Better version contained in bash snippets
 #choose		# reads from stdin, lets user choose one line, prints that line to stdout, exits
 #chordii
-#coreutils	# GNU File, Shell, and Text utilities
+coreutils	# GNU File, Shell, and Text utilities
 diff-pdf        # needs xquartz
 exiftool
 #expect		# automate interactive applications
@@ -374,7 +374,7 @@ if [[ -z "$P" ]]; then
     mkdir .m2 || die "mkdir $HOME/.m2 failed"
   fi
   c .m2/settings.xml .ssh .password-store .gnupg
-  chmod 700 .gnupg .password-store .ssh
+  chmod 700 .gnupg .password-store .password-store/* .ssh
   chmod 600 .password-store/**/*.gpg
   chmod 600 .ssh/*
   chmod 600 .gnupg/*
