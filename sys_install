@@ -1083,10 +1083,12 @@ if ! firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.de
   echo "$howtorestorebackup"
   pressEnterTo
 else
-  if [[ -z $(ls -A "$firefox_profile/bookmarkbackups") ]]; then
+  firefox_bookmarks="$firefox_profile/bookmarkbackups"
+  if [[ ! -e "$firefox_bookmarks" ]]; then
     if [[ -f "$firefox_bookmark_backup" ]]; then
-      letRead "Copying bookmarks backup into Firefox Bookmark folder: $firefox_profile/bookmarkbackups"
-      cp "$firefox_bookmark_backup" "$firefox_profile/bookmarkbackups/"
+      letRead "Copying bookmarks backup into Firefox Bookmark folder: $firefox_bookmarks"
+      mkdir -p "$firefox_bookmarks"
+      cp "$firefox_bookmark_backup" "$firefox_bookmarks"
       echo "$howtorestorebackup"
       pressEnterTo
       letRead "Install extensions:"
