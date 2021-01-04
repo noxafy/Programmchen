@@ -314,7 +314,7 @@ installWifi() {
 letRead() {
   if [[ -n "$*" ]]; then
     echo "$*"
-     sleep $(echo "scale=3;${#1}/40+0.36" | bc)
+    sleep $(echo "scale=3;${#1}/40+0.36" | bc)
   fi
 }
 
@@ -610,7 +610,7 @@ fi
 # install oh-my-zsh
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
-  sh -c "KEEP_ZSHRC=yes $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh); exit" || die "oh-my-zsh installation falied"
+  sh -c "KEEP_ZSHRC=yes $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh); exit" || die "oh-my-zsh installation failed"
 else
   echo "Skipped oh-my-zsh installation"
 fi
@@ -1082,7 +1082,7 @@ else
       cat "$IT"/Firefox/extensions
       pressEnterTo
       letRead "Import extensions settings"
-      o "$IT"/Firefox/
+      open "$IT"/Firefox/
       pressEnterTo
     else
       echo "WARNING: Firefox has no bookmarks yet, but no bookmark backup found: $firefox_bookmark_backup"
@@ -1096,7 +1096,8 @@ safari_bookmarks_file="$HOME/Library/Safari/Bookmarks.plist"
 if [[ ! -e "$safari_bookmarks_file" ]]; then
   letRead "Install Safari bookmarks"
   if [[ -f "$safari_bookmark_backup" ]]; then
-    cp "$safari_bookmark_backup" "$safari_booksmarks_file"
+    safari_dir=$(dirname "$safari_booksmarks_file")
+    cp "$safari_bookmark_backup" "$safari_dir"
   else
     echo "WARNING: No Safari bookmark backup found: $safari_bookmark_backup"
   fi
@@ -1142,8 +1143,7 @@ if [[ -n "$failedpackages" ]]; then
   echo
 fi
 
-
-echo "Last settings:
+echo 'Last settings:
 ### Settings
   - System settings
   - Flux setup
@@ -1158,7 +1158,7 @@ And last but not least, you might think of installing
   - FreeFileSync ([https://freefilesync.org/download.php])
   - Audacity ([https://www.audacityteam.org/download/mac/])
   - FileZilla ([https://filezilla-project.org/download.php?type=client])
-  - MenuMeters (e.g. [https://github.com/yujitach/MenuMeters])"
+  - MenuMeters (e.g. [https://github.com/yujitach/MenuMeters])'
 
 echo
 supersection "The End"
