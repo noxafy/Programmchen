@@ -1,6 +1,8 @@
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 export ZDOTDIR=$ZSH
+export PATH="/opt/homebrew/bin:$PATH"
+export FPATH="$(brew --prefix)/share/zsh/site-functions:$FPATH"
 
 # disable marking untracked files under VCS as dirty
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
