@@ -1044,7 +1044,7 @@ else
   echo "Skipped Dock arrangement"
 fi
 
-if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles" ]]; then
+if [[ ! -e "$HOME/Library/Application Support/TextMate/Managed/Bundles/LaTeX.tmbundle" ]]; then
   letRead "Go to Textmate Preferences and install bundles as you like."
   open /Applications/TextMate.app/ || die "Please install TextMate and restart the script to continue"
   pressEnterTo
