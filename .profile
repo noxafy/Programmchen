@@ -17,6 +17,11 @@ export PATH="/usr/local/opt/python@3.8/libexec/bin:$PATH" # wanted python versio
 export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node deps versioning
 #export PATH="$JAVA_HOME/bin:$PATH"
 
+if cat ~/.nanorc &>/dev/null | grep -e '$BREW_PREFIX' &>/dev/null; then
+  rm ~/.nanorc
+  cat "$P"/.nanorc | sed -e "s/\$BREW_PREFIX/${BREW_PREFIX//\//\\/}/" > ~/.nanorc
+fi
+
 #############################
 ### prefs
 #############################
