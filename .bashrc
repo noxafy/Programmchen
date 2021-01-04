@@ -11,7 +11,7 @@ bind 'set completion-ignore-case on'
 #PS1='\u@\H \A \W\$ '
 PS1='\t \W\$ '
 
-[[ -f /usr/local/etc/bash_completion ]] && . /usr/local/etc/bash_completion
+[[ -f $(brew --prefix)/etc/bash_completion ]] && . $(brew --prefix)/etc/bash_completion
 #trap 'printf ""' 2; printf "\033[8m"; while true; do printf "\r\033[K"; done #nasty
 
 function command_not_found_handle() {

@@ -5,15 +5,17 @@ export P=$HOME/Programmchen
 export PATH="$P:$PATH"
 alias p="cd $P"
 
-# frameworks
-export GOROOT=/usr/local/opt/go/libexec
+export PATH="/opt/homebrew/bin:$PATH"
+export BREW_PREFIX=$(brew --prefix)
+export GOROOT=$BREW_PREFIX/opt/go/libexec
 export JAVA_HOME=$(/usr/libexec/java_home)
 #export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_152.jdk/Contents/Home
-export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
+export ANDROID_SDK_ROOT="$BREW_PREFIX/share/android-sdk"
 export ANDROID_HOME=$ANDROID_SDK_ROOT
-export PATH="/opt/homebrew/bin:$PATH"
-export PATH="/usr/local/opt/python/libexec/bin:$PATH" # current python version
-export PATH="/usr/local/opt/python@3.8/libexec/bin:$PATH" # wanted python version
+
+#export PATH="$BREW_PREFIX/bin:$PATH"
+export PATH="$BREW_PREFIX/opt/python/libexec/bin:$PATH" # current python version
+export PATH="$BREW_PREFIX/opt/python@3.8/libexec/bin:$PATH" # wanted python version
 export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node deps versioning
 #export PATH="$JAVA_HOME/bin:$PATH"
 
@@ -27,7 +29,7 @@ fi
 #############################
 export LC_ALL='en_US.UTF-8'
 #export LANG=C
-export EDITOR="/usr/local/bin/mate -w"
+export EDITOR="$BREW_PREFIX/bin/mate -w"
 export SPELL="aspell -c"
 export NO_GETTEXT=1 # disable localization support and make git use english only
 

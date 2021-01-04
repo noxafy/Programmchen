@@ -702,7 +702,7 @@ else
 fi
 
 # TODO: install java
-# sudo ln -sfn /usr/local/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+# sudo ln -sfn $(brew --prefix)/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
 
 echo
 section "brew cask installs"
@@ -789,7 +789,7 @@ fi
 
 #pip installs #python should now be installed using brew
 section "pip installs"
-pip_exec=/usr/local/opt/$py_ver/libexec/bin/pip
+pip_exec=$(brew --prefix)/opt/$py_ver/libexec/bin/pip
 $pip_exec -V
 failedpackages=
 echo "Looking up installed pip packages ..."

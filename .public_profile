@@ -23,7 +23,7 @@ alias lsusers="dscl . list /Users | grep -v ^_"
 #############################
 ### git
 #############################
-alias gd="PAGER=/usr/local/share/git-core/contrib/diff-highlight/diff-highlight git diff" # use with colors in ~/.gitconfig as described in https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/
+alias gd="PAGER=$BREW_PREFIX/share/git-core/contrib/diff-highlight/diff-highlight git diff" # use with colors in ~/.gitconfig as described in https://www.viget.com/articles/dress-up-your-git-diffs-with-word-level-highlights/
 alias gds="gd --staged"
 alias gdw="PAGER= git diff --word-diff=color"
 alias gdws="gdw --staged"
@@ -336,7 +336,7 @@ function _pick() {
   fi
 
   local picked
-  picked=$(/usr/local/bin/fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
+  picked=$($BREW_PREFIX/bin/fd "${fd_args[@]}" "${depth_indicator[@]}" -H | grep -v '\.git/' | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
   local exit_code=$?
   if [[ $(printf "%s" "$picked" | wc -l) -gt 0 ]]; then # result found
     query=$(printf "%s" "$picked" | head -1)
@@ -502,7 +502,7 @@ function po() {
 #############################
 ### misc stuff
 #############################
-alias showUnixTime="/usr/local/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
+alias showUnixTime="$BREW_PREFIX/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
 alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
 alias lsusers="dscl . list /Users | grep -v ^_"
 
