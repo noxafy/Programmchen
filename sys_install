@@ -1054,8 +1054,10 @@ fi
 
 if ls "$templates"/*.potx &>/dev/null && [[ -e /Applications/Microsoft\ PowerPoint.app/ ]]; then
   # maybe also available via: defaults read | grep /Templates.localized | grep Normal
-  if pot_target=$(echo ~/Library/Group\ Containers/*.Office/User\ Content.localized/Templates.localized) 2>/dev/null; then
-    if ! ls "$pot_target"/*.potx >/dev/null; then
+  if pot_target=$(echo ~/Library/Group\ Containers/*.Office/User\ Content.localized/) 2>/dev/null; then
+    pot_target="$pot_target/Templates.localized"
+    if [[ ! -e "$pot_target" ]]; then
+      mkdir "$pot_target"
       echo "Copying Power Point templates to $pot_target"
       cp "$templates"/*.potx "$pot_target" || die "Copying Power Point templates failed"
     else
