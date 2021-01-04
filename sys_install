@@ -677,7 +677,7 @@ fi
 # install mas
 if ! hash mas &>/dev/null; then
   section "mas installation"
-  brew install mas || die "brew install mas failed"
+  brew install mas || echo "brew install mas failed"
 else
   echo "Skipped mas installation"
 fi
@@ -737,25 +737,29 @@ fi
 supersection "Full automatic part"
 
 #app store
-section "App Store apps installation"
-failedapps=""
-masls=$(mas list | awk '{print $1}')
-for app in ${masinstalls[@]}; do
-  if [[ -z $(echo "$masls" | grep -e "$app") ]]; then
-    echo "Installing $app ..."
-    mas install $app
-    if [[ $? -ne 0 ]]; then
-      echo "Failed installing $app $(mas info $app | sed -n 1p)"
-      failedapps+="$app "
+if hash mas &>/dev/null; then
+  section "App Store apps installation"
+  failedapps=""
+  masls=$(mas list | awk '{print $1}')
+  for app in ${masinstalls[@]}; do
+    if [[ -z $(echo "$masls" | grep -e "$app") ]]; then
+      echo "Installing $app ..."
+      mas install $app
+      if [[ $? -ne 0 ]]; then
+        echo "Failed installing $app $(mas info $app | sed -n 1p)"
+        failedapps+="$app "
+      fi
+    else
+      echo "Skipped already installed app: $app"
     fi
+  done
+  if [[ -z "$failedapps" ]]; then
+    echo "All apps installed with no obvious problems."
   else
-    echo "Skipped already installed app: $app"
+    echo "Following apps could not be installed: $failedapps"
   fi
-done
-if [[ -z "$failedapps" ]]; then
-  echo "All apps installed with no obvious problems."
 else
-  echo "Following apps could not be installed: $failedapps"
+  echo "Skipped App Store app installations"
 fi
 
 # TOOD: move casks without password here
@@ -1121,7 +1125,7 @@ if [[ -n "$failedcasks" ]]; then
   done
   echo
 fi
-if [[ -n "$failedapps" ]]; then
+if hash mas &>/dev/null && [[ -n "$failedapps" ]]; then
   echo "# Some apps failed to install. Retry installing them later:"
   for app in $failedapps; do
     echo "    mas install $app"
