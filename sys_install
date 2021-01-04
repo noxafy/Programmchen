@@ -1129,30 +1129,22 @@ fi
 section "Final"
 if [[ -n "$failedcasks" ]]; then
   echo "# Some brew casks failed to install. Retry installing them later:"
-  for cask in $failedcasks; do
-    echo "    brew install $cask"
-  done
+  echo "brew install --cask $failedcasks"
   echo
 fi
 if hash mas &>/dev/null && [[ -n "$failedapps" ]]; then
   echo "# Some apps failed to install. Retry installing them later:"
-  for app in $failedapps; do
-    echo "    mas install $app"
-  done
+  echo "mas install $failedapps"
   echo
 fi
 if [[ -n "$failedformulas" ]]; then
   echo "# Some brew formulas failed to install. Retry installing them later:"
-  for formula in $failedformulas; do
-    echo "    brew install $formula"
-  done
+  echo "brew install --formula $failedformulas"
   echo
 fi
 if [[ -n "$failedpackages" ]]; then
   echo "# Some python packages failed to install. Retry installing them later:"
-  for formula in $failedpackages; do
-    echo "    pip install $failedpackages"
-  done
+  echo "pip install $failedpackages"
   echo
 fi
 
