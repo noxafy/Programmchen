@@ -714,7 +714,7 @@ brewcaskls=$(brew ls --cask)
 for cask in ${brewcasks[@]}; do
   if [[ -z $(echo "$brewcaskls" | grep -e "$cask") ]]; then
     echo "Installing cask $cask ..."
-    brew install --cask $cask
+    brew install --cask --force $cask
     if [[ $? -ne 0 ]]; then
       echo "Failed installing $cask"
       failedcasks+="$cask "
