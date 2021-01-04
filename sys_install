@@ -1029,12 +1029,17 @@ fi
 section "Settings"
 
 current_dockitems=$(defaults read com.apple.dock | grep "\"file-label\" =" | sed 's/                "file-label" = //g;s/;//g')
-dockitems=$(pass dockitems)
-if [[ "$current_dockitems" != "$dockitems" ]]; then
-  letRead "Arrange the Dock with the following items in the given order:"
-  open /Applications/
-  letRead "$dockitems"
-  pressEnterTo
+if [[ $(echo "$current_dockitems"| wc -l) -ne 11 ]]; then
+  echo "Getting dockitems"
+  dockitems=$(pass dockitems)
+  if [[ "$current_dockitems" != "$dockitems" ]]; then
+    letRead "Arrange the Dock with the following items in the given order:"
+    letRead "$dockitems"
+    open /Applications/
+    pressEnterTo
+  else
+     echo "Skipped Dock arrangement"
+  fi
 else
   echo "Skipped Dock arrangement"
 fi
