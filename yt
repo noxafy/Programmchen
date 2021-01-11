@@ -392,6 +392,11 @@ if [[ "$site" = ${youtube}* ]]; then
     fi
     exit 0
   fi
+
+  if [[ ! -d "$STORAGE_DIR" ]]; then
+    mkdir -p "$STORAGE_DIR" || die "Couldn't create $STOREAGE_DIR"
+  fi
+
   if [[ "$site" = */videos ]]; then
     fetchVideos "$site" "$query"
     setupOutputsVariable
