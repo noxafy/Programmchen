@@ -253,6 +253,20 @@ function fetchWind() { # Usage: $0 <path on wetter.com>
   }' | sed -E 's/([[:alpha:]]) /\1    /;s/([[:alpha:]][[:alpha:]])  /\1 /;s/ Böen/  Böen/g'
 }
 
+function panoptoDownload() {
+  if [[ -n $1 && $1 == *Viewer* ]]; then
+    echo youtube-dl "$1"
+    return
+  fi
+  printf "Copy (whole) page html into clipboard"
+  read trash
+  local links=$(pbpaste | grep -o 'href="https[^"]*"' | sed 's/"//g;s/href=//g' | grep Viewer | uniq)
+  echo "$links"
+  printf "%d links found. Seems right?" $(echo $links | wc -l)
+  read trash
+  echo "$links" | xargs -L 1 youtube-dl
+}
+
 #############################
 ### applications
 #############################
