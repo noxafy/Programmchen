@@ -5,7 +5,7 @@ help="Convert any audio file capable by mplayer to mp3.
 $usage
         \e[1m-h\e[0m    Displays this message and exits.
         \e[4mfile\e[0m  Files to convert to mp3.
-Depencendies to mplayer and lame.
+Dependencies to mplayer and lame.
 "
 
 case $1 in
