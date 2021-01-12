@@ -191,15 +191,15 @@ if [[ ! -e "$target" ]]; then
   mkdir -p "$target"
 fi
 
-backup_dir="$HOME/backup"
-if [[ -n $(ls -A "$target") ]]; then
-  echo "Backing up current backup (calculating size ..."
-  size=$(calc_size "$target") || die "Size calculation for $target failed"
-
-  printf "\e[F\e[KBacking up current backup ($size) to $backup_dir ...\n"
-  rsyncit "$target/" "$backup_dir" || die "Backing up current backup failed"
-  echo
-fi
+#backup_dir="$HOME/backup"
+#if [[ -n $(ls -A "$target") ]]; then
+#  echo "Backing up current backup (calculating size ..."
+#  size=$(calc_size "$target") || die "Size calculation for $target failed"
+#
+#  printf "\e[F\e[KBacking up current backup ($size) to $backup_dir ...\n"
+#  rsyncit "$target/" "$backup_dir" || die "Backing up current backup failed"
+#  echo
+#fi
 
 echo "####################################################"
 echo "### Backup"
@@ -224,6 +224,7 @@ cd "Library" || die "cd to $HOME/Library failed"
 
 ensureTargetDir Thunderbird
 ctt Thunderbird/Profiles # - Thunderbird folder
+ctt Thunderbird/*.ini
 
 ctt "Keyboard Layouts" # - keyboard layout
 ctt "Dictionaries" # Databases for Dictionary.app
@@ -236,7 +237,7 @@ ctt Preferences/com.zipzapmac.Go2Shell.plist
 ensureTargetDir Safari
 ctt Safari/Bookmarks.plist
 
-# firefox bookmark backup
+# TODO: copy whole Firefox Profile folder
 if firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
   cd "$firefox_profile" || die "cd to $firefox_profile failed"
   recent_backup=$(ls -t | head -1)
