@@ -18,7 +18,6 @@ elif [[ -r {-1} ]]; then \
 else \
   echo 'Invalid file name: ' {}; \
 fi\" --preview-window=right" #--preview-window=right:hidden
-alias lsusers="dscl . list /Users | grep -v ^_"
 
 #############################
 ### git
@@ -620,7 +619,6 @@ alias img_2="img_x 2"
 alias img_4="img_x 4"
 
 function secinvideo() {
-
   local files
   if [[ -f $1 ]]; then
     for f in $@; do
