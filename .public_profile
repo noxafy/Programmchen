@@ -372,6 +372,10 @@ function _pick() {
 }
 
 function _pick_and_execute() {
+  local files
+  if [[ ! -t 0 ]]; then
+    files=$(cat)
+  fi
   local file_only=false
   if [[ "-f" == $1 ]]; then
     file_only=true
@@ -399,9 +403,25 @@ function _pick_and_execute() {
     query="${@: -1}"
   fi
 
-  local picked
-  picked=$(_pick $file_only "$query")
-  local exit_code=$?
+  local picked exit_code
+  if [[ -z "$files" ]]; then
+    picked=$(_pick $file_only "$query")
+    exit_code=$?
+  else
+    local pwd_name
+    if [[ $PWD == $HOME ]]; then
+      pwd_name="~"
+    elif [[ / == "$PWD" ]]; then
+      pwd_name=""
+    elif [[ / == $(dirname "$PWD") ]]; then
+      pwd_name="$PWD"
+    else
+      pwd_name=$(basename "$PWD")
+    fi
+    picked=$(echo "$files" | fzf --query="$query" --prompt="$pwd_name/ " --preview-window=right --print-query)
+    exit_code=$?
+    picked=$(printf "%s" "$picked" | tail -1)
+  fi
   case $exit_code in
     0) # found
       "${cmd[@]}" "${args[@]}" "$picked"
