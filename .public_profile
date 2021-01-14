@@ -680,7 +680,40 @@ function secinvideo() {
   else
     files=$(\fd -t f -H -0 "\.(avi|flv|mkv|mov|mp4|mpeg4?|ts|webm|wmv)$" "$@")
   fi
-  printf "%s" "$files" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc
+  secs=$(printf "%s" "$files" | xargs -L 1 -0 ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 | sed 's/^/+/' | tr -d '\n' | cut -c 2- | bc)
+  sec2time $secs
+}
+
+function _loudnorm() {
+  local vol peak vol_change res
+  vol=$(ffmpeg -hide_banner -i "$1" -af "volumedetect" -vn -sn -dn -f null /dev/null 2>&1 | \grep -o -e "max_volume.*" -e "mean_volume.*") || return $?
+  echo "$vol"
+  peak=$(echo "$vol" | grep "max" | grep -o -e "-\d\d\?.\d")
+  if [[ "$peak" -gt -5 ]]; then
+    echo "Already normalized"
+    return
+  fi
+  vol_change=$((-peak-2))
+  vol_change=$(echo $vol_change | awk '{print int($1+0.5)}')
+  echo "Amplify by ${vol_change}dB"
+  res=${1%.*}_normalized.${1#*.}
+  ffmpeg -hide_banner -loglevel warning -stats -i "$1" -af "volume=${vol_change}dB" -c:v copy "${res}" || return
+  if hash trash; then
+    trash "$1"
+  else
+    rm "$1"
+  fi
+  mv "$res" "$1"
+  ffmpeg -hide_banner -i "$1" -af "volumedetect" -vn -sn -dn -f null /dev/null 2>&1 | \grep -o -e "max_volume.*" -e "mean_volume.*"
+}
+
+function loudnorm() {
+  for f in $@; do
+    if [[ -f "$f" ]]; then
+      echo "### $f"
+      _loudnorm "$f" && echo || printf "\e[A\r\e[K"
+    fi
+  done
 }
 
 function vltomp4() {
@@ -703,7 +736,7 @@ function vltomp4() {
     resf="$resdir${resf}.mp4"
 
     echo "Convert $f to $resf"
-    ffmpeg -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf" || continue
+    ffmpeg -hide_banner -i "$f" -vcodec libx264 -tune animation -vf fps=30 -crf 28 -preset faster "$resf" || continue
     if [[ -e "$f" ]] && hash trash &>/dev/null; then
       trash "$f" && echo "Original file moved to trash"
       mv "$resf" "${resf% converted.*}.mp4"
