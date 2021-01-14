@@ -648,18 +648,28 @@ function ocr() {
   fi
 }
 
-function img_x() {
+function imgx() {
   local divide=$1
   shift
 
   for img in $@; do
-    local height=$(sips -g pixelHeight "$img" | grep -o ': \d\d\d\d' | grep -o "\d\d\d\d")
+    local width=$(sips -g pixelWidth "$img" | grep -o ': \d\+' | grep -o "\d\+")
+    local height=$(sips -g pixelHeight "$img" | grep -o ': \d\+' | grep -o "\d\+")
+    local size=$(du -sh "$img" | awk '{print $1}')
+    echo "$img:"
+    printf "    %d x %d (%s) -> " $width $height "$size"
     height=$(echo "${height}/$divide" | bc)
-    sips -s format jpeg --resampleHeight "$height" "$img" --out "${img%.*}.jpg"
+    new_img="${img%.*}.jpg"
+    sips -s format jpeg --resampleHeight "$height" "$img" --out "$new_img" >/dev/null && {
+      size=$(du -sh "$new_img" | awk '{print $1}')
+      width=$(sips -g pixelWidth "$new_img" | grep -o ': \d\+' | grep -o "\d\+")
+      height=$(sips -g pixelHeight "$new_img" | grep -o ': \d\+' | grep -o "\d\+")
+      printf "%d x %d (%s)\n" $width $height "$size"
+    }
   done
 }
-alias img_2="img_x 2"
-alias img_4="img_x 4"
+alias img2="imgx 2"
+alias img4="imgx 4"
 
 function secinvideo() {
   local files
