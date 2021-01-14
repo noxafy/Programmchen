@@ -60,7 +60,6 @@ function c() {
 ### hacky
 #############################
 alias ec='echo $?'
-alias q=exit
 alias rg="rg --hidden --glob '!.git/*'"
 alias g=grep
 alias hist=history
@@ -140,7 +139,7 @@ alias wi="wiki -l de"
 alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 alias yt1080="youtube-dl -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'"
-alias y=yt1080
+alias yd=yt1080
 alias ytul="alias | grep \"=\'yt\ \" | sed 's/alias //g;s/=.*//g'"
 alias be="bielefeld_events"
 
