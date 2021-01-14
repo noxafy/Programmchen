@@ -598,6 +598,30 @@ function battery() {
   system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
 }
 
+function sec2time() {
+    local sec=$1 min=0 hour=0 day=0
+    sec=$(echo $1 | awk '{print int($1+0.5)}')
+    if ((sec>59)); then
+        ((min=sec/60))
+        ((sec=sec%60))
+        if ((min>59)); then
+            ((hour=min/60))
+            ((min=min%60))
+            if ((hour>23)); then
+                ((day=hour/24))
+                ((hour=hour%24))
+                 echo "$day"d "$hour"h "$min"m "$sec"s
+            else
+               echo "$hour"h "$min"m "$sec"s
+            fi
+        else
+           echo "$min"m "$sec"s
+        fi
+    else
+      echo "$sec"s
+    fi
+}
+
 function ocr() {
   local imagefile="${@: -1}"
   if ! hash convert &>/dev/null; then
