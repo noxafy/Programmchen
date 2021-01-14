@@ -129,7 +129,7 @@ shpotify
 tesseract-lang
 tldr		# Simplified and community-driven man pages
 #tor
-#trash		# CLI tool that moves files or folder to the trash
+trash		# CLI tool that moves files or folder to the trash
 trimage
 #unrar		# Extract, view, and test RAR archives
 #wine		# use wine-stable in brew casks
@@ -138,6 +138,7 @@ woff2
 #you-get
 youtube-dl
 #zeek 		# passive network traffic analyzer
+zsh-completions
 )
 
 # essentials
