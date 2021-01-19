@@ -58,6 +58,25 @@ return;
 #############################
 
 #############################
+### OS
+#############################
+
+# Start
+/Library/LaunchAgents
+/Library/LaunchDaemons
+/Library/PrivilegedHelperTools
+/Library/Apple/System/Library/LaunchDaemons
+~/LaunchAgents
+
+# File recovering
+# try this (https://forum.cgsecurity.org/phpBB3/viewtopic.php?t=7727):
+# Due to macOS High Sierra (macOS 10.13) requirement, Mac users are not allowed an access to the built-in system drive from any apps. Therefore, if you need to restore lost data from the system disk under macOS 10.13, please "disable System Integrity Protection" first.
+# How to disable "disable System Integrity Protection"? Please follow the steps below.
+# Step 1: Reboot the Mac and hold down"Command + R" keys simultaneously after you hear the startup chime, this will boot OS X into Recovery Mode.
+# Step 2: When the "OS X Utilities" screen appears, pull down the "Utilities" menu at the top of the screen instead, and choose "Terminal".
+# Step 3: In the "Terminal" window, type in "csrutil disable" and press "Enter" then restrart your Mac.
+
+#############################
 ### shell
 #############################
 
@@ -153,10 +172,3 @@ function replace_git_name_and_mail() {
 
 # grep through all git history
 # PAGER= git grep <regexp> $(git rev-list --all)
-
-# mac, to recover files, try this (https://forum.cgsecurity.org/phpBB3/viewtopic.php?t=7727):
-# Due to macOS High Sierra (macOS 10.13) requirement, Mac users are not allowed an access to the built-in system drive from any apps. Therefore, if you need to restore lost data from the system disk under macOS 10.13, please "disable System Integrity Protection" first.
-# How to disable "disable System Integrity Protection"? Please follow the steps below.
-# Step 1: Reboot the Mac and hold down"Command + R" keys simultaneously after you hear the startup chime, this will boot OS X into Recovery Mode.
-# Step 2: When the "OS X Utilities" screen appears, pull down the "Utilities" menu at the top of the screen instead, and choose "Terminal".
-# Step 3: In the "Terminal" window, type in "csrutil disable" and press "Enter" then restrart your Mac.
