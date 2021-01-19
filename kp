@@ -47,7 +47,8 @@ if [[ $(echo "$processes" | wc -l) -eq 1 ]]; then
 else
   ps u -p $(echo "$processes" | tr '\n' ',' | sed 's/,$//')
   read -p "Which process do you want to kill? (PID) [$firstprocess]: " ans
-  [[ $ans =~ ^[0-9]+$ ]] && pidToKill=$ans || die "That was not a number."
+  [[ -z "$ans" ]] && ans=$firstprocess
+  [[ "$ans" =~ ^[0-9]+$ ]] && pidToKill=$ans || die "That was not a number."
 fi
 
 if [[ -z $pidToKill ]]; then
