@@ -443,6 +443,10 @@ function e() {
   _pick_and_execute -f less "$@"
 }
 
+function se() {
+  _pick_and_execute -f "sudo less" "$@"
+}
+
 function n() {
   _pick_and_execute -f -w nano "$@"
 }
