@@ -41,8 +41,7 @@ killID=$(lsof -i :$port | sed -n 2p | awk '{print $2}')
 if [[ -n $killID ]]; then
   lsof -a -d txt -p $killID | head -2
 
-  read -p "Do you really want to kill this process? (y/n) [n]:"
-  read ans
+  read -p "Do you really want to kill this process? (y/n) [n]: " ans
   case $ans in
     y)
       ;;
