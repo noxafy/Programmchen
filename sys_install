@@ -703,7 +703,10 @@ else
 fi
 
 # TODO: install java
-# sudo ln -sfn $(brew --prefix)/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+if [[ -e "$(brew --prefix)/opt/openjdk/libexec/openjdk.jdk" ]] && [[ ! -e /Library/Java/JavaVirtualMachines/openjdk.jdk ]]; then
+  echo "Link openjdk to /Library/Java/JavaVirtualMachines/openjdk.jdk"
+  sudo ln -sfn $(brew --prefix)/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+fi
 
 echo
 section "brew cask installs"
