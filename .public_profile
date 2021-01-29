@@ -754,3 +754,21 @@ function vltomp4() {
   done
   rm -r "$resdir"
 }
+
+function lc() {
+  local equation
+  if [[ ! -t 0 ]]; then
+    equation=$(cat)
+  else
+    equation=$(pbpaste)
+  fi
+  equation=$(sed 's/\\cdot/*/g' <<< "$equation")
+  cat <<< "$equation"
+  cat <<- EOF | latexcalc | sed -n '4p' | sed 's/^/= /'
+	\documentclass[12pt]{article}
+	\begin{document}
+	$\solver{$equation}
+	\answer
+	$\end{document}
+	EOF
+}
