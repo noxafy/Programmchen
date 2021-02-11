@@ -79,22 +79,30 @@ while [[ -n $1 ]]; do
     die "Wrong argument: %s\n$usage -- See -h for more help." "$1"
     ;;
   *)
-    [[ -z "$site" ]] && {
+    if [[ -f "$1" ]]; then
+      FILE=$1
+      shift
+    elif [[ -z "$site" ]]; then
       site=$1
       shift
-    }
+    fi
     query="$*"
-    break;
+    break
     ;;
   esac
   shift
 done
 
 function parseResults0() {
-  json_file="${STORAGE_FILE}.json"
-  printf "%s" "$1" > $json_file
-  if [[ -n $DEBUG ]]; then
-    echo "Json file saved in ${json_file}" >&2
+  local json_file
+  if [[ -z "$FILE" ]]; then
+    json_file="${STORAGE_FILE}.json"
+    printf "%s" "$1" > $json_file
+    if [[ -n $DEBUG ]]; then
+      echo "Json file saved in ${json_file}" >&2
+    fi
+  else
+    json_file=$FILE
   fi
   node -e "const filepath = process.argv[1];
       const fs = require('fs');
@@ -146,7 +154,11 @@ function parseResults0() {
 
 function parseResults() {
   # find place of content in html
-  local v1=$(printf "%s" "$1" | grep -m 1 '[ "]ytInitialData' | sed 's/.*ytInitialData = //' | sed 's/.*ytInitialData"] = //' | sed 's/<\/script>.*//' | sed 's/;$//')
+  if [[ -z "$FILE" || "$FILE" != *.json ]]; then
+    local v1=$(printf "%s" "$1" | grep -m 1 '[ "]ytInitialData' | sed 's/.*ytInitialData = //' | sed 's/.*ytInitialData"] = //' | sed 's/<\/script>.*//' | sed 's/;$//')
+  else
+    local v1=$1
+  fi
   local tmp_results=$(parseResults0 "$v1" "$2")
   local tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
   IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
@@ -191,7 +203,7 @@ function fetchVideos() {
     local src=$("${CURL[@]}" "$1")
   fi
 
-  if [[ -n $DEBUG ]]; then
+  if [[ -n $DEBUG && -n "$src" ]]; then
     result_name="${STORAGE_FILE}_$(date +%s)"
     echo "$src" > "${result_name}"
     echo "Curl result saved in ${result_name}" >&2
@@ -363,6 +375,7 @@ if [[ "$site" = ${youtube}* ]]; then
     fi
   fi
 elif [[ -n "$FILE" ]]; then
+  echo "Reading from file $FILE"
   results=$(cat "$FILE")
   parseResults "$results" "$query"
   setupOutputsVariable
