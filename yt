@@ -144,84 +144,10 @@ function parseResults0() {
   [[ -n $DEBUG ]] || rm $json_file
 }
 
-function parseResults1() {
-  echo "Last time used: $(date)" > ${STORAGE_DIR}/parser_v1
-  local json=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content json{}')
-  node -e "
-    const json = JSON.parse(process.argv[1]);
-    for (let el of json) {
-      // variable for final string
-      let description
-
-      // get title node
-      let title;
-      for (child of el.children) {
-        if (child.class && child.class.includes('yt-lockup-title')) { // normally node [0]
-          title = child.children
-        }
-      }
-
-      if (!title) {
-        console.error('Error! This video has no title node (yt-lockup-title):')
-        console.error(el)
-      }
-
-      // filter by query string
-      if ('$2' && title[0].text.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
-
-      // create link
-      let link = '$youtube' + title[0].href
-
-      // get meta data node
-      let info;
-      for (child of el.children) {
-        if (child.class && child.class.includes('yt-lockup-meta')) { // normally node [1]
-          info = child.children[0].children
-        }
-      }
-
-      if (!info) {
-        console.error('Error! This video has no info node (yt-lockup-meta):')
-        console.error(el)
-      }
-
-      // Regular video
-      if (title[1] && title[1].text
-        && info[1] && info[1].text && info[0].text) {
-        description = title[0].text + ' \033[2m' + title[1].text + '\033[0m \033[37m' + info[1].text + ' \033[2m' + info[0].text + '\033[0m'
-      }
-      // Livestream
-      else if (el.children[3]
-        && el.children[3].children[0].children[0].children[0].text
-        && el.children[2].children[0].children[0].text) {
-        const live_txt = el.children[3].children[0].children[0].children[0].text
-        const viewer_cnt = el.children[2].children[0].children[0].text
-        description = '\033[1m' + live_txt + ':\033[0m ' + title[0].text + ' \033[37m' + viewer_cnt + '\033[0m'
-      }
-      else {
-        description = 'Unknown video type!'
-      }
-
-      // print out, remove newlines
-      console.log(description.replace(/\r?\n|\r/gm, ''))
-      console.log(link)
-    }" "$json" | perl -MHTML::Entities -pe 'decode_entities($_);'
-}
-
 function parseResults() {
   # find place of content in html
   local v1=$(printf "%s" "$1" | grep -m 1 '[ "]ytInitialData' | sed 's/.*ytInitialData = //' | sed 's/.*ytInitialData"] = //' | sed 's/<\/script>.*//' | sed 's/;$//')
-  if [[ -n "$v1" ]]; then
-    local tmp_results=$(parseResults0 "$v1" "$2")
-  else # try old version
-    local v2=$(printf "%s" "$1" | pup --charset utf8 '.yt-lockup-content')
-    if [[ -z "$v2" ]]; then
-      result_name="${STORAGE_FILE}_error_$(date +%s)"
-#      printf "%s" "$1" >> "${result_name}"
-      die "Couldn't parse html!" #Curl result saved in ${result_name}"
-    fi
-    local tmp_results=$(parseResults1 "$v2" "$2")
-  fi
+  local tmp_results=$(parseResults0 "$v1" "$2")
   local tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
   IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
   local tmp_links=$(printf "%s" "$tmp_results" | sed -n '1d;p;n')
