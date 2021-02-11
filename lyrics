@@ -9,6 +9,7 @@ TITLE=
 DEBUG=
 QUIET=
 AUTOSELECT=2 # 0 = ask always, 1 = ask if no match found, 2 = ask if no match found in all sites
+DEPENDENCIES=(recode pup node)
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-v] [-a] [-q] [ (spotify|rbox|rhythmbox) | \e[4mtitle\e[0m [\e[4martist\e[0m] | \e[4murl\e[0m ]"
 help="Find out the song lyrics for a given or currently playing song.
 $usage
@@ -581,6 +582,13 @@ while [[ -n $1 ]]; do
     ;;
   esac
 done
+
+for dep in ${DEPENDENCIES[@]}; do
+  if ! hash $dep >&/dev/null; then
+    die "Please install $dep first!"
+  fi
+done
+
 
 case $1 in
 rhythmbox|rbox)
