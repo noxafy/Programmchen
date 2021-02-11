@@ -114,6 +114,7 @@ function parseResults0() {
 
       for (let item of gridRenderer.items) {
         let v = item.gridVideoRenderer
+        if (!v) continue;
 
         // get data
         let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
