@@ -836,6 +836,12 @@ else
 fi
 popd &> /dev/null || die "cd failed" # HOME again
 
+mpv_conf="$HOME/.config/mpv/input.conf"
+if [[ ! -f "$mpv_conf" ]]; then
+  echo "Create mpv config file $mpv_conf"
+  echo "RIGHT seek  5 exact\nLEFT  seek -5 exact" > "$mpv_conf"
+fi
+
 if [[ ! -e "$P"/.zshrc ]]; then
   git clone git@github.com:noxafy/Programmchen.git || die "Cloning Programmchen failed"
 fi
