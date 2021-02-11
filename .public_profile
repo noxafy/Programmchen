@@ -781,6 +781,7 @@ function vltomp4() {
   rm -r "$resdir"
 }
 
+# http://latexcalc.sourceforge.net/
 function lc() {
   local equation
   if [[ ! -t 0 ]]; then
