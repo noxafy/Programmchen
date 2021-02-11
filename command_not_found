@@ -1,4 +1,3 @@
-
 if [[ ! -t 0 ]]; then
   # not interactive, but piped
   echo "Sorry, couldn't find: $*"
@@ -23,6 +22,10 @@ case $1 in
     arg=${1:1}
     cmd=e
     ;;
+  se*)
+    arg=${1:2}
+    cmd=se
+    ;;
   n*)
     arg=${1:1}
     cmd=n
@@ -39,6 +42,10 @@ case $1 in
     arg=$(1:2)
     cmd=sm
     ;;
+#  t*) # make script zsh compatible first
+#    arg=${1:1}
+#    cmd=t
+#    ;;
   *)
     if [[ -f "$P/asciiart/$1" ]]; then
       cat "$P/asciiart/$1"
@@ -68,6 +75,7 @@ if [[ -n "$cmd" ]]; then
       ;;
   esac
 
+  #source ~/.zshrc
   source ~/.profile  # index aliases
   "$cmd" "${args[@]}"
 fi
