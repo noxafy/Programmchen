@@ -2,6 +2,7 @@ set smooth
 set softwrap
 set nowrap
 set nohelp
+set autoindent
 #set indicator #scroll bar
 
 bind   ^]           cutwordleft         main
