@@ -24,8 +24,28 @@ die() {
   exit 1
 }
 
-hash mplayer &>/dev/null || die "mplayer not found"
-hash lame &>/dev/null || die "lame not found"
+convertWithMplayer() {
+  mplayer -noar -novideo -ao pcm:fast "$1" || die "mplayer error on converting: $1"
+  [[ ! -f audiodump.wav ]] && {
+    echo "mplayer could not extract wav from source"
+    continue;
+  }
+  lame --preset extreme audiodump.wav "$2" || die "lame error on converting: $1"
+  rm -f audiodump.wav
+}
+
+convertWithFFmpeg() {
+  ffmpeg -loglevel warning -stats -hide_banner -i "$1" -vn -ar 44100 -ac 2 -b:a 192k "$2"
+}
+
+
+if hash mplayer &>/dev/null && hash lame &>/dev/null; then
+  converter=convertWithMplayer
+elif hash ffmpeg &>/dev/null; then
+  converter=convertWithFFmpeg
+else
+  die "No converter found!"
+fi
 
 for f in "$@" ; do
   [[  -d "$f" ]] && {
@@ -33,7 +53,6 @@ for f in "$@" ; do
     continue;
   }
 
-  mplayer -noar -novideo -ao pcm:fast "$f" || die "mplayer error on converting: $f"
   filename=$(basename "$f")
   #echo "filename: $filename"
   filename=${filename%.*}
@@ -42,10 +61,7 @@ for f in "$@" ; do
     echo "Conversion failed due to bad file name of [${f}] -> [${filename}]"
     continue;
   }
-  [[ ! -f audiodump.wav ]] && {
-    echo "mplayer could not extract wav from source"
-    continue;
-  }
-  lame --preset extreme audiodump.wav "${filename}.mp3" || die "lame error on converting: $f"
-  rm -f audiodump.wav
+  goal="${filename}.mp3"
+
+  $converter "$f" "$goal"
 done
