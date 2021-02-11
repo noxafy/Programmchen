@@ -46,7 +46,7 @@ else
     pid=$(echo "$res" | grep -oE "PID \d+" | cut -d ' ' -f 2)
     if [[ -n $pid ]]; then
       ps -p $pid
-      read -p "Do you want to kill this process? (y/n) [y]: " ans2
+      read -p "Do you want to kill this process (PID $pid)? (y/n) [y]: " ans2
       if [[ -z $ans2 || $ans2 == y ]]; then
         kill $pid || die "Failed to kill process PID $pid"
         unmount0 "$volume"
