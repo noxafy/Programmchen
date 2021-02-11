@@ -104,7 +104,9 @@ function parseResults0() {
   else
     json_file=$FILE
   fi
-  node -e "const filepath = process.argv[1];
+
+  local result
+  result=$(node -e "const filepath = process.argv[1];
       const fs = require('fs');
       const json = JSON.parse(fs.readFileSync(filepath));
       let content = json.contents.twoColumnBrowseResultsRenderer.tabs.filter(el => el.tabRenderer?.content)[0].tabRenderer.content
@@ -148,21 +150,25 @@ function parseResults0() {
         // print out, remove newlines
         console.log(description.replace(/\r?\n|\r/gm, ''))
         console.log(link)
-      }" "$json_file" | perl -MHTML::Entities -pe 'decode_entities($_);'
+      }" "$json_file") || return 1
+
+  printf "%s" "$result" | perl -MHTML::Entities -pe 'decode_entities($_);'
+
   [[ -n $DEBUG ]] || rm $json_file
 }
 
 function parseResults() {
   # find place of content in html
+  local v1 tmp_results tmp_descriptions tmp_links
   if [[ -z "$FILE" || "$FILE" != *.json ]]; then
-    local v1=$(printf "%s" "$1" | grep -m 1 '[ "]ytInitialData' | sed 's/.*ytInitialData = //' | sed 's/.*ytInitialData"] = //' | sed 's/<\/script>.*//' | sed 's/;$//')
+    v1=$(printf "%s" "$1" | grep -m 1 '[ "]ytInitialData' | sed 's/.*ytInitialData = //' | sed 's/.*ytInitialData"] = //' | sed 's/<\/script>.*//' | sed 's/;$//')
   else
-    local v1=$1
+    v1=$1
   fi
-  local tmp_results=$(parseResults0 "$v1" "$2")
-  local tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
+  tmp_results=$(parseResults0 "$v1" "$2") || die "parseResults0: Couldn't parse descriptions for ${STORAGE_FILE##*/}"
+  tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
   IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
-  local tmp_links=$(printf "%s" "$tmp_results" | sed -n '1d;p;n')
+  tmp_links=$(printf "%s" "$tmp_results" | sed -n '1d;p;n')
   IFS=$'\n' LINKS=(${tmp_links})
 
   if [[ -n $DEBUG ]]; then
