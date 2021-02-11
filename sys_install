@@ -445,6 +445,7 @@ if [[ -z "$P" ]]; then
   echo "Dictionary settings"
   defaults write com.apple.Dictionary "last available dictionaries" "(
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
+    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/2a679af89e5bb8b417ff02b0fef81ca39ffad9a5.asset/AssetData/German - English.dictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
     \"asset:/Oxford Dictionary of English.dictionary\",
@@ -476,7 +477,6 @@ if [[ -z "$P" ]]; then
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/2fcc349eb53d7c336b8372758b70508eb8e2ac0b.asset/AssetData/Oxford Thesaurus of English.dictionary\",
     \"asset:/Traditional Chinese - English.dictionary\",
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/59c252b96e44a6dbdc931e5b75a169f22eb6fa43.asset/AssetData/Duden Dictionary Data Set I.dictionary\",
-    \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/2a679af89e5bb8b417ff02b0fef81ca39ffad9a5.asset/AssetData/German - English.dictionary\",
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/e5ccfe0082277d86bcac7e63268a21272f704c34.asset/AssetData/French - English.dictionary\",
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/d574b5371fbd293fe74c473f37a18fa300ecdc31.asset/AssetData/Italian - English.dictionary\",
     \"/System/Library/Assets/com_apple_MobileAsset_DictionaryServices_dictionaryOSX/60f594992693ff3f88af3f505da1451dc5af9c8c.asset/AssetData/Russian - English.dictionary\",
@@ -484,13 +484,13 @@ if [[ -z "$P" ]]; then
   )"
   defaults write com.apple.DictionaryServices DCSActiveDictionaries "(
     \"/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/Resources/Wikipedia.wikipediadictionary\",
+    \"com.apple.dictionary.OxfordGerman\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/Deutsch-Englisch.dictionary\",
     \"$HOME/Library/Containers/com.apple.Dictionary/Data/Library/Dictionaries/OpenThesaurus Deutsch.dictionary\",
     \"com.apple.dictionary.AppleDictionary\",
     \"com.apple.dictionary.OAWT\",
     \"com.apple.dictionary.NOAD\",
     \"com.apple.dictionary.de.DDDSI\",
-    \"com.apple.dictionary.OxfordGerman\",
     \"com.apple.dictionary.OTE\",
     \"com.apple.dictionary.OxfordFrench\",
     \"com.apple.dictionary.OxfordItalian\",
