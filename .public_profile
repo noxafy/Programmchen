@@ -56,6 +56,32 @@ function c() {
   git commit -m "$*"
 }
 
+function b() {
+  local args=($@)
+  local input=$args[-1]
+  if [[ ! -t 0 ]]; then
+    input=$(cat)
+  else
+    unset 'args[-1]'
+  fi
+
+  # first utilize wcalc
+  local res=$(wcalc "${args[@]}" "$input" 2>&1)
+  if [[ "$res" == *Infinity* ]]; then
+    # if the number is too large for wcalc, use bc
+    read res <<< $(bc <<< "scale=42;$input" 2>&1)
+    res=" = $res"
+  fi
+
+  if [[ "$res" != *error* && "$res" != *Undefined* ]]; then
+     echo "$res"; return
+  else
+    # and if it still seems unsolvable, ask sage
+    # see https://paulmasson.github.io/sagemath-docs/functions
+    sage -c "print($input)"
+  fi
+}
+
 #############################
 ### hacky
 #############################
