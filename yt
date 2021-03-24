@@ -3,7 +3,7 @@
 youtube="https://www.youtube.com"
 site=""
 query=""
-CURL=(curl -sSi -H "Accept-Language: de,en-US;q=0.7,en;q=0.3")
+CURL=(curl -sSi -H "Accept-Language: en-US")
 DEBUG=
 PRINTALL=
 OPEN=
@@ -122,7 +122,10 @@ function parseResults0() {
 
         // get data
         let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
-        title = title.substring(0, title.lastIndexOf(' von'))
+        title = title.substring(0, title.lastIndexOf(' by'))
+        if (!title) { // try german version
+          title = title.substring(0, title.lastIndexOf(' von'))
+        }
         if (!title) {
           // slightly panic
           console.error('Error! This video has no title node:')
