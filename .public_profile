@@ -694,11 +694,20 @@ function ocr() {
 function imgx() {
   local divide=$1
   shift
+  local width height size mime
 
   for img in $@; do
-    local width=$(sips -g pixelWidth "$img" | grep -o ': \d\+' | grep -o "\d\+")
-    local height=$(sips -g pixelHeight "$img" | grep -o ': \d\+' | grep -o "\d\+")
-    local size=$(du -sh "$img" | awk '{print $1}')
+    if ! mime=$(file --mime-type -E "$img"); then
+      echo "$mime"
+      continue
+    fi
+    if [[ $(printf "%s" "$mime" | awk '{print $NF}') != *image* ]]; then
+      echo "Not an image file: $img"
+      continue
+    fi
+    width=$(sips -g pixelWidth "$img" | grep -o ': \d\+' | grep -o "\d\+") || continue
+    height=$(sips -g pixelHeight "$img" | grep -o ': \d\+' | grep -o "\d\+")
+    size=$(du -sh "$img" | awk '{print $1}')
     echo "$img:"
     printf "    %d x %d (%s) -> " $width $height "$size"
     height=$(echo "${height}/$divide" | bc)
