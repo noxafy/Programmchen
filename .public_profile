@@ -103,6 +103,14 @@ alias j="python -m notebook" #guarantee same python version #jupyter-notebook
 alias s="sage -n jupyter"
 alias spip="sage -python -m pip"
 alias ipy=ipython
+alias ca=conda
+alias caa="ca activate"
+alias cad="ca deactivate"
+alias cals="ca list"
+alias cas="ca search"
+alias cai="ca install -y"
+alias cacr="ca create --clone base -n"
+alias carm="ca remove --all -n"
 
 function cltex() {
   local goal=$1

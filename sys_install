@@ -612,6 +612,8 @@ fi
 if [[ ! -d "$ZSH" ]]; then
   section "Oh my zsh installation"
   sh -c "KEEP_ZSHRC=yes $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh); exit" || die "oh-my-zsh installation failed"
+
+  git clone https://github.com/esc/conda-zsh-completion ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/conda-zsh-completion
 else
   echo "Skipped oh-my-zsh installation"
 fi
@@ -852,6 +854,11 @@ if [[ ! -e "$P"/imgcat ]]; then
   wget https://iterm2.com/utilities/it2check && chmod +x "$P"/it2check
   popd &>/dev/null
 fi
+
+# try with CONDA_AUTO_ACTIVATE_BASE=false first
+#if hash conda &>/dev/null; then
+#  conda config --set auto_activate_base false
+#fi
 
 if [[ ! -e ~/.public_profile \
    || ! -e ~/.profile \

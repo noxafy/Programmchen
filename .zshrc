@@ -19,6 +19,7 @@ plugins=(
   git
   npm
   fd
+  conda-zsh-completion
 )
 
 source "$ZSH/oh-my-zsh.sh"
@@ -89,3 +90,20 @@ function help() {
 #echo "source ~/.zshrc" >> /Applications/IntelliJ\ IDEA.app/Contents/plugins/terminal/.zshrc
 # If zsh is slow, try
 # mv ~/.oh-my-zsh/lib/spectrum.zsh ~/.oh-my-zsh/lib/spectrum.zsh_disabled
+
+if [[ $BREW_PREFIX == "/opt/homebrew" ]] && hash conda &>/dev/null; then
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/homebrew/Caskroom/miniconda/base/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh" ]; then
+        . "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/homebrew/Caskroom/miniconda/base/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+fi

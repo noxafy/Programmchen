@@ -30,6 +30,7 @@ export LC_ALL='en_US.UTF-8'
 export EDITOR="$BREW_PREFIX/bin/mate -w"
 export SPELL="aspell -c"
 export NO_GETTEXT=1 # disable localization support and make git use english only
+export CONDA_AUTO_ACTIVATE_BASE=false
 
 #############################
 ### interactive shell start
