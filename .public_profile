@@ -56,31 +56,22 @@ function c() {
   git commit -m "$*"
 }
 
-function b() {
-  local args=($@)
-  local input=$args[-1]
-  if [[ ! -t 0 ]]; then
-    input=$(cat)
-  else
-    unset 'args[-1]'
-  fi
-
-  # first utilize wcalc
-  local res=$(wcalc "${args[@]}" "$input" 2>&1)
-  if [[ "$res" == *Infinity* ]]; then
-    # if the number is too large for wcalc, use bc
-    read res <<< $(bc <<< "scale=42;$input" 2>&1)
-    res=" = $res"
-  fi
-
-  if [[ "$res" != *error* && "$res" != *Undefined* ]]; then
-     echo "$res"; return
-  else
-    # and if it still seems unsolvable, ask sage
-    # see https://paulmasson.github.io/sagemath-docs/functions
-    sage -c "print($input)"
-  fi
-}
+#############################
+### python
+#############################
+alias py=python
+alias j="python -m notebook" #guarantee same python version #jupyter-notebook
+alias s="sage -n jupyter"
+alias spip="sage -python -m pip"
+alias ipy=ipython
+alias ca=conda
+alias caa="ca activate"
+alias cad="ca deactivate"
+alias cals="ca list"
+alias cas="ca search"
+alias cai="ca install -y"
+alias cacr="ca create --clone base -n"
+alias carm="ca remove --all -n"
 
 #############################
 ### hacky
@@ -99,67 +90,6 @@ alias ql="qlmanage -p"
 alias shutup="osascript -e 'Set volume output volume 0'"
 alias apropos="2>/dev/null apropos"
 alias diff="git diff --no-index"
-
-alias py=python
-alias j="python -m notebook" #guarantee same python version #jupyter-notebook
-alias s="sage -n jupyter"
-alias spip="sage -python -m pip"
-alias ipy=ipython
-alias ca=conda
-alias caa="ca activate"
-alias cad="ca deactivate"
-alias cals="ca list"
-alias cas="ca search"
-alias cai="ca install -y"
-alias cacr="ca create --clone base -n"
-alias carm="ca remove --all -n"
-
-function cltex() {
-  local goal=$1
-  [[ -z "$goal" && -e "main.tex" ]] && goal="main.tex"
-  if [[ ! -e "$goal" || "$goal" != *.tex ]]; then
-    echo "Please give a valid tex file." && return 1
-  fi
-
-  local -i removed=0
-  local -a tokill=(aux bbl bcf blg dvi fdb_latexmk fls idx ilg ind lof log lot out out.ps run.xml toc)
-  for postfix in ${tokill[@]}; do
-    local file="${goal:0:$((${#goal}-4))}.$postfix"
-    [[ -e "$file" ]] && rm -v "$file" && ((removed++))
-  done
-  echo "$removed files removed"
-}
-
-function meta() {
-  if hash exiftool &>/dev/null; then
-    if [[ -z "$1" ]]; then
-      echo "Please give a file to show its metadata."
-    else
-      exiftool "$1"
-    fi
-  else
-    echo "Please install exiftool before."
-  fi
-}
-
-function rmmeta() {
-  if hash exiftool &>/dev/null; then
-    if [[ -z "$1" ]]; then
-      echo "Please give a file to remove metadata from."
-    else
-      exiftool -all= -overwrite_original "$1"
-    fi
-  else
-    echo "Please install exiftool before."
-  fi
-}
-
-function filecnt() {
-  \fd -I0Ht d -d 1 | while IFS= read -r -d '' f; do
-    printf "$f: "
-    \fd -IH -t f '.*' "$f" | wc -l
-  done | awk '{print $NF"\t"$0}' | sed -E 's/:.*$//g' | sort -nr
-}
 
 #############################
 ### internet
@@ -290,7 +220,7 @@ function fetchWind() { # Usage: $0 <path on wetter.com>
   }' | sed -E 's/([[:alpha:]]) /\1    /;s/([[:alpha:]][[:alpha:]])  /\1 /;s/ Böen/  Böen/g'
 }
 
-function panoptoDownload() {
+function panoptoDownload() { # TODO: seems not to work anymore
   if [[ -n $1 && $1 == *Viewer* ]]; then
     echo youtube-dl "$1"
     return
@@ -323,6 +253,9 @@ alias dark="osascript -e 'tell application \"System Events\" to tell appearance 
 #############################
 ### fi*
 #############################
+
+# fip has its own script now
+
 function fif() {
   typeset -f | grep --color=never -E ' \(\) \{?' | sed -E 's/ \(\) \{?$//g' | grep -e "$*"
 }
@@ -511,83 +444,27 @@ function cdf() {
   cd "$picked__dir"
 }
 
-#############################
-### pass
-#############################
-alias pe="pass edit"
-
-function pm() {
-  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing e-mail address." && return 1;
-  local p_res
-  p_res=$(pass "$*") || return $?
-
-  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^m: ")
-  [[ -z $res ]] && echo "No mail address found for: $*" && return 1
-  res=$(echo "$res" | cut -c 4-)
-
-  if [[ ! -t 1 ]]; then
-    echo "$res"
-  else
-    printf "%s" "$res" | pbcopy
-    echo "$res (copied to clipboard)"
-  fi
+function filecnt() {
+  \fd -I0Ht d -d 1 | while IFS= read -r -d '' f; do
+    printf "$f: "
+    \fd -IH -t f '.*' "$f" | wc -l
+  done | awk '{print $NF"\t"$0}' | sed -E 's/:.*$//g' | sort -nr
 }
 
-function pu() {
-  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing username." && return 1;
-  local p_res
-  p_res=$(pass "$*") || return $?
-
-  local res=$(echo "$p_res" | grep --binary-files=text -m 1 "^u: ")
-  if [[ -z $res ]]; then
-    res=$(echo "$p_res" | grep --binary-files=text -m 1 "^CID: ")
-    if [[ -z $res ]]; then
-      echo "No username found for: $*" && return 1
-    else
-      res=$(echo "$res" | cut -c 6-)
-    fi
-  else
-    res=$(echo "$res" | cut -c 4-)
+function cltex() {
+  local goal=$1
+  [[ -z "$goal" && -e "main.tex" ]] && goal="main.tex"
+  if [[ ! -e "$goal" || "$goal" != *.tex ]]; then
+    echo "Please give a valid tex file." && return 1
   fi
 
-  if [[ ! -t 1 ]]; then
-    echo "$res"
-  else
-    printf "%s" "$res" | pbcopy
-    echo "$res (copied to clipboard)"
-  fi
-}
-
-function po() {
-  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing online login site." && return 1;
-  local p_res
-  p_res=$(pass "$*") || return $?
-
-  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
-  [[ -z $res ]] && echo "No online link found for: $*" && return 1
-  res=$(echo "$res" | cut -c 4-)
-
-  if [[ "$res" != *".app" ]] && which f >/dev/null; then
-    f "$res"
-  else
-    open "$res"
-  fi
-}
-
-#############################
-### misc stuff
-#############################
-alias showUnixTime="$BREW_PREFIX/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
-alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
-alias lsusers="dscl . list /Users | grep -v ^_"
-
-function isprime() {
-  if [[ ${#1} -le 17 ]] && (($1 < 18014398509481984)); then # 2^54
-    python "$P"/isprime.py $1
-  else
-    #echo "Let's harness sage..."
-    sage -c "print(is_prime($1))"
-  fi
+  local -i removed=0
+  local -a tokill=(aux bbl bcf blg dvi fdb_latexmk fls idx ilg ind lof log lot out out.ps run.xml toc)
+  for postfix in ${tokill[@]}; do
+    local file="${goal:0:$((${#goal}-4))}.$postfix"
+    [[ -e "$file" ]] && rm -v "$file" && ((removed++))
+  done
+  echo "$removed files removed"
 }
 
 function backup() {
@@ -614,6 +491,9 @@ function backup() {
   "$P"/backup -t "$target" && unmount
 }
 
+#############################
+### media
+#############################
 function pdfpages() {
   local -a files=("$@")
   if [[ -z "$*" ]]; then
@@ -629,65 +509,27 @@ function pdfgrepc() {
   pdfgrep -c "$@" * | grep -v ':0' | tr ':' ' ' | awk '{print $2"\t"$1}' | sort -n
 }
 
-function zombiesAndStuff() {
-  ps aux | awk ' $8 !~ /S/ {print $0}' | grep -v "ps aux"
-}
-
-function showHexFlow() {
-  _pick_and_execute -f hexdump "$@" | sed 's/[0123456789abcdef]\{7\}//g' | grep --color=always -e "3e\|$" | xargs printf "%s "; echo
-}
-
-function battery() {
-  system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
-}
-
-function sec2time() {
-    local sec=$1 min=0 hour=0 day=0
-    sec=$(echo $1 | awk '{print int($1+0.5)}')
-    if ((sec>59)); then
-        ((min=sec/60))
-        ((sec=sec%60))
-        if ((min>59)); then
-            ((hour=min/60))
-            ((min=min%60))
-            if ((hour>23)); then
-                ((day=hour/24))
-                ((hour=hour%24))
-                 echo "$day"d "$hour"h "$min"m "$sec"s
-            else
-               echo "$hour"h "$min"m "$sec"s
-            fi
-        else
-           echo "$min"m "$sec"s
-        fi
+function meta() {
+  if hash exiftool &>/dev/null; then
+    if [[ -z "$1" ]]; then
+      echo "Please give a file to show its metadata."
     else
-      echo "$sec"s
-    fi
-}
-
-function ocr() {
-  local imagefile="${@: -1}"
-  if ! hash convert &>/dev/null; then
-    echo "Please make sure that convert (see imagemagick) is in your path!"
-    return 1
-  elif ! hash tesseract &>/dev/null; then
-    echo "Please make sure that tesseract is in your path!"
-    return 1
-  elif [[ -f "$imagefile" ]]; then
-    shift -p
-    local res=$(convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -)
-    if ! echo "$res" | grep "\w" &>/dev/null; then
-      echo "Oh dear, no results! :(" >&2
-      echo "Maybe you should try: $0 --psm 11 $imagefile" >&2
-      echo "See tesseract --help-extra for more help." >&2
-      return 2
-    else
-      echo "$res"
+      exiftool "$1"
     fi
   else
-    echo "Usage: $(basename $0) [\e[4mtesseract options\e[0m \e[4m...\e[0m] imagefile" >&2
-    echo "Print result of optical character recognition with tesseract to stdout." >&2
-    echo "See tesseract --help-extra for more help." >&2
+    echo "Please install exiftool before."
+  fi
+}
+
+function rmmeta() {
+  if hash exiftool &>/dev/null; then
+    if [[ -z "$1" ]]; then
+      echo "Please give a file to remove metadata from."
+    else
+      exiftool -all= -overwrite_original "$1"
+    fi
+  else
+    echo "Please install exiftool before."
   fi
 }
 
@@ -722,6 +564,32 @@ function imgx() {
 }
 alias img2="imgx 2"
 alias img4="imgx 4"
+
+function ocr() {
+  local imagefile="${@: -1}"
+  if ! hash convert &>/dev/null; then
+    echo "Please make sure that convert (see imagemagick) is in your path!"
+    return 1
+  elif ! hash tesseract &>/dev/null; then
+    echo "Please make sure that tesseract is in your path!"
+    return 1
+  elif [[ -f "$imagefile" ]]; then
+    shift -p
+    local res=$(convert "$imagefile" -colorspace Gray -depth 8 -resample 200x200 -flatten -alpha Off - | tesseract "$@" - -)
+    if ! echo "$res" | grep "\w" &>/dev/null; then
+      echo "Oh dear, no results! :(" >&2
+      echo "Maybe you should try: $0 --psm 11 $imagefile" >&2
+      echo "See tesseract --help-extra for more help." >&2
+      return 2
+    else
+      echo "$res"
+    fi
+  else
+    echo "Usage: $(basename $0) [\e[4mtesseract options\e[0m \e[4m...\e[0m] imagefile" >&2
+    echo "Print result of optical character recognition with tesseract to stdout." >&2
+    echo "See tesseract --help-extra for more help." >&2
+  fi
+}
 
 function secinvideo() {
   local files
@@ -801,6 +669,99 @@ function vltomp4() {
   rm -r "$resdir"
 }
 
+
+#############################
+### pass
+#############################
+alias pe="pass edit"
+
+function pm() {
+  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing e-mail address." && return 1;
+  local p_res
+  p_res=$(pass "$*") || return $?
+
+  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^m: ")
+  [[ -z $res ]] && echo "No mail address found for: $*" && return 1
+  res=$(echo "$res" | cut -c 4-)
+
+  if [[ ! -t 1 ]]; then
+    echo "$res"
+  else
+    printf "%s" "$res" | pbcopy
+    echo "$res (copied to clipboard)"
+  fi
+}
+
+function pu() {
+  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing username." && return 1;
+  local p_res
+  p_res=$(pass "$*") || return $?
+
+  local res=$(echo "$p_res" | grep --binary-files=text -m 1 "^u: ")
+  if [[ -z $res ]]; then
+    res=$(echo "$p_res" | grep --binary-files=text -m 1 "^CID: ")
+    if [[ -z $res ]]; then
+      echo "No username found for: $*" && return 1
+    else
+      res=$(echo "$res" | cut -c 6-)
+    fi
+  else
+    res=$(echo "$res" | cut -c 4-)
+  fi
+
+  if [[ ! -t 1 ]]; then
+    echo "$res"
+  else
+    printf "%s" "$res" | pbcopy
+    echo "$res (copied to clipboard)"
+  fi
+}
+
+function po() {
+  [[ -z "$*" ]] && echo "Please give a pass-name for grabbing online login site." && return 1;
+  local p_res
+  p_res=$(pass "$*") || return $?
+
+  local res=$(echo "$p_res" | grep --binary-files=text -m 1 -e "^o: ")
+  [[ -z $res ]] && echo "No online link found for: $*" && return 1
+  res=$(echo "$res" | cut -c 4-)
+
+  if [[ "$res" != *".app" ]] && which f >/dev/null; then
+    f "$res"
+  else
+    open "$res"
+  fi
+}
+
+#############################
+### math
+#############################
+function b() {
+  local args=($@)
+  local input=$args[-1]
+  if [[ ! -t 0 ]]; then
+    input=$(cat)
+  else
+    unset 'args[-1]'
+  fi
+
+  # first utilize wcalc
+  local res=$(wcalc "${args[@]}" "$input" 2>&1)
+  if [[ "$res" == *Infinity* ]]; then
+    # if the number is too large for wcalc, use bc
+    read res <<< $(bc <<< "scale=42;$input" 2>&1)
+    res=" = $res"
+  fi
+
+  if [[ "$res" != *error* && "$res" != *Undefined* ]]; then
+     echo "$res"; return
+  else
+    # and if it still seems unsolvable, ask sage
+    # see https://paulmasson.github.io/sagemath-docs/functions
+    sage -c "print($input)"
+  fi
+}
+
 # http://latexcalc.sourceforge.net/
 function lc() {
   local equation
@@ -818,4 +779,57 @@ function lc() {
 	\answer
 	$\end{document}
 	EOF
+}
+
+function isprime() {
+  if [[ ${#1} -le 17 ]] && (($1 < 18014398509481984)); then # 2^54
+    python "$P"/isprime.py $1
+  else
+    #echo "Let's harness sage..."
+    sage -c "print(is_prime($1))"
+  fi
+}
+
+function sec2time() {
+    local sec=$1 min=0 hour=0 day=0
+    sec=$(echo $1 | awk '{print int($1+0.5)}')
+    if ((sec>59)); then
+        ((min=sec/60))
+        ((sec=sec%60))
+        if ((min>59)); then
+            ((hour=min/60))
+            ((min=min%60))
+            if ((hour>23)); then
+                ((day=hour/24))
+                ((hour=hour%24))
+                 echo "$day"d "$hour"h "$min"m "$sec"s
+            else
+               echo "$hour"h "$min"m "$sec"s
+            fi
+        else
+           echo "$min"m "$sec"s
+        fi
+    else
+      echo "$sec"s
+    fi
+}
+
+
+#############################
+### misc stuff
+#############################
+alias showUnixTime="$BREW_PREFIX/bin/bash -c 'while true; do printf \"\\r\\e[K\$EPOCHREALTIME\"; done'"
+alias weekday='case $(date +%u) in; 1) echo Monday;; 2) echo Tuesday;; 3) echo Wednesday;; 4) echo Thursday;; 5) echo Friday;; 6) echo Saturday;; 7) echo Sunday;; *) echo "Invalid week day number: $(date +%u)";; esac'
+alias lsusers="dscl . list /Users | grep -v ^_"
+
+function zombiesAndStuff() {
+  ps aux | awk ' $8 !~ /S/ {print $0}' | grep -v "ps aux"
+}
+
+function showHexFlow() {
+  _pick_and_execute -f hexdump "$@" | sed 's/[0123456789abcdef]\{7\}//g' | grep --color=always -e "3e\|$" | xargs printf "%s "; echo
+}
+
+function battery() {
+  system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF" %"}' #| awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
 }
