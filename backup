@@ -215,13 +215,10 @@ rm -rf .gnupg/S.gpg-agent* # remove rsync-blocking sockets from gpg-agent (timeo
 ctt .bashrc .profile .zshrc # only transitionally
 ctt .m2/settings.xml .ssh .password-store .gnupg
 
-pushd "Programmchen" &> /dev/null || die "cd to $HOME/Programmchen failed"
+cd "Programmchen" &> /dev/null || die "cd to $HOME/Programmchen failed"
 ctt sys_install
-popd &> /dev/null
 
-ctt Cloud Desktop Downloads Documents Music Pictures Programmchen
-
-cd "Library" || die "cd to $HOME/Library failed"
+cd "$HOME/Library" || die "cd to $HOME/Library failed"
 
 ensureTargetDir Thunderbird
 ctt Thunderbird/Profiles # - Thunderbird folder
@@ -255,7 +252,13 @@ fi
 cd /Applications || die "cd to /Applications failed"
 ctt Minecraft
 
+cd "$HOME"
+
+ctt Desktop Downloads Documents Music Pictures Programmchen Cloud
+
 popd &> /dev/null
+
+
 
 #if [[ -z $warningFlag ]]; then
 #  echo "Deleting dated backup at $backup_dir"
