@@ -79,10 +79,11 @@ calc_size() {
 }
 
 function rsyncit() {
-  rsync $rsync_progress --size-only --recursive --filter=':- .gitignore' \
-          --links --perms --times --crtimes --group --owner --devices --specials `# preserve everything` \
-          --delete --delete-delay `# but delete non existing files` \
-          "$1" "$2"; return $?
+  rsync $rsync_progress --size-only \
+          --archive --crtimes `# preserve everything, except -H,-A,-X` \
+          --delete --delete-delay `# but delete non-existing files` \
+          --filter=':- .gitignore' \
+          "$1" "$2"
 }
 
 function ctt() { #copy to target
