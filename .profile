@@ -71,11 +71,17 @@ return;
 #############################
 
 # Start
+startup=(
 /Library/LaunchAgents
 /Library/LaunchDaemons
 /Library/PrivilegedHelperTools
 /Library/Apple/System/Library/LaunchDaemons
 ~/LaunchAgents
+)
+for d in "${startup[@]}"; do
+  echo "$d:"
+  l "$d"
+done
 
 # File recovering
 # try this (https://forum.cgsecurity.org/phpBB3/viewtopic.php?t=7727):
