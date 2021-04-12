@@ -63,7 +63,8 @@ class BN:
             if len(lines) != 0:
                 self._parse(lines)
         except Exception as e:
-            raise Exception(f"Please give a valid BN file! See test .bn files for guidance.\n%s" % e)
+            print(f"Please give a valid BN file! See test .bn files for guidance.")
+            raise e
 
 
     def _parse(self, lines):
