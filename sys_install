@@ -838,10 +838,19 @@ else
 fi
 popd &> /dev/null || die "cd failed" # HOME again
 
-mpv_conf="$HOME/.config/mpv/input.conf"
-if [[ ! -f "$mpv_conf" ]]; then
-  echo "Create mpv config file $mpv_conf"
-  echo "RIGHT seek  5 exact\nLEFT  seek -5 exact" > "$mpv_conf"
+mpv_conf1="$HOME/.config/mpv/input.conf"
+mpv_conf2="$HOME/.config/mpv/mpv.conf"
+if [[ ! -f "$mpv_conf1" ]]; then
+  echo "Create mpv config file $mpv_conf1"
+  echo "RIGHT seek  5 exact\nLEFT  seek -5 exact" > "$mpv_conf1"
+fi
+if [[ ! -f "$mpv_conf2" ]]; then
+  echo "Create mpv config gile $mpv_conf2"
+  echo 'autofit-larger=2880x1620
+cursor-autohide=300
+msg-color=yes
+volume-max=150
+#macos-title-bar-material=dark' > "$mpv_conf2"
 fi
 
 if [[ ! -e "$P"/.zshrc ]]; then
