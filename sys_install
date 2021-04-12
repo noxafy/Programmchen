@@ -9,6 +9,8 @@ Fast internet connection recommended.
 Warning: Leave in place!
 "
 
+# TODO: conda install pips sklearn -> scikit-learn
+# Unify brew & brew casks
 ########################################################################################################
 ##### Args parsing
 ########################################################################################################
@@ -159,9 +161,13 @@ brewcasks+=(
   background-music
   google-earth-pro
   mactex
+  miniconda
+  nextcloud
   #soundflower
   wine-stable
   xquartz
+  zoom
+  #adoptopenjdk/openjdk/adoptopenjdk8
 )
 
 # extended / main only
@@ -193,7 +199,6 @@ intellij-idea
 #mathpix-snipping-tool  #nice, but only 50 pics/month
 #mp3tag
 musescore
-#nextcloud #already installed
 #notational-velocity
 #nvalt
 #openoffice
@@ -218,7 +223,6 @@ masinstalls=(
 890805912 # Newsflow
 595191960 # CopyClip
 1061963639 # VirtualDJ 8
-1278508951 # Trello
 
 ### Apple
 #497799835 # XCode
@@ -695,14 +699,14 @@ fi
 # TODO: move casks with password here
 
 # install chordpro
-if ! hash chordpro &>/dev/null; then
-  section "Chordpro installation"
+#if ! hash chordpro &>/dev/null; then
+#  section "Chordpro installation"
   #sudo cpan chordpro
-  sudo cpan install chordpro || die "installing chordpro failed"
-  echo
-else
-  echo "Skipped chordpro installation"
-fi
+#  sudo cpan install chordpro || die "installing chordpro failed"
+#  echo
+#else
+#  echo "Skipped chordpro installation"
+#fi
 
 # TODO: install java
 if [[ -e "$(brew --prefix)/opt/openjdk/libexec/openjdk.jdk" ]] && [[ ! -e /Library/Java/JavaVirtualMachines/openjdk.jdk ]]; then
@@ -799,7 +803,7 @@ pip_exec=$(brew --prefix)/opt/$py_ver/libexec/bin/pip
 $pip_exec -V
 failedpackages=
 echo "Looking up installed pip packages ..."
-pipls=$($pip_exec list)
+pipls=$($pip_exec list | tail -n +3)
 for package in ${pips[@]}; do
   if [[ -z $(echo "$pipls" | grep -e "$package") ]]; then
     echo "Installing package $package ..."
