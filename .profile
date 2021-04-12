@@ -22,6 +22,14 @@ if cat ~/.nanorc &>/dev/null | grep -e '$BREW_PREFIX' &>/dev/null; then
   cat "$P"/.nanorc | sed -e "s/\$BREW_PREFIX/${BREW_PREFIX//\//\\/}/" > ~/.nanorc
 fi
 
+if hash python &>/dev/null && [[ -d "$P/BN" ]]; then
+  py_usersite=$(python -m site --user-site)
+  if [[ ! -d "$py_usersite/BN" ]]; then
+    mkdir -p "$py_usersite"
+    cp -a "$P/BN" "$py_usersite/"
+  fi
+fi
+
 #############################
 ### prefs
 #############################
