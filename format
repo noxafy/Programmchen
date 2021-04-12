@@ -11,7 +11,7 @@ More infomation: https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
 http://ascii-table.com/ansi-escape-sequences.php
 "
 
-formatted="0 1 2 4 5 7 8 $(seq 30 37) $(seq 40 47) $(seq 90 97) $(seq 100 107)"
+formatted="0 1 2 3 4 5 7 8 9 $(seq 30 37) $(seq 40 47) $(seq 90 97) $(seq 100 107)"
 show() {
   printf "Key\tFormat\tCode\n"
   for cnt in $formatted
@@ -27,7 +27,7 @@ case $1 in
     show
     ;;
   -s)
-    formatted="0 1 2 4 5 7 8"
+    formatted="0 1 2 3 4 5 7 8 9"
     show
     ;;
   [0-9]|[0-9][0-9]|[0-9][0-9][0-9])
