@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+  echo "This is a simple sat solver. Give a formula"
+  printf "\t%s\n" "e.g. \"(a -> b) & (b <-> c) <-> (b & ~c)\""
+  printf "\t%s\n" "e.g. \"r and not q or not t\""
+  printf "\t%s\n" "e.g. \"(~a | b) & (a -> c) & (b -> ~c) & a\""
+  exit 0
+fi
+
+thisdir=$(dirname "$PWD/$BASH_SOURCE")
+if [[ ! -e $thisdir ]]; then
+  thisdir=$(dirname "$BASH_SOURCE")
+fi
+out=$(node "$thisdir/_sat/parser.js" "$1")
+python "$thisdir/_sat/propos.py" "$out"
