@@ -72,6 +72,7 @@ alias cas="ca search"
 alias cai="ca install -y"
 alias cacr="ca create --clone base -n"
 alias carm="ca remove --all -n"
+alias bn="py -m BN"
 
 #############################
 ### hacky
