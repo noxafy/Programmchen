@@ -928,13 +928,21 @@ while [[ ! ( -e "$duolingo_icon" && -e "$trading_icon" && -e "$trading_script" &
 done
 echo "All required cloud data available"
 
+if hash node &>/dev/null; then
+  platform=$(node -e "console.log(os.platform())")
+  arch=$(node -e "console.log(os.arch())")
+else
+  platform="darwin"
+  arch="x64" # assume
+fi
+
 # create Duolingo.app with nativefier
 if [[ ! -e "/Applications/Duolingo.app" ]]; then
   echo "### Duolingo.app installation"
   echo "Installing Duolingo.app with nativefier from https://www.duolingo.com/learn"
   nativefier -f -n "Duolingo" -i "$duolingo_icon" https://www.duolingo.com/learn || die "Creating Duolingo.app failed"
-  mv "Duolingo-darwin-x64/Duolingo.app" /Applications/
-  rm -rf "Duolingo-darwin-x64"
+  mv "Duolingo-${platform}-${arch}/Duolingo.app" /Applications/
+  rm -rf "Duolingo-${platform}-${arch}"
   echo
 else
   echo "Skipped creation of Duolingo.app with nativefier"
@@ -945,8 +953,8 @@ if [[ ! -e "/Applications/Graphing Calculator.app" ]]; then
   echo "### Graphing Calculator.app installation"
   echo "Installing Graphing Calculator.app with nativefier from https://www.desmos.com/calculator"
   nativefier -f -n "Graphing Calculator" -i "$graphing_icon" https://www.desmos.com/calculator || die "Creating Graphing Calculator.app failed"
-  mv "Graphing Calculator-darwin-x64/Graphing Calculator.app" /Applications/
-  rm -rf "Graphing Calculator-darwin-x64"
+  mv "Graphing Calculator-${platform}-${arch}/Graphing Calculator.app" /Applications/
+  rm -rf "Graphing Calculator-${platform}-${arch}"
   echo
 else
   echo "Skipped creation of Graphing Calculator.app with nativefier"
@@ -1024,6 +1032,7 @@ fi
 section "Logins"
 echo "Please login to following applications:"
 
+# TODO: only propose login if applications are present
 if [[ ! -e "$HOME/Library/Application Support/Spotify/prefs" ]]; then
   letRead "  - Spotify"
   open /Applications/Spotify.app/ || die "Please install Spotify and restart the script to continue"
