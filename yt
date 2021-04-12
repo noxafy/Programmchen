@@ -122,10 +122,11 @@ function parseResults0() {
 
         // get data
         let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
-        title = title.substring(0, title.lastIndexOf(' by'))
-        if (!title) { // try german version
-          title = title.substring(0, title.lastIndexOf(' von'))
+        idx = title.lastIndexOf(' by')
+        if (idx < 0) { // try german version
+          idx = title.lastIndexOf(' von')
         }
+        title = title.substring(0, idx)
         if (!title) {
           // slightly panic
           console.error('Error! This video has no title node:')
