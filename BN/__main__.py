@@ -73,8 +73,10 @@ def main():
                 if p not in net:
                     unspecified.add(p)
 
-        if unspecified:
-            die(f"There are parents which are not specified as nodes! %s" % unspecified)
+        # add unspecified nodes as nodes without parents
+        for node in unspecified:
+            net[node] = {}
+        del unspecified
 
         # generate file
         res = ""
@@ -92,6 +94,7 @@ def main():
 
         with open(fname, mode='a') as file:
             file.write(res)
+            print(f"Generated file with %d nodes. Saved as: %s" % (len(net), fname))
         exit(0)
 
 
