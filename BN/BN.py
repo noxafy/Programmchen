@@ -76,7 +76,7 @@ class BN:
         """
         if len(lines) == 1:
             # single line node/buffer
-            match = re.match(r'P\((.*)\) = (.*)\n', lines[0])
+            match = re.match(r'P\(([^:=]*)[^\)]*\) = (.*)\n', lines[0])
             var, prob = match.group(1).strip(), float(match.group(2).strip())
             self.net[var] = {
                 'parents': [], 

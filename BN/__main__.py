@@ -24,7 +24,7 @@ def main():
         Run a topological sort to determine the order of the variables.
         All parents of a node has to be added before the node is added, and ties
         are broken alphabetically.
-        
+
         Args:
             net dict: variable -> set(parents)
         """
@@ -51,37 +51,37 @@ def main():
         fname = argv[2]
         if isfile(fname):
             die(f'%s already exists. Please remove the file or use another filename.' % fname)
-        
+
         # generate net
         net = {}
 
         vs = argv[3:]
         for v in vs:
             v1 = v.split("|")
-            node = v1[0]
+            node = v1[0].strip()
             parents = {}
             if node in net:
                 die(f"Node \"%s\" is specified multiple times!" % node)
             if len(v1) > 1:
-                parents = set(v1[1].split(","))
+                parents = { p.strip() for p in v1[1].split(",") }
             net[node] = parents
-        
+
         # check parent consistency
-        unspecified = {}
+        unspecified = set()
         for n, ps in net.items():
             for p in ps:
                 if p not in net:
                     unspecified.add(p)
 
-        if unspecified:        
+        if unspecified:
             die(f"There are parents which are not specified as nodes! %s" % unspecified)
-        
+
         # generate file
         res = ""
         for n in toposort(net):
             pa = net[n]
             if len(pa) == 0:
-                res += f"P(%s) = 0\n" % n
+                res += f"P(%s = t) = 0\n" % n
             else:
                 res += f"%s | %s\n" % (n, " ".join(pa))
                 res += f"%s--%s-\n" % ("-" * len(n), "-" * sum([len(p) + 1 for p in pa]))
@@ -93,8 +93,8 @@ def main():
         with open(fname, mode='a') as file:
             file.write(res)
         exit(0)
-        
-    
+
+
     fname = argv[1]
     if fname[-3:] != ".bn":
         die('Please give a .bn file. See --help for more information.')
