@@ -33,6 +33,7 @@ class MDP:
             return self.rewards[s1]
 
         actions_rewards = self.rewards[s1][a]
+        # this won't work with lists
         if s2 in actions_rewards:
             return actions_rewards[s2]
         else:
