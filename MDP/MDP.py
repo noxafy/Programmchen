@@ -13,6 +13,15 @@ class MDP:
         self.gamma = gamma
         self.threshold = (1-self.gamma)/(2*self.gamma)
 
+        if not self.state_rewards:
+            # check data types
+            for a in rewards:
+                if type(a) != dict:
+                    raise ValueError("Rewards must contain actions as dicts!")
+                for name, rewards_dict in a.items():
+                    if type(rewards_dict) != dict:
+                        raise ValueError("Rewards must contain the rewards for each state as dict, but was %s!" % type(rewards_dict))
+
     def P(self,s1,a,s2):
         return self.transition[a][s1][s2]
 
