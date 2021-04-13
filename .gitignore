@@ -1,8 +1,8 @@
 .idea/
 *.iml
 Te*/
-test*
 .DS_Store
 imgcat
 it2check
 latexcalc
+__pycache__
