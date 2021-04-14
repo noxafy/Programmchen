@@ -5,7 +5,7 @@ python -m site --user-site
 
 First generate a .bn file with your network using
 ```
-python -m BN -g myBN.bn <node1|parent1> <node2|parent1,parent2> ...
+python -m BN -g myBN.bn 'node1|parent1' 'node2|parent1,parent2' ...
 ```
 Not explicitly specified nodes, which appear as parents, are generated automatically as nodes without parents.
 
