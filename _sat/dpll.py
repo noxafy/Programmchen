@@ -38,8 +38,6 @@ def dpll(valuation, clauses, variables):
     res_valuation = _dpll(valuation, clauses, unassigned)
     if res_valuation is None:
         return False
-    # try: print(dicHash(res_valuation))
-    # except: pass
     for k, v in res_valuation.items():
         valuation[k] = v
     return True
@@ -135,9 +133,3 @@ def copy_lvl2(ar, last_item):
         res.append(a.copy())
     res.append(last_item)
     return res
-
-import json
-# if called with PYTHONHASHSEED=0 the solution for the
-# WORLD'S HARDEST SUDOKU has the hash -7614980647442532336
-def dicHash(dic):
-    return hash(json.dumps(dic, sort_keys=True))
