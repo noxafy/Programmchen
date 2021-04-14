@@ -1,6 +1,8 @@
 import json
 from .logic import *
 import itertools
+import sys
+import os
 
 dpll_available, z3_available = False, False
 try:
@@ -54,9 +56,6 @@ class SAT:
         print(res)
         
     def _parse(self, formula):
-        import sys
-        import os
-        
         def getFormula(f):
             if "operator" in f:
                 o = f["operator"]
@@ -85,7 +84,9 @@ class SAT:
         
         path = os.path.dirname(__file__)
         parser = ["node", path + "/parser.js", formula]
-        f = call(parser)
+        returncode, f = call(parser)
+        if returncode != 0:
+            raise ValueError("Did you write the formula correctly?")
         # print("node output:", f)
         f = json.loads(f)[1]
         return getFormula(f)
@@ -128,6 +129,7 @@ def DPLLsolve(formula):
 def call(cmd):
     import subprocess
     
-    sub = subprocess.run(cmd, stdout=subprocess.PIPE)
-    sub.stdout.decode('utf-8')
-    return sub.stdout
+    sub = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if sub.stderr:
+        print(sub.stderr.decode('utf-8'), file=sys.stderr)
+    return sub.returncode, sub.stdout.decode('utf-8')
