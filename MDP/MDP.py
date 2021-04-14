@@ -2,10 +2,12 @@ class MDP:
 
     def __init__(self, transition_tables, rewards, gamma):
         """
-        States are enumerated 1,..., while action are strings (or any other hashable unique identifier).
+        States are enumerated (0,1,...), while actions are strings (or any other hashable unique identifiers).
 
         Transition tables is a dict(action -> transition probabilities (2d array)), where it is read as prob of going from row to col
-        Rewards is either a list of rewards (one for each state) or a list of states -> dict(action -> dict(successorstate -> reward))))
+        Rewards is a list with one entry per state, where the entries are
+            - either the state reward as float
+            - or dict: action -> (dict: successorstate -> reward)
         """
         self.transition = transition_tables
         self.rewards = rewards
@@ -23,11 +25,14 @@ class MDP:
                         raise ValueError("Rewards must contain the rewards for each state as dict, but was %s!" % type(rewards_dict))
 
     def P(self,s1,a,s2):
+        """
+        TODO: Switch to same specification logic as in rewards (and adapt successor_states and applicable_actions function accordingly)
+        """
         return self.transition[a][s1][s2]
 
     def R(self,s1,a=None,s2=None):
         """
-        Call this with one argument only if you gave rewards only state-wise
+        If you initialized with state-only rewards, call this with only one argument.
         """
         if self.state_rewards:
             return self.rewards[s1]
