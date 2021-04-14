@@ -2,8 +2,6 @@ import sys
 import json
 from logic import *
 
-f = json.loads(sys.argv[1])[1] # input from parser.js
-
 def getFormula(f):
     if "operator" in f:
         o = f["operator"]
@@ -30,12 +28,7 @@ def getFormula(f):
         name = f["string"]
         return ATOM(name)
 
-formula = getFormula(f)
-model = {}
-
-try:
-    from z3 import *
-
+def getZ3(formula):
     def literal_conversion(literal):
         if literal[1]:
             return Bool(literal[0])
@@ -52,12 +45,40 @@ try:
     result = solver.check() == sat
     if result:
         model = solver.model()
-except:
+    else:
+        model = {}
+    return result, model
+
+def getDPLL(formula):
+    model = {}
+    result = dpll(model, formula.clauses(), formula.vars())
+    return result, model
+
+
+useDPLL = not (sys.argv[1] == "")
+
+if useDPLL:
     try:
         from dpll import dpll
-        result = dpll(model, formula.clauses(), formula.vars())
+        solver = getDPLL
     except:
-        raise ImportError("No solver available!") from None
+        raise ImportError("DPLL solver not available!") from None
+else:
+    z3_available=False
+    try:
+        from z3 import *
+        solver = getZ3
+    except:
+        try:
+            from dpll import dpll
+            solver = getDPLL
+        except:
+            raise ImportError("No solver available!") from None
+
+
+f = json.loads(sys.argv[2])[1] # input from parser.js
+formula = getFormula(f)
+result, model = solver(formula)
 
 if result:
     print("Satisfiable with model")

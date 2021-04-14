@@ -8,9 +8,20 @@ if [[ -z "$1" ]]; then
   exit 0
 fi
 
+useDPLL=
+if [[ "$1" == -d ]]; then
+  useDPLL="-d"
+  shift
+fi
+
+if [[ -z "$1" ]]; then
+  echo "You forgot the formula."
+  exit 0
+fi
+
 thisdir=$(dirname "$PWD/$BASH_SOURCE")
 if [[ ! -e $thisdir ]]; then
   thisdir=$(dirname "$BASH_SOURCE")
 fi
 out=$(node "$thisdir/_sat/parser.js" "$1")
-python "$thisdir/_sat/solver.py" "$out"
+python "$thisdir/_sat/solver.py" "$useDPLL" "$out"
