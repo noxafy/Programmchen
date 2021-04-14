@@ -13,4 +13,4 @@ if [[ ! -e $thisdir ]]; then
   thisdir=$(dirname "$BASH_SOURCE")
 fi
 out=$(node "$thisdir/_sat/parser.js" "$1")
-python "$thisdir/_sat/propos.py" "$out"
+python "$thisdir/_sat/solver.py" "$out"

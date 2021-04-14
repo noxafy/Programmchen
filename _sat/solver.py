@@ -1,11 +1,8 @@
 import sys
 import json
 from logic import *
-# from z3_wrapper import solve
-from dpll import dpll
-from pprint import pprint
 
-f = json.loads(sys.argv[1])[1]
+f = json.loads(sys.argv[1])[1] # input from parser.js
 
 def getFormula(f):
     if "operator" in f:
@@ -34,18 +31,36 @@ def getFormula(f):
         return ATOM(name)
 
 formula = getFormula(f)
-# print(formula)
-clauses = formula.clauses()
+model = {}
 
-model = dict()
-my_result = dpll(model, clauses, formula.vars())
-# z3_result, model2, time = solve(clauses) # invalid result for "(~a | b) & (a -> c) & (b -> ~c) & a" ???
-# print(model2)
-# assert my_result == z3_result, (my_result, z3_result)
+try:
+    from z3 import *
 
-if my_result:
-    assert formula.is_satisfiable(model)
+    def literal_conversion(literal):
+        if literal[1]:
+            return Bool(literal[0])
+        else:
+            return Not(Bool(literal[0]))
+
+    def clause_conversion(clause):
+        return Or(*[literal_conversion(literal) for literal in clause])
+
+    solver = Solver()
+    clauses = formula.clauses()
+    z3_formula = And(*[clause_conversion(clause) for clause in clauses])
+    solver.append(z3_formula)
+    result = solver.check() == sat
+    if result:
+        model = solver.model()
+except:
+    try:
+        from dpll import dpll
+        result = dpll(model, formula.clauses(), formula.vars())
+    except:
+        raise ImportError("No solver available!") from None
+
+if result:
     print("Satisfiable with model")
-    pprint(model)
+    print(model)
 else:
     print("Unsatisfiable")
