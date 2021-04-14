@@ -28,6 +28,7 @@ function copy_custom_py_packages() {
 
   [[ -d "$P/BN" ]] &&  cp -a "$P/BN" "$py_usersite/"
   [[ -d "$P/MDP" ]] && cp -a "$P/MDP" "$py_usersite/"
+  [[ -d "$P/SAT" ]] && cp -a "$P/SAT" "$py_usersite/"
 }
 
 #############################
