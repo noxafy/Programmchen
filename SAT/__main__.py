@@ -1,5 +1,5 @@
 from sys import argv, exit
-from SAT import solve
+from . import solve
 
 def main():
 

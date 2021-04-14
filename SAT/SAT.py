@@ -1,16 +1,16 @@
 import json
-from .logic import *
 import itertools
 import sys
 import os
 
-dpll_available, z3_available = False, False
-try:
+if __name__ == "SAT": # Is there a better way?
+    from logic import *
+    from dpll import dpll
+else:
+    from .logic import *
     from .dpll import dpll
-    dpll_available = True
-except:
-    pass
 
+z3_available = False
 try:
     from z3 import *
     z3_available = True
@@ -20,22 +20,15 @@ except:
 class SAT:
 
     def __init__(self, useDPLL=False):
-        if useDPLL:
-            if not dpll_available:
-                raise ImportError("DPLL solver not available!") from None
-            else:
-                self.delegate = DPLLsolve
-        elif z3_available:
-            self.delegate = Z3solve
-        elif dpll_available:
+        if useDPLL or not z3_available:
             self.delegate = DPLLsolve
         else:
-            raise ImportError("No solver available!") from None
+            self.delegate = Z3solve
         
     def solve(self, formula):
         formula = self._parse(formula)
         return self.delegate(formula)
-        
+
     def table(self, formula):
         def generateValuationDict(bitvector, variables):
             res = {}
