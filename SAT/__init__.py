@@ -1,1 +1,1 @@
-from .SAT import SAT, solve, table
+from .SAT import SAT, solve, table, valid, logCon, logEq

@@ -24,7 +24,7 @@ class SAT:
             self.delegate = DPLLsolve
         else:
             self.delegate = Z3solve
-        
+
     def solve(self, formula):
         formula = self._parse(formula)
         return self.delegate(formula)
@@ -35,7 +35,7 @@ class SAT:
             for b,v in zip(bitvector, variables):
                 res[v] = b == 1
             return res
-        
+
         original = formula
         formula = self._parse(formula)
         variables = formula.vars()
@@ -47,7 +47,21 @@ class SAT:
             sat = formula.is_satisfiable(v_dict)
             res += "%s | %s\n" % (" ".join(str(v) for v in valuation), "*True" if sat else "False")
         print(res)
-        
+
+    def valid(self, f):
+        f = "~(%s)" % f
+        result, _ = self.solve(f)
+        return not result
+
+    # returns whether f1 is logical consequence of f2
+    def logCon(self, f1, f2):
+        f = "(%s) & ~(%s)" % (f1, f2)
+        result, _ = self.solve(f)
+        return not result
+
+    def logEq(self, f1, f2):
+        return self.logCon(f1, f2) and self.logCon(f2, f1)
+
     def _parse(self, formula):
         def getFormula(f):
             if "operator" in f:
@@ -74,7 +88,7 @@ class SAT:
             else:
                 name = f["string"]
                 return ATOM(name)
-        
+
         path = os.path.dirname(__file__)
         parser = ["node", path + "/parser.js", formula]
         returncode, f = call(parser)
@@ -84,14 +98,34 @@ class SAT:
         f = json.loads(f)[1]
         return getFormula(f)
 
+##############################
+### convenience functions
+##############################
 
 def solve(formula, useDPLL=True):
     sat = SAT(useDPLL)
     return sat.solve(formula)
-    
+
 def table(formula, useDPLL=True):
     sat = SAT(useDPLL)
     sat.table(formula)
+
+def valid(f, useDPLL=True):
+    sat = SAT(useDPLL)
+    return sat.valid(f)
+
+# returns whether f1 is a logical consequence of f2
+def logCon(f1, f2, useDPLL=True):
+    sat = SAT(useDPLL)
+    return sat.logCon(f1, f2)
+
+def logEq(f1, f2, useDPLL=True):
+    sat = SAT(useDPLL)
+    return sat.logEq(f1, f2)
+
+##############################
+### helper functions
+##############################
 
 def Z3solve(formula):
     def literal_conversion(literal):
@@ -121,7 +155,7 @@ def DPLLsolve(formula):
 
 def call(cmd):
     import subprocess
-    
+
     sub = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if sub.stderr:
         print(sub.stderr.decode('utf-8'), file=sys.stderr)
