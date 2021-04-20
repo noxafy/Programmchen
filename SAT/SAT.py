@@ -4,49 +4,44 @@ import sys
 import os
 
 if __name__ == "SAT": # Is there a better way?
-    from logic import *
-    from dpll import dpll
-else:
+    from logic import * #ATOM, AND, OR, NOT, IMPL, EQVI
+    from solvers import * #dpll, z3wrapper, z3available
+else: # "SAT.SAT"
     from .logic import *
-    from .dpll import dpll
-
-z3_available = False
-try:
-    from z3 import *
-    z3_available = True
-except:
-    pass
+    from .solvers import *
 
 class SAT:
 
     def __init__(self, useDPLL=False):
-        if useDPLL or not z3_available:
-            self.delegate = DPLLsolve
+        if useDPLL or not z3available():
+            self.delegate = dpll
         else:
-            self.delegate = Z3solve
+            self.delegate = z3wrapper
 
     def solve(self, formula):
         formula = self._parse(formula)
-        return self.delegate(formula)
+        return self.delegate(formula.clauses())
 
-    def table(self, formula):
-        def generateValuationDict(bitvector, variables):
-            res = {}
-            for b,v in zip(bitvector, variables):
-                res[v] = b == 1
-            return res
-
+    def table(self, formula, verbose=True):
         original = formula
         formula = self._parse(formula)
         variables = formula.vars()
         variables = sorted(variables)
-        res = "%s | %s\n" % (" ".join(variables), original)
-        res += "-" * len(res) + "-\n"
+        data = {}
         for valuation in itertools.product([0, 1], repeat=len(variables)):
             v_dict = generateValuationDict(valuation, variables)
             sat = formula.is_satisfiable(v_dict)
-            res += "%s | %s\n" % (" ".join(str(v) for v in valuation), "*True" if sat else "False")
-        print(res)
+            key = valuation
+            data[key] = sat
+
+        if verbose:
+            res = "%s | %s\n" % (" ".join(variables), original)
+            res += "-" * len(res) + "-\n"
+            for k, sat in data.items():
+                res += "%s | %s\n" % (" ".join([str(i) for i in k]), "*True" if sat else "False")
+            print(res, end="")
+
+        return data, variables
 
     def valid(self, f):
         f = "~(%s)" % f
@@ -61,6 +56,10 @@ class SAT:
 
     def logEq(self, f1, f2):
         return self.logCon(f1, f2) and self.logCon(f2, f1)
+
+    def modelCnt(self, f):
+        table, _ = self.table(f, False)
+        return sum(table.values())
 
     def _parse(self, formula):
         def getFormula(f):
@@ -106,13 +105,13 @@ def solve(formula, useDPLL=True):
     sat = SAT(useDPLL)
     return sat.solve(formula)
 
-def table(formula, useDPLL=True):
-    sat = SAT(useDPLL)
-    sat.table(formula)
+def table(formula, verbose=True): # no solver needed
+    sat = SAT(True) # "True" just because faster init
+    return sat.table(formula, verbose)
 
-def valid(f, useDPLL=True):
+def valid(formula, useDPLL=True):
     sat = SAT(useDPLL)
-    return sat.valid(f)
+    return sat.valid(formula)
 
 # returns whether f1 is a logical consequence of f2
 def logCon(f1, f2, useDPLL=True):
@@ -123,35 +122,13 @@ def logEq(f1, f2, useDPLL=True):
     sat = SAT(useDPLL)
     return sat.logEq(f1, f2)
 
+def modelCnt(formula): # no solver needed
+    sat = SAT(True) # "True" just because faster init
+    return sat.modelCnt(formula)
+
 ##############################
 ### helper functions
 ##############################
-
-def Z3solve(formula):
-    def literal_conversion(literal):
-        if literal[1]:
-            return Bool(literal[0])
-        else:
-            return Not(Bool(literal[0]))
-
-    def clause_conversion(clause):
-        return Or(*[literal_conversion(literal) for literal in clause])
-
-    solver = Solver()
-    clauses = formula.clauses()
-    z3_formula = And(*[clause_conversion(clause) for clause in clauses])
-    solver.append(z3_formula)
-    result = solver.check() == sat
-    if result:
-        model = solver.model()
-    else:
-        model = {}
-    return result, model
-
-def DPLLsolve(formula):
-    model = {}
-    result = dpll(model, formula.clauses(), formula.vars())
-    return result, model
 
 def call(cmd):
     import subprocess
@@ -160,3 +137,9 @@ def call(cmd):
     if sub.stderr:
         print(sub.stderr.decode('utf-8'), file=sys.stderr)
     return sub.returncode, sub.stdout.decode('utf-8')
+
+def generateValuationDict(bitvector, variables):
+    res = {}
+    for b,v in zip(bitvector, variables):
+        res[v] = b == 1
+    return res

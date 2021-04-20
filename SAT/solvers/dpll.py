@@ -1,4 +1,4 @@
-def dpll(valuation, clauses, variables):
+def dpll(clauses):
     """
     The Davis-Putnam-Logemann-Loveland (DPLL) algorithm
 
@@ -12,6 +12,32 @@ def dpll(valuation, clauses, variables):
     represent the variable, and its second element represent the polarity of the
     literal.
 
+    Parameters
+    ----------
+    clauses: List[List[(str, bool)]]
+        The CNF formula; Literals are described by a pair of (str, bool), which
+        denotes the variable and its polarity, respectively.
+
+    Returns
+    -------
+    bool
+        If the formula is satisfiable, it returns `True`; otherwise, it returns
+        `False`. If the return value is `True`, the `valuation` dictionary has
+        been updated so that it specifies all variables' truth-values.
+    """
+    variables = set()
+    for c in clauses:
+        for var, _ in c:
+            if var not in variables:
+                variables.add(var)
+
+    res_valuation = _dpll({}, clauses, list(variables))
+    if res_valuation is None:
+        return False, {}
+    return True, res_valuation
+
+def _dpll(valuation, clauses, variables):
+    """
     Parameters
     ----------
     valuation: Dict[str, bool]
@@ -30,19 +56,7 @@ def dpll(valuation, clauses, variables):
         `False`. If the return value is `True`, the `valuation` dictionary has
         been updated so that it specifies all variables' truth-values.
     """
-    # prep: variables should only contain unassigned variables
-    unassigned = list(variables)
-    for var in valuation.keys():
-        unassigned.remove(var)
     
-    res_valuation = _dpll(valuation, clauses, unassigned)
-    if res_valuation is None:
-        return False
-    for k, v in res_valuation.items():
-        valuation[k] = v
-    return True
-
-def _dpll(valuation, clauses, variables):
     if not unit(valuation, clauses, variables):
         return None # contradiction found
 
