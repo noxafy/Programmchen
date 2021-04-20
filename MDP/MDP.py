@@ -57,7 +57,7 @@ class MDP:
     def states(self):
         return list(range(len(self.rewards)))
 
-    def solve(self, epsilon = 1e-8):
+    def solve(self, epsilon = 1e-8, max_rounds = -1, verbose = False, init=0):
         def max_distance(v, v2):
             max_d = -1
             for s in v.keys():
@@ -66,9 +66,30 @@ class MDP:
                     max_d = d
             return max_d
 
-        v = {s:0 for s in self.states()}
+        def hasConverged(iteration, v, v_new):
+            return iteration == max_rounds or max_distance(v, v_new) < epsilon * self.threshold
 
+        states = self.states()
+        if type(init) == dict:
+            v = {}
+            for s in states:
+                if s in init:
+                    v[s] = init[s]
+                else:
+                    v[s] = 0 # fallback
+        elif type(init) == list:
+            v = {}
+            assert len(init) == len(state), "There must be as many initial values as states!"
+            for i, s in zip(init, states):
+                v[s] = i
+        elif type(init) == float or type(init) == int:
+            v = {s:init for s in states}
+        else:
+            raise ValueError('"init" must be a number, a dict: state -> values, or a list of values (one for each state), but was', type(init))
+
+        iteration = 0
         while True:
+            iteration += 1
             v_new = {}
 
             for s in v.keys():
@@ -79,7 +100,9 @@ class MDP:
                 best_action = argmax(action_vals)
                 v_new[s] = action_vals[best_action]
 
-            if max_distance(v, v_new) < epsilon * self.threshold:
+            if verbose:
+                print("Round:",iteration, v_new)
+            if hasConverged(iteration, v, v_new):
                 break
 
             v = v_new
