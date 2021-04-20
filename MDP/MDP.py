@@ -1,34 +1,45 @@
 class MDP:
 
-    def __init__(self, transition_tables, rewards, gamma):
+    def __init__(self, transition, rewards, gamma, default_reward=0):
         """
         States are enumerated (0,1,...), while actions are strings (or any other hashable unique identifiers).
 
-        Transition tables is a dict(action -> transition probabilities (2d array)), where it is read as prob of going from row to col
+        Transition is a list with one entry per state, where each entry is a dict: action -> (dict: successorstate -> transition probability)
         Rewards is a list with one entry per state, where the entries are
             - either the state reward as float
             - or dict: action -> (dict: successorstate -> reward)
         """
-        self.transition = transition_tables
+        self.transition = transition
         self.rewards = rewards
+        self.default_reward = default_reward
         self.state_rewards = type(rewards[0]) == float or type(rewards[0]) == int
         self.gamma = gamma
         self.threshold = (1-self.gamma)/(2*self.gamma)
+        self.states = list(range(len(self.rewards)))
+
+        # some sanity checks
+        assert len(rewards) == len(transition), "Rewards and transition should both have entries for all states! (was: %d vs. %d)" %(len(rewards), len(transition))
+        assert type(rewards) == list, "Rewards must be a list, but was: %s" % type(rewards)
+        assert type(transition) == list, "Transition must be a list, but was: %s" % type(transition)
 
         if not self.state_rewards:
             # check data types
-            for a in rewards:
-                if type(a) != dict:
-                    raise ValueError("Rewards must contain actions as dicts!")
-                for name, rewards_dict in a.items():
-                    if type(rewards_dict) != dict:
-                        raise ValueError("Rewards must contain the rewards for each state as dict, but was %s!" % type(rewards_dict))
+            for s in rewards:
+                if type(s) != dict:
+                    raise ValueError("Rewards must contain dicts (one for each state)!")
+                for a, a_dict in s.items():
+                    if type(a_dict) != dict:
+                        raise ValueError("Rewards state dicts must contain dicts for each action, but one was %s!" % type(rewards_dict))
+        for i, s in enumerate(transition):
+            if type(s) != dict:
+                raise ValueError("Transition must contain dicts (one for each state)!")
+            for a, a_dict in s.items():
+                if type(a_dict) != dict:
+                    raise ValueError("Transition state dicts must contain dicts for each action, but one was %s!" % type(trans_dict))
+                assert abs(sum(a_dict.values())) - 1 < 1e-10, "Transition probabilities must sum to one! (state: %s, action: %s)" % (i, a)
 
     def P(self,s1,a,s2):
-        """
-        TODO: Switch to same specification logic as in rewards (and adapt successor_states and applicable_actions function accordingly)
-        """
-        return self.transition[a][s1][s2]
+        return _getFromDictDictList(self.transition, s1, a, s2, 0)
 
     def R(self,s1,a=None,s2=None):
         """
@@ -36,26 +47,13 @@ class MDP:
         """
         if self.state_rewards:
             return self.rewards[s1]
-
-        actions_rewards = self.rewards[s1][a]
-        # this won't work with lists
-        if s2 in actions_rewards:
-            return actions_rewards[s2]
-        else:
-            return 0
+        return _getFromDictDictList(self.rewards, s1, a, s2, self.default_reward)
 
     def successor_states(self,s,a):
-        return [i for i, succ in enumerate(self.transition[a][s]) if succ > 0.0]
+        return self.transition[s][a].keys()
 
     def applicable_actions(self,s):
-        actions = []
-        for a, trans in self.transition.items():
-            if sum(trans[s]) > 0.0:
-                actions.append(a)
-        return actions
-
-    def states(self):
-        return list(range(len(self.rewards)))
+        return self.transition[s].keys()
 
     def solve(self, epsilon = 1e-8, max_rounds = -1, verbose = False, init=0):
         def max_distance(v, v2):
@@ -69,21 +67,20 @@ class MDP:
         def hasConverged(iteration, v, v_new):
             return iteration == max_rounds or max_distance(v, v_new) < epsilon * self.threshold
 
-        states = self.states()
         if type(init) == dict:
             v = {}
-            for s in states:
+            for s in self.states:
                 if s in init:
                     v[s] = init[s]
                 else:
                     v[s] = 0 # fallback
         elif type(init) == list:
             v = {}
-            assert len(init) == len(state), "There must be as many initial values as states!"
-            for i, s in zip(init, states):
+            assert len(init) == len(self.states), "There must be as many initial values as states!"
+            for i, s in zip(init, self.states):
                 v[s] = i
         elif type(init) == float or type(init) == int:
-            v = {s:init for s in states}
+            v = {s:init for s in self.states}
         else:
             raise ValueError('"init" must be a number, a dict: state -> values, or a list of values (one for each state), but was', type(init))
 
@@ -113,10 +110,10 @@ class MDP:
         if self.state_rewards:
             return {s1 : argmax({a : self.R(s1) + self.value_of(s1, a, optimal_values)
                             for a in self.applicable_actions(s1)})
-                        for s1 in self.states()}
+                        for s1 in self.states}
         return {s1 : argmax({a : self.value_of(s1, a, optimal_values)
                         for a in self.applicable_actions(s1)})
-                    for s1 in self.states()}
+                    for s1 in self.states}
 
     def value_of(self, s, a, v):
         if self.state_rewards:
@@ -125,3 +122,14 @@ class MDP:
 
 def argmax(d):
     return max(d, key = lambda k : d[k])
+
+def _getFromDictDictList(d, s1, a, s2, default):
+    s1_ = d[s1]
+    try:
+        a_ = s1_[a]
+    except:
+        raise ValueError('Action "%s" is not applicable in state %s' % (a, s1)) from None
+    # this won't work with lists
+    if s2 in a_:
+        return a_[s2]
+    return default
