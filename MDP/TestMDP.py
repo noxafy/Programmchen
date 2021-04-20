@@ -19,7 +19,7 @@ Test methods:
     assertAlmostEqual
 '''
 
-class TestBayesNet(unittest.TestCase):
+class TestMDP(unittest.TestCase):
     def setUp(self):
         pass
 
