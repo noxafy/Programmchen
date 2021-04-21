@@ -47,7 +47,7 @@ firefox_bookmark_backup="$thisdir/files/firefox_bookmark.jsonlz4"
 safari_bookmark_backup="$thisdir/Safari/Bookmarks.plist"
 newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 
-py_ver=python@3.8
+py_ver=python@3.9
 
 # brew essentials
 brews=(
@@ -242,14 +242,14 @@ masinstalls=(
 )
 
 pips=(
-notebook # jupyter
-tensorflow
-matplotlib
-ipywidgets
-sklearn
-scipy
 numpy
 pandas
+#scipy
+#sklearn
+notebook # jupyter
+#tensorflow
+matplotlib
+ipywidgets
 ipython
 ipykernel
 )

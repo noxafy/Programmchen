@@ -13,7 +13,7 @@ export ANDROID_SDK_ROOT="$BREW_PREFIX/share/android-sdk"
 export ANDROID_HOME=$ANDROID_SDK_ROOT
 
 export PATH="$BREW_PREFIX/opt/python/libexec/bin:$PATH" # current python version
-export PATH="$BREW_PREFIX/opt/python@3.8/libexec/bin:$PATH" # wanted python version
+export PATH="$BREW_PREFIX/opt/python@3.9/libexec/bin:$PATH" # wanted python version
 export PATH="./node_modules/.bin:$PATH" # nice hack for dev independent node deps versioning
 #export PATH="$JAVA_HOME/bin:$PATH"
 
