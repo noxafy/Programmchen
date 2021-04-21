@@ -941,7 +941,7 @@ if [[ ! -e "/Applications/Duolingo.app" ]]; then
   echo "### Duolingo.app installation"
   echo "Installing Duolingo.app with nativefier from https://www.duolingo.com/learn"
   nativefier -f -n "Duolingo" -i "$duolingo_icon" https://www.duolingo.com/learn || die "Creating Duolingo.app failed"
-  mv "Duolingo-${platform}-${arch}/Duolingo.app" /Applications/
+  mv "Duolingo-${platform}-${arch}/Duolingo.app" /Applications/ || die "Moving to /Applications/ failed"
   rm -rf "Duolingo-${platform}-${arch}"
   echo
 else
@@ -953,7 +953,7 @@ if [[ ! -e "/Applications/Graphing Calculator.app" ]]; then
   echo "### Graphing Calculator.app installation"
   echo "Installing Graphing Calculator.app with nativefier from https://www.desmos.com/calculator"
   nativefier -f -n "Graphing Calculator" -i "$graphing_icon" https://www.desmos.com/calculator || die "Creating Graphing Calculator.app failed"
-  mv "Graphing Calculator-${platform}-${arch}/Graphing Calculator.app" /Applications/
+  mv "Graphing Calculator-${platform}-${arch}/Graphing Calculator.app" /Applications/ || die "Moving to /Applications/ failed"
   rm -rf "Graphing Calculator-${platform}-${arch}"
   echo
 else
@@ -965,8 +965,8 @@ if [[ ! -e "/Applications/WhatsApp Web.app" ]]; then
   echo "### Whatsapp Web.app installation"
   echo "Installing Whatsapp Web.app with nativefier from http://web.whatsapp.com/"
   nativefier -f -n "WhatsApp Web" http://web.whatsapp.com/ || die "Creating Whatsapp Web.app failed"
-  mv "WhatsApp Web-darwin-x64/WhatsApp Web.app" /Applications/
-  rm -rf "WhatsApp Web-darwin-x64"
+  mv "WhatsApp Web-${platform}-${arch}/WhatsApp Web.app" /Applications/ || die "Moving to /Applications/ failed"
+  rm -rf "WhatsApp Web-${platform}-${arch}"
   echo
 else
   echo "Skipped creation of Whatsapp Web.app with nativefier"
@@ -978,8 +978,8 @@ if [[ ! -e "/Applications/Trading212.app" ]]; then
   echo "Installing Trading212.app with nativefier from https://www.trading212.com/"
   nativefier -f -i "$trading_icon" --inject "$trading_script" -n "Trading212" https://www.trading212.com/ || die "Creating Trading212.app failed"
 
-  mv "Trading212-darwin-x64/Trading212.app" /Applications/ || die "Moving to /Applications/ failed"
-  rm -rf "Trading212-darwin-x64"
+  mv "Trading212-${platform}-${arch}/Trading212.app" /Applications/ || die "Moving to /Applications/ failed"
+  rm -rf "Trading212-${platform}-${arch}"
 
   mainpath="/Applications/Trading212.app/Contents/Resources/app/lib/main.js"
   if [[ -e "$mainpath" ]]; then
