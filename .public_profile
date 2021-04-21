@@ -60,10 +60,12 @@ function c() {
 ### python
 #############################
 alias py=python
+alias ipython="python -m IPython"
+alias pip="python -m pip"
+alias ipy=ipython
 alias j="python -m notebook" #guarantee same python version #jupyter-notebook
 alias s="sage -n jupyter"
 alias spip="sage -python -m pip"
-alias ipy=ipython
 alias ca=conda
 alias caa="ca activate"
 alias cad="ca deactivate"
