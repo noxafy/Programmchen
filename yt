@@ -226,11 +226,13 @@ function parseResults0() {
         }
       }
       else if (contents.messageRenderer) {
-        throw new Error(contents.messageRenderer.text.simpleText)
+        console.error(contents.messageRenderer.text.simpleText)
+        process.exit(42)
       }
       else {
-        throw new Error('Unknown contents object!')
-      }" "$json_file") || return 1
+        console.error('Unknown contents object!')
+        process.exit(1)
+      }" "$json_file") || return $?
 
   [[ -z $DEBUG && -z "$JSON_FILE" && "$FILE" != "$json_file" ]] && rm "$json_file" # rm tmp files
   printf "%s" "$result" | perl -MHTML::Entities -pe 'decode_entities($_);'
@@ -244,7 +246,10 @@ function parseResults() {
   else
     v1=$1
   fi
-  tmp_results=$(parseResults0 "$v1" "$2") || die "parseResults0: Couldn't parse descriptions for ${STORAGE_FILE##*/}"
+  tmp_results=$(parseResults0 "$v1" "$2")
+  exit_code=$?
+  [[ $exit_code == 42 ]] && die
+  [[ $exit_code -gt 0 ]] && die "parseResults0: Couldn't parse descriptions for ${STORAGE_FILE##*/}"
   tmp_descriptions=$(printf "%s" "$tmp_results" | sed -n 'p;n')
   IFS=$'\n' DESCRIPTIONS=(${tmp_descriptions})
   tmp_links=$(printf "%s" "$tmp_results" | sed -n '1d;p;n')
