@@ -13,7 +13,7 @@ STORAGE_FILE=
 declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -f \e[4mfile\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Some commandline interaction with YouTube.
 $usage
 	\e[1m-h\e[0m		Displays this message and exits.
@@ -66,11 +66,18 @@ while [[ -n $1 ]]; do
     site="${youtube}/channel/${1}/videos"
     STORAGE_FILE="$STORAGE_DIR/$1"
     ;;
-  -f)
+  -f) # json file
     shift
     [[ -z "$1" || ! -e "$1" ]] && die "Please give a file with curl fetch results with option -f. See -h for more help."
     STORAGE_FILE="$STORAGE_DIR/"$(basename "$1")
     FILE="$1"
+    ;;
+  -p)
+    shift
+    [[ -z "$1" ]] && die "Please give a playlist ID with option -p. See -h for more help."
+    site="${youtube}/playlist?list=${1}"
+    [[ -n $2 ]] && shift # use alternative name if given
+    STORAGE_FILE="$STORAGE_DIR/$1"
     ;;
   -o)
     OPEN=true
@@ -80,7 +87,7 @@ while [[ -n $1 ]]; do
     ;;
   *)
     if [[ -f "$1" ]]; then
-      FILE=$1
+      FILE=$1 # json file
       shift
     elif [[ -z "$site" ]]; then
       site=$1
@@ -96,8 +103,12 @@ done
 function parseResults0() {
   local json_file
   if [[ -z "$FILE" ]]; then
-    json_file="${STORAGE_FILE}.json"
-    printf "%s" "$1" > $json_file
+    if [[ -n $STORAGE_FILE ]]; then
+      json_file="${STORAGE_FILE}.json"
+    else
+      json_file="$(date +%s).json"
+    fi
+    printf "%s" "$1" > "$json_file"
     if [[ -n $DEBUG ]]; then
       echo "Json file saved in ${json_file}" >&2
     fi
@@ -111,60 +122,102 @@ function parseResults0() {
       const json = JSON.parse(fs.readFileSync(filepath));
       let content = json.contents.twoColumnBrowseResultsRenderer.tabs.filter(el => el.tabRenderer?.content)[0].tabRenderer.content
       let contents = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0]
-      let gridRenderer = contents.gridRenderer
-      if (!gridRenderer && contents.messageRenderer.text.simpleText) {
-        throw contents.messageRenderer.text.simpleText
+
+      if (contents.gridRenderer) {
+        for (let item of contents.gridRenderer.items) {
+          let v = item.gridVideoRenderer
+          if (!v) continue;
+
+          // get data
+          let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
+          idx = title.lastIndexOf(' by')
+          if (idx < 0) { // try german version
+            idx = title.lastIndexOf(' von')
+          }
+          title = title.substring(0, idx)
+          if (!title) {
+            // slightly panic
+            console.error('Error! This video has no title node:')
+            console.error(item)
+            continue
+          }
+
+          // filter query
+          if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
+
+          let description
+          // Regular video
+          if (v.viewCountText.simpleText) {
+            let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+            let views = v.viewCountText.simpleText
+            let time = v.publishedTimeText.simpleText
+
+            description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+          }
+          // Livestream
+          else if (v.viewCountText.runs) {
+            let views = v.viewCountText.runs[0].text
+            description = '\033[1mLive:\033[0m ' + title + ' \033[37m' + views + '\033[0m'
+          } else {
+            console.error('Unknown video type!')
+          }
+
+          // create link
+          let link = '$youtube' + v.navigationEndpoint.commandMetadata.webCommandMetadata.url
+
+          // print out, remove newlines
+          console.log(description.replace(/\r?\n|\r/gm, ''))
+          console.log(link)
+        }
       }
+      else if (contents.playlistVideoListRenderer) {
+        for (let item of contents.playlistVideoListRenderer.contents) {
+          let v = item.playlistVideoRenderer
+          if (!v) continue;
 
-      for (let item of gridRenderer.items) {
-        let v = item.gridVideoRenderer
-        if (!v) continue;
+          // get data
+          let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
+          let by_str = ' by'
+          idx = title.lastIndexOf(by_str)
+          if (idx < 0) { // try german version
+            by_str = ' von'
+            idx = title.lastIndexOf(by_str)
+          }
+          title = title.substring(0, idx)
+          if (!title) {
+            // slightly panic
+            console.error('Error! This video has no title node:')
+            console.error(item)
+            continue
+          }
 
-        // get data
-        let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
-        idx = title.lastIndexOf(' by')
-        if (idx < 0) { // try german version
-          idx = title.lastIndexOf(' von')
-        }
-        title = title.substring(0, idx)
-        if (!title) {
-          // slightly panic
-          console.error('Error! This video has no title node:')
-          console.error(item)
-          continue
-        }
+          // filter query
+          if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
 
-        // filter query
-        if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
-
-        let description
-        // Regular video
-        if (v.viewCountText.simpleText) {
+          // Regular video
           let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
-          let views = v.viewCountText.simpleText
-          let time = v.publishedTimeText.simpleText
+          let user = v.shortBylineText.runs[0].text
 
-          description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+          let description = title + ' \033[2m' + duration + '\033[0m \033[37m' + by_str + ' ' + user + '\033[0m'
+
+          // create link
+          let link = '$youtube' + '/watch?v=' + v.videoId
+
+          // print out, remove newlines
+          console.log(description.replace(/\r?\n|\r/gm, ''))
+          console.log(link)
         }
-        // Livestream
-        else if (v.viewCountText.runs) {
-          let views = v.viewCountText.runs[0].text
-          description = '\033[1mLive:\033[0m ' + title + ' \033[37m' + views + '\033[0m'
-        } else {
-          console.error('Unknown video type!')
-        }
-
-        // create link
-        let link = '$youtube' + v.navigationEndpoint.commandMetadata.webCommandMetadata.url
-
-        // print out, remove newlines
-        console.log(description.replace(/\r?\n|\r/gm, ''))
-        console.log(link)
+      }
+      else if (contents.messageRenderer) {
+        throw new Error(contents.messageRenderer.text.simpleText)
+      }
+      else {
+        throw new Error('Unknown contents object!')
       }" "$json_file") || return 1
 
   printf "%s" "$result" | perl -MHTML::Entities -pe 'decode_entities($_);'
 
-  [[ -n $DEBUG ]] || rm $json_file
+  [[ -n $DEBUG || "$json_file" == "$FILE" ]] || rm "$json_file"
 }
 
 function parseResults() {
@@ -220,7 +273,7 @@ function fetchVideos() {
   fi
 
   if [[ -n $DEBUG && -n "$src" ]]; then
-    result_name="${STORAGE_FILE}_$(date +%s)"
+    result_name="${STORAGE_FILE}_$(date +%s).curl"
     echo "$src" > "${result_name}"
     echo "Curl result saved in ${result_name}" >&2
   fi
@@ -351,7 +404,8 @@ if [[ "$site" = ${youtube}* ]]; then
     mkdir -p "$STORAGE_DIR" || die "Couldn't create $STOREAGE_DIR"
   fi
 
-  if [[ "$site" = */videos ]]; then
+  echo "$site"
+  if [[ "$site" = */videos || "$site" = *playlist* ]]; then
     fetchVideos "$site" "$query"
     setupOutputsVariable
 
