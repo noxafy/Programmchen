@@ -49,35 +49,8 @@ newsflow_opml_backup="$thisdir/files/Newsflow Subscriptions.xml"
 
 py_ver=python@3.9
 
-# brew essentials
+# brew formulas
 brews=(
-  cloc
-  fd
-  fortune
-  fzf
-  heksa
-  howdoi
-  imagemagick   # installs convert
-  jq
-  lorem
-  lsd
-  nano
-  node
-  pdfgrep
-  pup
-  $py_ver
-  recode
-  rename
-  ripgrep
-  rsync
-  testdisk	# Powerful free data recovery utility
-  tesseract
-  wget
-  wiki
-)
-
-# extended / main only
-brews+=(
 airshare
 agedu		# Unix utility for tracking down wasted disk space
 #aspell
@@ -92,25 +65,39 @@ brightness
 #cheat		# Better version contained in bash snippets
 #choose		# reads from stdin, lets user choose one line, prints that line to stdout, exits
 #chordii
+cloc
 coreutils	# GNU File, Shell, and Text utilities
+curlie		# Easy-to-use curl
+darkstat
 diff-pdf        # needs xquartz
+#docker		# also as cask
 exiftool
 #expect		# automate interactive applications
 #fasttext	# fast text representation and classification
+fd
 ffmpeg
+fortune
 #freeling	# Suite of language analyzers
 #fswatch	# Monitor a directory for changes
+fzf
 gcal
 #ghostscript	# pdf2ps, ps2pdf, and more
 git
 #geoipupdate
 go
+#gox		# Go cross compile tool
 #gobject-introspection
 googler
+heksa
 hexedit
-openjdk
+howdoi
+imagemagick   # installs convert
+jq		# JSON parser
 #launch4j   	# Cross-platform Java executable wrapper
 #lf		# Terminal visual file manager
+lorem
+lsd
+lynx
 #mas #already installed
 #maven
 #maven-completion
@@ -118,59 +105,63 @@ monolith	# Saving complete web pages as a single HTML
 mplayer
 #mujs
 mysql
+nano
 nativefier
 #navi 		# Interactive cheatsheet tool
 #nbdime		# Jupyter Notebook Diff and Merge tools
+nmap		# Port scanning utility for large networks
+node
+openjdk
 #pass #already installed
 pandoc		# markup format conversion
 pastel		# Generate, analyze, convert and manipulate colors
+pdfgrep
 #plan9port
-pueue
+pueue		# queuing shell commands
+pup		# HTML parser
+$py_ver
+recode		# Convert character sets
+rename
+ripgrep
+rsync
 shpotify
 #sic		# Minimal multiplexing IRC client
+telnet
+tesseract
 tesseract-lang
+testdisk      # Powerful free data recovery utility
 tldr		# Simplified and community-driven man pages
-#tor
+tor
 trash		# CLI tool that moves files or folder to the trash
-trimage
+trimage		# optimizing PNG and JPG files
 #unrar		# Extract, view, and test RAR archives
+w-calc
+wget
+wiki
 #wine		# use wine-stable in brew casks
 #winetricks
-woff2
+woff2		# create and convert Web Open Font File (WOFF) files
 #you-get
 youtube-dl
 #zeek 		# passive network traffic analyzer
 zsh-completions
 )
 
-# essentials
-brewcasks=(
-  disablemonitor
-  firefox
-  flux
-  font-hack-nerd-font
-  iterm2
-  mpv
-  qlstephen
-  textmate
-  the-unarchiver
-)
-
 # casks needing the password
-brewcasks+=(
+brewcasks=(
   background-music
   google-earth-pro
   mactex
   miniconda
   nextcloud
-  #soundflower
+  #soundflower # replaced by background-music
   wine-stable
   xquartz
   zoom
   #adoptopenjdk/openjdk/adoptopenjdk8
 )
 
-# extended / main only
+# brew casks
 brewcasks+=(
 #anaconda
 android-file-transfer
@@ -185,34 +176,47 @@ bibdesk
 #blender
 calibre
 #celestia
+devbook
+disablemonitor
 discord
-#docker
+#docker			# also as formula
 drawio
+#element
 #eul 			# clear and simple status monitoring
+firefox
+flux
+font-hack-nerd-font
 #font-times-newer-roman	# slightly wider times font
 geogebra
 #gephi			# Utility to visualize and explore GraphViz graphs
 #graphsketcher		# draw graphs
 intellij-idea
+iterm2
 #jwzlyrics
 #kodi
 #mathpix-snipping-tool  #nice, but only 50 pics/month
 #mp3tag
+mpv
 musescore
 #notational-velocity
 #nvalt
 #openoffice
 #osxfuse 		#maybe needed for plugging the external drive?
+qlstephen
 sage
 signal
 #sketch
+skim			# PDF reader and note-taking application
 #skype
+slack
 #sonic-visualiser
 spotify
 #stellarium
 #teamviewer
 telegram
 #texstudio
+textmate
+the-unarchiver
 thunderbird
 #tor-browser
 ukelele
