@@ -10,23 +10,26 @@ OPEN=
 FILE=
 STORAGE_DIR="$HOME/.yt"
 STORAGE_FILE=
+JSON_FILE=
+USE_CACHED=
 declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m ] [\e[4mseries\e[0m] [\e[4mquery\e[0m \e[4m...\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | [--cached] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Some commandline interaction with YouTube.
 $usage
-	\e[1m-h\e[0m		Displays this message and exits.
-	\e[1m-a\e[0m		Print all results from the first page.
-	\e[1m-o\e[0m		Just opens the generated link with \e[1mf\[0m.
-	\e[1m-d\e[0m		Print some debug logs.
-	\e[4msite\e[0m		Youtube user or channel site to grep videos from.
-	\e[1m-u\e[0m \e[4muser\e[0m		Give a \e[4muser\e[0m name to grep videos from.
-	\e[1m-c\e[0m \e[4mname\e[0m		Give a channel's \e[4mname\e[0m to grep videos from.
-	\e[1m-i\e[0m \e[4mID\e[0m		Give a channel's \e[4mID\e[0m ID to grep videos from.
-        \e[1m-f\e[0m \e[4mfile\e[0m         Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
-	\e[4mseries\e[0m		Filters for special series containing \e[4mseries\e[0m (case insensitive).
-	\e[4mquery\e[0m		Search a specified query on YouTube.
+        \e[1m-h\e[0m          Displays this message and exits.
+        \e[1m-a\e[0m          Print all results from the first page.
+        \e[1m-o\e[0m          Just opens the generated link (uses \"\e[1mf\e[0m\").
+        \e[1m-d\e[0m          Print some debug logs.
+        \e[4msite\e[0m        Youtube user or channel site to grep videos from.
+        \e[1m--cached\e[0m    Use cache (only for \e[1m-u\e[0m, \e[1m-c\e[0m, \e[1m-i\e[0m, and \e[1m-p\e[0m).
+        \e[1m-u\e[0m \e[4muser\e[0m     Give a \e[4muser\e[0m name to grep videos from.
+        \e[1m-c\e[0m \e[4mname\e[0m     Give a channel's \e[4mname\e[0m to grep videos from.
+        \e[1m-i\e[0m \e[4mID\e[0m       Give a channel's \e[4mID\e[0m ID to grep videos from.
+        \e[1m-p\e[0m \e[4mID\e[0m       Give a playlist ID. Takes an optional second argument \e[4mname\e[0m for the cache file name.
+        \e[1m-f\e[0m \e[4mfile\e[0m     Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
+        \e[4mquery\e[0m       Filters for a query \e[4mquery\e[0m (case insensitive). If no other argument given, opens the search on YouTube with the given query.
 "
 
 die() {
@@ -38,6 +41,9 @@ die() {
 
 while [[ -n $1 ]]; do
   case "$1" in
+  --cached)
+    USE_CACHED=true
+    ;;
   -h)
     printf "$help"
     exit 0
@@ -53,23 +59,25 @@ while [[ -n $1 ]]; do
     [[ -z "$1" ]] && die "Please give a user name with option -u. See -h for more help."
     site="${youtube}/user/${1}/videos"
     STORAGE_FILE="$STORAGE_DIR/$1"
+    JSON_FILE="$STORAGE_DIR/json/${1}.json"
     ;;
   -c)
     shift
     [[ -z "$1" ]] && die "Please give a channel's name  with option -c. See -h for more help."
     site="${youtube}/c/${1}/videos"
     STORAGE_FILE="$STORAGE_DIR/$1"
+    JSON_FILE="$STORAGE_DIR/json/${1}.json"
     ;;
   -i)
     shift
     [[ -z "$1" ]] && die "Please give a channel ID with option -i. See -h for more help."
     site="${youtube}/channel/${1}/videos"
     STORAGE_FILE="$STORAGE_DIR/$1"
+    JSON_FILE="$STORAGE_DIR/json/${1}.json"
     ;;
-  -f) # json file
+  -f) # json file or curl result
     shift
     [[ -z "$1" || ! -e "$1" ]] && die "Please give a file with curl fetch results with option -f. See -h for more help."
-    STORAGE_FILE="$STORAGE_DIR/"$(basename "$1")
     FILE="$1"
     ;;
   -p)
@@ -78,6 +86,7 @@ while [[ -n $1 ]]; do
     site="${youtube}/playlist?list=${1}"
     [[ -n $2 ]] && shift # use alternative name if given
     STORAGE_FILE="$STORAGE_DIR/$1"
+    JSON_FILE="$STORAGE_DIR/json/${1}.json"
     ;;
   -o)
     OPEN=true
@@ -87,7 +96,7 @@ while [[ -n $1 ]]; do
     ;;
   *)
     if [[ -f "$1" ]]; then
-      FILE=$1 # json file
+      FILE=$1
       shift
     elif [[ -z "$site" ]]; then
       site=$1
@@ -100,15 +109,23 @@ while [[ -n $1 ]]; do
   shift
 done
 
+if [[ -n $USE_CACHED ]]; then
+  [[ -z $JSON_FILE ]] && die "No caches available for websites."
+  [[ ! -f $JSON_FILE ]] && die "Can only use existing caches!"
+  FILE=$JSON_FILE
+  site=
+fi
+
 function parseResults0() {
   local json_file
   if [[ -z "$FILE" ]]; then
-    if [[ -n $STORAGE_FILE ]]; then
-      json_file="${STORAGE_FILE}.json"
+    if [[ -n $JSON_FILE ]]; then
+      json_file=$JSON_FILE
     else
-      json_file="$(date +%s).json"
+      json_file="$STORAGE_DIR/json/$(date +%s).json"
     fi
     printf "%s" "$1" > "$json_file"
+
     if [[ -n $DEBUG ]]; then
       echo "Json file saved in ${json_file}" >&2
     fi
@@ -215,9 +232,8 @@ function parseResults0() {
         throw new Error('Unknown contents object!')
       }" "$json_file") || return 1
 
+  [[ -z $DEBUG && -z "$JSON_FILE" && "$FILE" != "$json_file" ]] && rm "$json_file" # rm tmp files
   printf "%s" "$result" | perl -MHTML::Entities -pe 'decode_entities($_);'
-
-  [[ -n $DEBUG || "$json_file" == "$FILE" ]] || rm "$json_file"
 }
 
 function parseResults() {
@@ -403,8 +419,11 @@ if [[ "$site" = ${youtube}* ]]; then
   if [[ ! -d "$STORAGE_DIR" ]]; then
     mkdir -p "$STORAGE_DIR" || die "Couldn't create $STOREAGE_DIR"
   fi
+  if [[ ! -d "$STORAGE_DIR/json" ]]; then
+    mkdir -p "$STORAGE_DIR/json" || die "Couldn't create $STOREAGE_DIR/json"
+  fi
 
-  echo "$site"
+  # echo "$site"
   if [[ "$site" = */videos || "$site" = *playlist* ]]; then
     fetchVideos "$site" "$query"
     setupOutputsVariable
@@ -412,7 +431,9 @@ if [[ "$site" = ${youtube}* ]]; then
     if [[ -z $PRINTALL ]]; then
       filterLinks
     fi
-    updateLocalStorage
+    if [[ -n $STORAGE_FILE ]]; then
+      updateLocalStorage
+    fi
     if [[ -z $PRINTALL ]]; then
       setupOutputsVariable
     fi
