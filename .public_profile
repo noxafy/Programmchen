@@ -508,13 +508,46 @@ function backup() {
 ### media
 #############################
 function pdfpages() {
-  local -a files=("$@")
-  if [[ -z "$*" ]]; then
-    IFS=$'\n' files=($(fd --no-ignore-vcs -t f -d 1 '\.pdf')); unset IFS
-    [[ -z "$files" ]] && echo "No .pdf file found." && return 0
+  local QUIET=
+  if [[ $1 == -q || $1 == -s ]]; then
+    QUIET=true
+    shift
   fi
-  local -i pages=$(echo $(mdls -name kMDItemNumberOfPages "${files[@]}" | sed "s/kMDItemNumberOfPages =/+/g") | cut -c "3-" | bc)
-  printf "%d pages found in %d files.\n" "$pages" "${#files}"
+  if [[ $1 == -v ]]; then
+    shift # ignore
+  fi
+
+  local -a input=("$@")
+  if [[ -z "$*" ]]; then
+    IFS=$'\n' input=($(fd --no-ignore-vcs -t f -d 1 '\.pdf')); unset IFS
+    [[ -z "$input" ]] && echo "No .pdf file found." && return 0
+  fi
+  local -a files=()
+  for f in "${input[@]}"; do
+    [[ -r "$f" && "$f" = *.pdf ]] || continue
+    files+=("$f")
+  done
+  if [[ "${#files[@]}" == 0 ]]; then
+    echo "No .pdf file in arguments."
+    return 1
+  fi
+
+  local -a pages=($(mdls -name kMDItemNumberOfPages -- "${files[@]}" | sed "s/kMDItemNumberOfPages = //g"))
+  if [[ -z $QUIET ]]; then
+    local COLOR=$(echo -en '\e[37m') RESET=$(echo -en '\e[0m')
+    local -a idcs
+    if [[ $0 == *bash* ]]; then
+      idcs=($(seq 0 $((${#files[@]}-1))))
+    else # zsh
+      idcs=($(seq 1 ${#files[@]}))
+    fi
+
+    for idx in "${idcs[@]}"; do
+      echo "${pages[idx]}: ${files[idx]}"
+    done | sort -n -r | sed "s/^[0-9]*:/$COLOR&$RESET/"
+    echo
+  fi
+  printf "%d pages found in %d files.\n" $(IFS="+"; bc <<< "${pages[*]}") ${#files[@]}
 }
 
 function pdfgrepc() {
