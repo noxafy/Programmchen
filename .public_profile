@@ -112,7 +112,7 @@ alias geta="youtube-dl -x --audio-format mp3 --audio-quality 0"
 alias yt720="youtube-dl -f 'bestvideo[height<=720]+bestaudio/best[height<=720]'"
 alias yt1080="youtube-dl -f 'bestvideo[height<=1080]+bestaudio/best[height<=1080]'"
 alias y=yt1080
-alias ytul="alias | grep \"=\'yt\ \" | sed 's/alias //g;s/=.*//g'"
+alias ytul="alias | grep \"='yt \" | grep -v -- --cached | sed 's/alias //g; s/=.*//g'"
 alias be="bielefeld_events"
 hash curlie &>/dev/null && alias curl=curlie
 
