@@ -4,10 +4,12 @@ timeout=15
 sendNote=
 waitflag=
 wifiDevice=en0
+PING=${PING:-8.8.8.8}
+
 starttime=$(date "+%s")
 output=2 # 3=debug; 2=outall; 1=outnosuccesswithoutwaiting; if empty, no output
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-d|-s|-q] [-n] [-t \e[4mtimeout\e[0m]"
-help="Test for internet connection establishment.
+help="Test for internet connection on MacOS (using \e[1mnetworksetup\e[0m).
 $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-d\e[0m	Debug output.
@@ -15,6 +17,8 @@ $usage
 	\e[1m-q\e[0m	No console output, except errors.
 	\e[1m-n\e[0m	Send also a note message on connection found.
 	\e[1m-t\e[0m	Specify a timeout in seconds (default: $timeout).
+
+Dependencies: ping, note, networksetup (MacOS)
 "
 
 while [[ -n $1 ]]; do
@@ -58,6 +62,11 @@ while [[ -n $1 ]]; do
   esac
   shift
 done
+
+[[ $(uname) == "Darwin" ]] || {
+  echo "Only works on MacOS!"
+  exit 1
+}
 
 case $(ps -o stat= -p $$) in
 *+*)
@@ -116,10 +125,10 @@ fi
 if [[ -n $(echo "$wifiDeviceStatus" | grep Off) ]]; then
   turnWifiOn
 else
-  #for preformance, first test if internet connection is established
-  # performance: 40ms more when not working, but 100ms less when working (and the letter is most of the times)
-  [[ $output -ge 3 ]] && echo "ping 8.8.8.8 if internet is available"
-  netTest=$(ping -t 3 -c 1 8.8.8.8 2>/dev/null)
+  # for preformance, first test if internet connection is established
+  # performance: 40ms more when not working (more latency okay), but 100ms less when working (most of the uses)
+  [[ $output -ge 3 ]] && echo "ping $PING"
+  netTest=$(ping -t 3 -c 1 $PING 2>/dev/null)
   if [[ $? -eq 0 ]]; then
     if [[ $output -gt 1 ]]; then
       echo 'Internet connection avaliable!'
@@ -169,7 +178,7 @@ while true; do
       fail "Timeout: Internet connection detection"
     fi
     #test on internet connection
-    netTest=$(ping -t 3 -c 1 8.8.8.8 2>&1 >/dev/null)
+    netTest=$(ping -t 3 -c 1 $PING 2>&1 >/dev/null)
     if [[ $? -ne 0 ]]; then
       [[ $output -ge 3 ]] && echo "ping output: $netTest"
       waitflag=2
