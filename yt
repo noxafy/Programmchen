@@ -16,20 +16,23 @@ declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | [--cached] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m \e[4m...\e[0m]"
-help="Some commandline interaction with YouTube.
+help="Fetch list of recent videos from YouTube.
 $usage
         \e[1m-h\e[0m          Displays this message and exits.
         \e[1m-a\e[0m          Print all results from the first page.
         \e[1m-o\e[0m          Just opens the generated link (uses \"\e[1mf\e[0m\").
         \e[1m-d\e[0m          Print some debug logs.
         \e[4msite\e[0m        Youtube user or channel site to grep videos from.
-        \e[1m--cached\e[0m    Use cache (only for \e[1m-u\e[0m, \e[1m-c\e[0m, \e[1m-i\e[0m, and \e[1m-p\e[0m).
+        \e[1m--cached\e[0m    Use cache (only in combination with \e[1m-u\e[0m, \e[1m-c\e[0m, \e[1m-i\e[0m, and \e[1m-p\e[0m).
         \e[1m-u\e[0m \e[4muser\e[0m     Give a \e[4muser\e[0m name to grep videos from.
         \e[1m-c\e[0m \e[4mname\e[0m     Give a channel's \e[4mname\e[0m to grep videos from.
         \e[1m-i\e[0m \e[4mID\e[0m       Give a channel's \e[4mID\e[0m ID to grep videos from.
         \e[1m-p\e[0m \e[4mID\e[0m       Give a playlist ID. Takes an optional second argument \e[4mname\e[0m for the cache file name.
         \e[1m-f\e[0m \e[4mfile\e[0m     Give a curl fetch result \e[4mfile\e[0m to grep videos from (for debug, no save).
-        \e[4mquery\e[0m       Filters for a query \e[4mquery\e[0m (case insensitive). If no other argument given, opens the search on YouTube with the given query.
+        \e[4mquery\e[0m       Filters for a query \e[4mquery\e[0m (case insensitive).
+If only \e[4mquery\e[0m given, uses \e[1mf\e[0m to search on YouTube.
+
+Dependencies: f, curl, node, perl, pup (https://github.com/EricChiang/pup)
 "
 
 die() {
@@ -110,6 +113,7 @@ while [[ -n $1 ]]; do
 done
 
 if [[ -n $USE_CACHED ]]; then
+  [[ -z $site ]] && die "Please specify a channel, user, or playlist id with option \e[1m--cached\e[0m. See \e[1m-h\e[0m for more help."
   [[ -z $JSON_FILE ]] && die "No caches available for websites."
   [[ ! -f $JSON_FILE ]] && die "Can only use existing caches!"
   FILE=$JSON_FILE
@@ -276,8 +280,6 @@ function parseResults() {
 
 # fetch videos from youtube site $1, filtered by optional query $2
 function fetchVideos() {
-  waitnet -s >&2 || exit 1
-
   if [[ -n $DEBUG ]]; then
     printf '"%s" ' "${CURL[@]}" >&2
     printf "%s\n" "$1" >&2
