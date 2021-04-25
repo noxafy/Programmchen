@@ -4,8 +4,22 @@ regex='(https?|ftp|file)://(www\.)?[A-Za-z0-9-]*\.[A-Za-z0-9ÄÖÜäöüß?\\+&@
 openLink=true
 DEBUG=
 check_link=true
+start=
 openCommands=
+isMacOS=
 internetConnection=
+case $(uname) in
+Windows*)
+  start=start
+  ;;
+Darwin*)
+  start=open
+  isMacOS=true
+  ;;
+*)
+  start=xdg-open
+  ;;
+esac
 
 e="https://www.ecosia.org/search?q="
 e_def="https://www.ecosia.org/"
@@ -37,7 +51,7 @@ $usage
 	\e[1m-h\e[0m	Displays this message and exits.
 	\e[1m-i\e[0m	Treat given or piped arguments (separated by \$IFS) as valid weblinks.
 	\e[1m-y\e[0m	Prints the resulting link, adds it to clipboard and exits.
-	\e[1m-g\e[0m	Open browser silently in background.
+	\e[1m-g\e[0m	Open browser silently in background (only MacOS).
 	\e[1m-d\e[0m	Debug logging and don't open anything at all.
 	\e[4mkey\e[0m	The query keywords to look for a translation.
 	\e[4msite\e[0m	Launch a search with given keywords directly on a particular site.
@@ -57,7 +71,9 @@ $usage
 	  default search engine. Use -- for separating arguments from query, reading from stdin when no query given.
 	Given a query as arguments or piped, the script will firstly try to extract a link and, if nothing found,
 	read the first non-empty line and search it as specified.
-	No argument will just open Firefox. (Therefrom its name..)
+	No argument will just open Firefox. (Therefore its name..)
+
+Dependencies: curl
 "
 
 ################################
@@ -72,6 +88,10 @@ function die() {
 }
 
 function testInternet() {
+  if [[ -z $isMacOS ]] || ! hash waitnet &>/dev/null; then
+    return 0 # just assume connection
+  fi
+
   if [[ -z $internetConnection ]]; then
     if waitnet -s; then
       internetConnection=0
@@ -85,6 +105,8 @@ function testInternet() {
 }
 
 function startFireFox() {
+  [[ -n $isMacOS ]] || return
+
   if [[ $(ps -x | grep firefox | wc -l) -eq 1 ]]; then
     printf "Firefox not started yet!\nStarting Firefox"
     open $openCommands /Applications/Firefox.app
@@ -111,18 +133,18 @@ function fire() {
   if [[ -n $openLink ]]; then
     # test internet connection
     if [[ -z $DEBUG ]] && testInternet; then
-        open $openCommands -a /Applications/Firefox.app "$1" || die "Failed to open $1"
+        $start $openCommands "$1" || die "Failed to open $1"
     else
-      echo "open $1"
+      printf "%s %s\n" "$start" "$1"
     fi
   else
     if [[ -t 1 ]]; then
-      echo "$1 (copied to clipboard)"
+      [[ -n $isMacOS ]] && printf "%s %s\n" "$1" "(copied to clipboard)" || printf "%s\n" "$1"
     else
       echo
     fi
     #save to clipboard
-    printf "%s" "$1" | pbcopy
+    [[ -n $isMacOS ]] && printf "%s" "$1" | pbcopy
   fi
 }
 
@@ -138,7 +160,7 @@ function tryFirst() {
 
   # test internet connection
   if ! testInternet; then
-    printf "open $link"
+    printf "%s %s\n" "$start" "$link"
     exit 1
   fi
   stream=$("${CURL[@]}")
@@ -198,7 +220,11 @@ while [[ $1 == -* ]]; do
       DEBUG=true
       ;;
     -g)
-      openCommands="-g"
+      if [[ -n $isMacOS ]]; then
+        openCommands="-g"
+      else
+        echo "Argument -g ignored."
+      fi
       ;;
     --)
       break;
@@ -304,22 +330,24 @@ if [[ -n $key ]]; then
   fi
 
   key=$(echo "$key" | grep -m 1 '.\+')
-  [[ $DEBUG ]] && echo "Key before uri escaping: $key"
+  # [[ $DEBUG ]] && echo "Key before uri escaping: $key"
   key=$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "$key" "" | cut -c 3- | sed 's/%20/+/g')
-  [[ $DEBUG ]] && echo "Key after uri escaping: $key"
+  # [[ $DEBUG ]] && echo "Key after uri escaping: $key"
 
   fire "$(eval echo \$$site)$key"
 else
-  # if you want just copy the def link or gave an site option
+  # if you want, just copy the default link or give a site option
   if [[ -z $openLink || "$site" != "def" ]]; then
     fire "$(eval echo \$${site}_def)"
     exit 0
   fi
 
-  #for empty key just open firefox, resp. bring it to front
-  if [[ $DEBUG ]]; then
-    echo "Would just open Firefox."
-  else
-    open $openCommands /Applications/FireFox.app/
+  if [[ -n $isMacOS ]]; then
+    # for empty key just open firefox / bring it to front
+    if [[ $DEBUG ]]; then
+      echo "Would just open Firefox."
+    else
+      open $openCommands /Applications/FireFox.app
+    fi
   fi
 fi
