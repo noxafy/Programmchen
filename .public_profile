@@ -95,6 +95,34 @@ alias shutup="osascript -e 'Set volume output volume 0'"
 alias apropos="2>/dev/null apropos"
 alias diff="git diff --no-index"
 
+function printbytes() {
+  if [[ -t 0 ]]; then
+    content=$1
+  else
+    content=$(cat)
+  fi
+  content=$(printf "%s" "$content" | sed 's/[[:space:]]*//g;s/://g' | tr '[:upper:]' '[:lower:]')
+  last_H=
+  for (( i=0; i < ${#content}; i++ )); do
+    H="${content:$i:1}"
+    if [[ $H != [0-9a-f] ]]; then
+      echo "Invalid character at index $i: [$H]" >&2
+      return 1
+   fi
+    if [[ -n $last_H ]]; then
+      #printf "%s: %b\n" "${last_H}${H}" "\x${last_H}${H}"
+      printf "%b" "\x${last_H}${H}"
+      last_H=
+    else
+      last_H=$H
+    fi
+  done
+
+  if [[ -n $last_H ]]; then
+    printf "%b" "\x${last_H}0"
+  fi
+}
+
 #############################
 ### internet
 #############################
