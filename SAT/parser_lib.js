@@ -139,7 +139,7 @@ Parser.prototype.parseFormula = function(str) {
   if (nstr == '%0') {
     return this.parseFormula(str.replace(/^\((.*)\)$/, "$1"), arguments[1]);
   }
-  var reTest = nstr.match(/,/) || nstr.match(/↔/) || nstr.match(/→/) || nstr.match(/∨/) || nstr.match(/∧/);
+  var reTest = nstr.match(/,/) || nstr.match(/↔/) || nstr.match(/→/) || nstr.match(/∨/) || nstr.match(/∧/) || nstr.match(/\^/) || nstr.match(/⊼/);
   if (reTest) {
     var op = reTest[0];
     if (op == ',') nstr = nstr.replace(/,/g, '%split');

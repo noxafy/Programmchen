@@ -4,7 +4,7 @@ import sys
 import os
 
 if __name__ == "SAT": # Is there a better way?
-    from logic import * #ATOM, AND, OR, NOT, IMPL, EQVI
+    from logic import * #ATOM, AND, OR, NOT, IMPL, EQVI, XOR, NAND
     from solvers import * #dpll, z3wrapper, z3available
 else: # "SAT.SAT"
     from .logic import *
@@ -20,26 +20,29 @@ class SAT:
 
     def solve(self, formula):
         formula = self._parse(formula)
+        #print(formula.flatten())
         return self.delegate(formula.clauses())
 
-    def table(self, formula, verbose=True):
+    def table(self, formula, verbose=True, trueOnly=False):
         original = formula
         formula = self._parse(formula)
         variables = formula.vars()
         variables = sorted(variables)
+
+        if verbose:
+            res = "%s | %s\n" % (" ".join(variables), original)
+            res += "-" * len(res)
+            print(res)
+
         data = {}
         for valuation in itertools.product([0, 1], repeat=len(variables)):
             v_dict = generateValuationDict(valuation, variables)
             sat = formula.is_satisfiable(v_dict)
-            key = valuation
-            data[key] = sat
-
-        if verbose:
-            res = "%s | %s\n" % (" ".join(variables), original)
-            res += "-" * len(res) + "-\n"
-            for k, sat in data.items():
-                res += "%s | %s\n" % (" ".join([str(i) for i in k]), "*True" if sat else "False")
-            print(res, end="")
+            if not trueOnly or sat:
+                key = valuation
+                data[key] = sat
+                if verbose:
+                    print("%s | %s" % (" ".join([str(i) for i in key]), "\033[1m*True\033[0m" if sat else "False"))
 
         return data, variables
 
@@ -58,8 +61,8 @@ class SAT:
         return self.logCon(f1, f2) and self.logCon(f2, f1)
 
     def modelCnt(self, f):
-        table, _ = self.table(f, False)
-        return sum(table.values())
+        table, _ = self.table(f, verbose=False, trueOnly=True)
+        return len(table)
 
     def _parse(self, formula):
         def getFormula(f):
@@ -76,6 +79,10 @@ class SAT:
                 elif o == "¬":
                     sub = getFormula(f["sub"])
                     return NOT(sub)
+                elif o == "^":
+                    sub1 = getFormula(f["sub1"])
+                    sub2 = getFormula(f["sub2"])
+                    return XOR(sub1, sub2)
                 elif o == "→":
                     sub1 = getFormula(f["sub1"])
                     sub2 = getFormula(f["sub2"])
@@ -84,6 +91,10 @@ class SAT:
                     sub1 = getFormula(f["sub1"])
                     sub2 = getFormula(f["sub2"])
                     return EQVI(sub1, sub2)
+                elif o == "⊼":
+                    sub1 = getFormula(f["sub1"])
+                    sub2 = getFormula(f["sub2"])
+                    return NAND(sub1, sub2)
             else:
                 name = f["string"]
                 return ATOM(name)
@@ -105,9 +116,9 @@ def solve(formula, useDPLL=True):
     sat = SAT(useDPLL)
     return sat.solve(formula)
 
-def table(formula, verbose=True): # no solver needed
+def table(formula, verbose=True, trueOnly=False): # no solver needed
     sat = SAT(True) # "True" just because faster init
-    return sat.table(formula, verbose)
+    return sat.table(formula, verbose, trueOnly=trueOnly)
 
 def valid(formula, useDPLL=True):
     sat = SAT(useDPLL)

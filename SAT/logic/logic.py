@@ -60,6 +60,14 @@ class AND(NaryFormula):
     def negin(self):
         return OR([NOT(f) for f in self.subformulas])
 
+    def flatten(self):
+        for sub in list(self.subformulas):
+            sub.flatten()
+            if type(sub) is AND:
+                self.subformulas.extend(sub.subformulas)
+                self.subformulas.remove(sub)
+        return self
+
     def clauses(self):
         return concatlists([c.clauses() for c in self.subformulas])
 
@@ -77,6 +85,14 @@ class OR(NaryFormula):
     def negin(self):
         return AND([NOT(f) for f in self.subformulas])
 
+    def flatten(self):
+        for sub in list(self.subformulas):
+            sub.flatten()
+            if type(sub) is OR:
+                self.subformulas.extend(sub.subformulas)
+                self.subformulas.remove(sub)
+        return self
+
     def clauses(self):
         cclauses = [c.clauses() for c in self.subformulas]
         return [concatlists(list(c)) for c in itertools.product(*cclauses)]
@@ -87,7 +103,6 @@ class OR(NaryFormula):
             sat = sat or subformula.is_satisfiable(valuation)
         return sat
 
-
 class NOT:
     def __init__(self, subformula):
         self.subformula = subformula
@@ -97,6 +112,9 @@ class NOT:
 
     def negin(self):
         return self.subformula
+
+    def flatten(self):
+        return self
 
     def clauses(self):
         if isinstance(self.subformula, ATOM):
@@ -122,6 +140,9 @@ class ATOM:
     def negin(self):
         return NOT(self)
 
+    def flatten(self):
+        return self
+
     def clauses(self):
         return [[(self.name, True)]]
 
@@ -138,7 +159,12 @@ class ATOM:
 def IMPL(f1, f2):
     return OR([NOT(f1), f2])
 
-
 # A <-> B is reduced to (-A V B) & (-B V A)
 def EQVI(f1, f2):
     return AND([IMPL(f1, f2), IMPL(f2, f1)])
+
+def XOR(f1, f2):
+    return AND([OR([f1, f2]), NOT(AND([f1, f2]))])
+
+def NAND(f1, f2):
+    return NOT(AND([f1, f2]))
