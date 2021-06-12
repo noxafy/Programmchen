@@ -86,27 +86,39 @@ function rsyncit() {
           "$1" "$2"
 }
 
+function _cp() {
+  src=$1
+  dst=$2
+
+  # calc size
+  echo "$src (calculating size ..."
+  size=$(calc_size "$src") || continue;
+  printf "\e[F\e[K%s (%s) to %s\n" "$src" "${size:-??}" "$dst"
+
+  # backup
+  if [[ -d "$src" ]]; then
+    src="$src/"
+  elif [[ ! -f "$src" ]]; then
+    warn "Invalid backup task: $src"
+    return 1
+  fi
+  rsyncit "$src" "$dst" || {
+    warn "Backing up $src to $dst failed"
+  }
+}
+
 function ctt() { #copy to target
   while [[ -n "$1" ]]; do
-    source_name="$1"
+    _cp "$PWD/$1" "$target/$1"
     shift
+  done
+}
 
-    # calc size
-    echo "$PWD/$source_name (calculating size ..."
-    size=$(calc_size "$PWD/$source_name") || continue;
-    printf "\e[F\e[K%s (%s) to %s\n" "$PWD/$source_name" "${size:-??}" "$target/$source_name"
-
-    # backup
-    if [[ -d "$source_name" ]]; then
-      source_name="$source_name/"
-    elif [[ ! -f "$source_name" ]]; then
-      warn "Invalid backup task: $source_name"
-      continue;
-    fi
-    rsyncit "$source_name" "$target/$source_name" || {
-      warn "Backing up $source_name to $target failed"
-      continue;
-    }
+function ctf() { #copy to files
+  while [[ -n "$1" ]]; do
+    file=$(basename "$1")
+    _cp "$PWD/$1" "$target/files/$file"
+    shift
   done
 }
 
@@ -209,11 +221,13 @@ echo "####################################################"
 # Copy from ~
 pushd "$HOME" &> /dev/null || die "cd to $HOME failed"
 
+ensureTargetDir files
 ensureTargetDir .m2
 
 rm -rf .gnupg/S.gpg-agent* # remove rsync-blocking sockets from gpg-agent (timeout for retyping key password)
 ctt .bashrc .profile .zshrc # only transitionally
 ctt .m2/settings.xml .ssh .password-store .gnupg
+ctf .ipython/profile_default/startup/00.py
 
 cd "Programmchen" &> /dev/null || die "cd to $HOME/Programmchen failed"
 ctt sys_install
@@ -236,14 +250,13 @@ ensureTargetDir Safari
 ctt Safari/Bookmarks.plist
 
 # TODO: copy whole Firefox Profile folder
+firefox_bookmark="firefox_bookmark.jsonlz4"
 if firefox_profile=$(echo ~/Library/Application\ Support/Firefox/Profiles/*.default/bookmarkbackups) 2>/dev/null; then
   cd "$firefox_profile" || die "cd to $firefox_profile failed"
   recent_backup=$(ls -t | head -1)
-  mkdir files
-  cp "$recent_backup" "files/firefox_bookmark.jsonlz4"
-  ensureTargetDir files
-  ctt "files/firefox_bookmark.jsonlz4"
-  rm -rf files || warn "Removing temp dir failed: $firefox_profile/files"
+  cp "$recent_backup" "$firefox_bookmark"
+  ctf "$firefox_bookmark"
+  rm "$firefox_bookmark"
 else
   warn "Could not backup firefox bookmarks! Folder does not exist: $firefox_profile"
 fi
