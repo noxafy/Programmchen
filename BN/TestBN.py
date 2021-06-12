@@ -121,5 +121,12 @@ class TestBayesNet(unittest.TestCase):
             self.assertEqual(round(res[0] - outputs[i][0], 3), 0)
             self.assertEqual(round(res[1] - outputs[i][1], 3), 0)
 
+    def test_addNode(self):
+        bn = BN()
+        bn.addNode('A', None, 0.4)
+        bn.addNode('B', ['A'], [0.3,0.8])
+        probs = bn.P("A|B=f", False)
+        self.assertAlmostEqual(probs[1], 0.7)
+
 if __name__ == '__main__':
     unittest.main()

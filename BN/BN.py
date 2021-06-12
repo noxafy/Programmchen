@@ -39,7 +39,7 @@ class BN:
             }
         }
     """
-    def __init__(self, fname):
+    def __init__(self, fname=None):
         """
         Initialize the network; read and parse the given file.
 
@@ -48,6 +48,9 @@ class BN:
         """
         self.permutationsmemo = {}
         self.net = {}
+        if not fname:
+            return
+
         lines = []  # buffer
         try:
             with open(fname) as f:
@@ -76,34 +79,68 @@ class BN:
         """
         if len(lines) == 1:
             # single line node/buffer
-            match = re.match(r'P\(([^:=]*)[^\)]*\) = (.*)\n', lines[0])
+            match = re.match(r'P\(([^:=]*)[^\)]*\) ?= ?(.*)\n', lines[0])
             var, prob = match.group(1).strip(), float(match.group(2).strip())
-            self.net[var] = {
+            self.addNode(var, None, prob)
+        else:
+            # multi line node/buffer
+            # table header
+            match = re.match(r'(.*) \| (.*)', lines[0])
+            var, parents = match.group(1).strip(), match.group(2).split()
+
+            prob_dict = {}
+            for probline in lines[2:]:
+                match = re.match(r'(.*) \| (.*)', probline)
+                truth, prob = match.group(1).split(), float(match.group(2).strip())
+                truth = tuple(True if x == 't' or x == '1' else False for x in truth)
+                prob_dict[truth] = prob
+
+            self.addNode(var, parents, prob_dict)
+
+    def addNode(self, name, parents, prob):
+        """
+        Add a new node to the graph.
+
+        Args:
+            name: Name of the node
+            parents: List of parents
+            prob: Dict: tuple(Booleans) -> float, or list of probabilities (for name == True) in the order: e.g. with 2 parents
+                t t
+                t f
+                f t
+                f f
+        """
+        if not parents:
+            try:
+                prob = prob[0]
+            except:
+                assert type(prob) == float or type(prob) == int
+
+            self.net[name] = {
                 'parents': [], 
                 'children': [],
                 'prob': prob,
                 'condprob': {}
             }
         else:
-            # multi line node/buffer
-            # table header
-            match = re.match(r'(.*) \| (.*)', lines[0])
-            var, parents = match.group(1).strip(), match.group(2).split()
+            truth_table = list(itertools.product([True, False], repeat=len(parents)))
+            assert len(prob) == len(truth_table), "Not all values specified!"
             for p in parents:
-                self.net[p]['children'].append(var)
-            self.net[var] = {
+                if p not in self.net:
+                    raise ValueError("Parent " + p + " is not defined in the graph!")
+                self.net[p]['children'].append(name)
+
+            if type(prob) == dict:
+                condprob = prob
+            else:
+                condprob = {truth: p for truth, p in zip(truth_table, prob)}
+
+            self.net[name] = {
                 'parents': parents,
                 'children': [],
                 'prob': -1,
-                'condprob': {}
+                'condprob': condprob
             }
-
-            # table rows/distributions
-            for probline in lines[2:]:
-                match = re.match(r'(.*) \| (.*)', probline)
-                truth, prob = match.group(1).split(), float(match.group(2).strip())
-                truth = tuple(True if x == 't' else False for x in truth)
-                self.net[var]['condprob'][truth] = prob
 
     def normalize(self, dist):
         """
@@ -595,4 +632,5 @@ class BN:
                 if printResult:
                     print("P(%s = %s | %s) = %f" % (X, stdStr(x), edictToStr(edict), prob))
 
-        return X, edict, dist
+        # return X, edict, dist
+        return dist
