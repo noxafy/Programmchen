@@ -51,6 +51,7 @@ compdef _path_commands fip
 compdef _functions fif
 compdef _aliases fia
 compdef '_files -g "*.tex"' clat
+compdef '_files -g "*.tex"' cltex
 
 ### theme
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[red]%}"
