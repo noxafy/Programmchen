@@ -15,7 +15,7 @@ USE_CACHED=
 declare -a LINKS
 declare -a DESCRIPTIONS
 OUTPUTS=
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | [--cached] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m \e[4m...\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-a] [-o] [-d] [ \e[4msite\e[0m | [--cached | -n ] [ -u \e[4muser\e[0m | -c \e[4mchannel\e[0m | -i \e[4mid\e[0m | -p \e[4mid\e[0m [\e[4mname\e[0m] ] ] [\e[4mquery\e[0m \e[4m...\e[0m]"
 help="Fetch list of recent videos from YouTube.
 $usage
         \e[1m-h\e[0m          Displays this message and exits.
@@ -23,7 +23,8 @@ $usage
         \e[1m-o\e[0m          Just opens the generated link (uses \"\e[1mf\e[0m\").
         \e[1m-d\e[0m          Print some debug logs.
         \e[4msite\e[0m        Youtube user or channel site to grep videos from.
-        \e[1m--cached\e[0m    Use cache (only in combination with \e[1m-u\e[0m, \e[1m-c\e[0m, \e[1m-i\e[0m, and \e[1m-p\e[0m).
+        \e[1m--cached\e[0m    Read from cache (only if cache already exists).
+        \e[1m-n\e[0m          Undo option \e[1m--cached\e[0m, i.e. don't read from cache (default).
         \e[1m-u\e[0m \e[4muser\e[0m     Give a \e[4muser\e[0m name to grep videos from.
         \e[1m-c\e[0m \e[4mname\e[0m     Give a channel's \e[4mname\e[0m to grep videos from.
         \e[1m-i\e[0m \e[4mID\e[0m       Give a channel's \e[4mID\e[0m ID to grep videos from.
@@ -46,6 +47,9 @@ while [[ -n $1 ]]; do
   case "$1" in
   --cached)
     USE_CACHED=true
+    ;;
+  -n)
+    USE_CACHED=
     ;;
   -h)
     printf "$help"
@@ -122,7 +126,7 @@ fi
 
 function parseResults0() {
   local json_file
-  if [[ -z "$FILE" ]]; then
+  if [[ -z "$FILE" || "$FILE" != *.json ]]; then
     if [[ -n $JSON_FILE ]]; then
       json_file=$JSON_FILE
     else
@@ -151,9 +155,9 @@ function parseResults0() {
 
           // get data
           let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
-          idx = title.lastIndexOf(' by')
+          idx = title.lastIndexOf(' by ')
           if (idx < 0) { // try german version
-            idx = title.lastIndexOf(' von')
+            idx = title.lastIndexOf(' von ')
           }
           title = title.substring(0, idx)
           if (!title) {
@@ -168,7 +172,7 @@ function parseResults0() {
 
           let description
           // Regular video
-          if (v.viewCountText.simpleText) {
+          if (v.viewCountText?.simpleText && v.viewCountText) {
             let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
             let views = v.viewCountText.simpleText
             let time = v.publishedTimeText.simpleText
@@ -176,11 +180,18 @@ function parseResults0() {
             description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
           }
           // Livestream
-          else if (v.viewCountText.runs) {
+          else if (v.viewCountText?.runs) {
             let views = v.viewCountText.runs[0].text
             description = '\033[1mLive:\033[0m ' + title + ' \033[37m' + views + '\033[0m'
+          }
+          else if (!v.viewCountText && v.publishedTimeText) {
+            let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+            let time = v.publishedTimeText.simpleText
+
+            description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + '\033[0m'
           } else {
             console.error('Unknown video type!')
+            console.error(item)
           }
 
           // create link
@@ -243,8 +254,8 @@ function parseResults0() {
 }
 
 function parseResults() {
-  # find place of content in html
   local v1 tmp_results tmp_descriptions tmp_links
+  # find place of content in html
   if [[ -z "$FILE" || "$FILE" != *.json ]]; then
     v1=$(printf "%s" "$1" | grep -m 1 '[ "]ytInitialData' | sed 's/.*ytInitialData = //' | sed 's/.*ytInitialData"] = //' | sed 's/<\/script>.*//' | sed 's/;$//')
   else
