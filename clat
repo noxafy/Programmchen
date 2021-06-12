@@ -1,13 +1,17 @@
 #!/bin/bash
 
-usage="Usage: \e[1m$(basename $0)\e[0m -h | [\e[4mfile\e[0m]"
+usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s|-l] [-n|-d] [\e[4mfile\e[0m]"
 default_name="main.tex"
 goal=
 SHORT=
-help="Compiles a tex file. Complies multiple times if a bib file is existent, so that literature section is right. Uses pdflatexmkrc if available.
+DELETE=
+help="Compiles a tex file. Complies multiple times if citation is used, so that literature section is right. Uses pdflatexmkrc if available.
 $usage
 	\e[1m-h\e[0m	Display this message and exit.
-	\e[1m-s\e[0m	Compile only one time with pdflatex.
+	\e[1m-s\e[0m	Force compile only one time with pdflatex.
+	\e[1m-l\e[0m	Force compile multiple times.
+	\e[1m-n\e[0m	Don't delete auto-generated files.
+	\e[1m-d\e[0m	Force delete auto-generated files.
 	\e[4mfile\e[0m	.tex-file to compile (default: $default_name).
 "
 
@@ -26,7 +30,8 @@ function cltex() {
   fi
 
   local -i removed=0
-  local -a tokill=(-blx.bib .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .idx .ilg .ind .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp) # toc nav are needed
+  local -a tokill=(.aux -blx.bib .bbl .bcf .blg .dvi .fdb_latexmk .fls .idx .ilg .ind .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp)
+  [[ $SHORT == "false" ]] && tokill+=(.nav .toc)
   for postfix in ${tokill[@]}; do
     local file="${goal:0:$((${#goal}-4))}$postfix"
     [[ -e "$file" ]] && rm -v "$file" && ((removed++))
@@ -38,7 +43,9 @@ function open_it() {
   if hash open &>/dev/null; then
     open "${1:0:$((${#1}-4))}.pdf" || die "Could not open file: $goal"
   fi
-  cltex "$1"
+  if [[ $DELETE == "true" ]]; then
+    cltex "$1"
+  fi
 }
 
 while [[ $1 == -* ]]; do
@@ -52,6 +59,12 @@ while [[ $1 == -* ]]; do
       ;;
     -l)
       SHORT=false
+      ;;
+    -n)
+      DELETE=false
+      ;;
+    -d)
+      DELETE=true
       ;;
     --)
       break;
@@ -67,8 +80,20 @@ goal="${1:-$default_name}"
 goal_dir=$(dirname "$goal")
 [[ -n "$2" ]] && multiple=true || multiple=
 
-if [[ -z $SHORT ]] && ! cat "$goal" | grep '\\ref' &>/dev/null; then
-  SHORT=true
+if [[ -z $SHORT ]]; then
+  if ! cat "$goal" | grep -e '\\cite' -e '\\citep' -e '\\parencite' -e '\\\citet' -e '\\textcite' &>/dev/null; then # -e '\\ref'
+    SHORT=true
+  else
+    SHORT=false
+  fi
+fi
+
+if [[ -z $DELETE ]]; then
+  if [[ -e "${goal:0:$((${#goal}-3))}toc" ]]; then
+    DELETE=false
+  else
+    DELETE=true
+  fi
 fi
 
 if [[ -r "$PWD/pdflatexmkrc" ]]; then
