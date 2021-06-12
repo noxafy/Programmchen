@@ -811,6 +811,8 @@ function po() {
 ### math
 #############################
 function b() {
+  local precision=42
+
   local args=($@)
   local input=$args[-1]
   if [[ ! -t 0 ]]; then
@@ -819,21 +821,49 @@ function b() {
     unset 'args[-1]'
   fi
 
-  # first utilize wcalc
-  local res=$(wcalc "${args[@]}" "$input" 2>&1)
-  if [[ "$res" == *Infinity* ]]; then
-    # if the number is too large for wcalc, use bc
-    read res <<< $(bc <<< "scale=42;$input" 2>&1)
-    res=" = $res"
+  # first utilize bc
+  local res=$(bc <<< "scale=$precision;$input" 2>&1 | tr -d '\\
+\n')
+  if [[ "$res" != *error* ]]; then # assume success
+    echo " = $res"; return
   fi
 
-  if [[ "$res" != *error* && "$res" != *Undefined* ]]; then
+  res=$(wcalc --radians -P$precision "${args[@]}" "$input" 2>&1)
+  if [[ "$res" != *error* && "$res" != *Inf* && "$res" != *Undefined* ]]; then
      echo "$res"; return
-  else
-    # and if it still seems unsolvable, ask sage
-    # see https://paulmasson.github.io/sagemath-docs/functions
-    sage -c "print($input)"
   fi
+
+  res=$(python -c "
+from math import *  # https://docs.python.org/3/library/math.html
+
+nCr=comb
+nPr=lambda a,b: comb(a,b)*factorial(b)
+print($input)" 2>/dev/null)
+  if [[ $? == 0 ]]; then
+     echo "$res"; return
+  fi
+
+  # and if it still seems unsolvable, ask sage
+  # see https://paulmasson.github.io/sagemath-docs/functions
+  sage -c "nCr=binomial; nPr=lambda a,b: factorial(a)/factorial(a-b); print($input)"
+}
+
+__test_b() {
+  b '1+1' || return 1 # 2
+  b '2**1000' || return 1 # scientific output
+  b '2^1000' || return 1 # long integer output
+  b '1/sqrt(2)' || return 1 # math functions defined
+  b 'log(100) * pi' || return 1 # log is base 10
+  b 'ln(e^pi)' || return 1 # variables e and pi defined
+  b 'nCr(24,4)' || return 1 # nCr defined
+  b 'is_prime(512*2^512 - 1)' || return 1 # sage is working
+  b 'diff(sin(x) * x^2 + cos(x) * e^(x^2))' || return 1 # sage is working 2
+  echo "---------------"
+  echo "All tests succeeded!"
+}
+
+function randint() {
+  echo $((RANDOM % $1))
 }
 
 # http://latexcalc.sourceforge.net/
