@@ -92,8 +92,8 @@ function _cp() {
 
   # calc size
   echo "$src (calculating size ..."
-  size=$(calc_size "$src") || continue;
-  printf "\e[F\e[K%s (%s) to %s\n" "$src" "${size:-??}" "$dst"
+  size=$(calc_size "$src")
+  printf "\e[F\e[K%s (%s) to %s\n" "$src" "${size:-???}" "$dst"
 
   # backup
   if [[ -d "$src" ]]; then
