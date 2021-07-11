@@ -936,8 +936,13 @@ function zombiesAndStuff() {
   ps aux | awk ' $8 !~ /S/ {print $0}' | grep -v "ps aux"
 }
 
-function showHexFlow() {
-  _pick_and_execute -f hexdump "$@" | sed 's/[0123456789abcdef]\{7\}//g' | grep --color=always -e "3e\|$" | xargs printf "%s "; echo
+function hexflow() {
+  t=${1:-100}
+  t=$((1.0/t))
+  while true; do
+    openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g' | grep --color=always -e "3e\|$"
+    sleep $t
+  done
 }
 
 function battery() {
