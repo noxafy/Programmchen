@@ -533,7 +533,8 @@ function backup() {
   done
   echo "Starting backup script now."
   echo
-  "$P"/backup -t "$target" && unmount
+  caffeinate -i "$P"/backup -t "$target"
+  unmount
 }
 
 #############################
