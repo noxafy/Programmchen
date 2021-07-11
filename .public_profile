@@ -76,6 +76,8 @@ alias cacr="ca create --clone base -n"
 alias carm="ca remove --all -n"
 alias bn="py -m BN"
 alias sat="py -m SAT"
+alias py_basic="head -15 ~/.ipython/profile_default/startup/00.py | sed 's/from tqdm import tqdm/import tqdm.notebook as tq/' | pbcopy"
+alias py_full="cat ~/.ipython/profile_default/startup/00.py | sed 's/from tqdm import tqdm/import tqdm.notebook as tq/' | pbcopy"
 
 #############################
 ### hacky
