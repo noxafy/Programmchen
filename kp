@@ -37,15 +37,17 @@ processname="$*"
 [[ -z "$processname" ]] && die "Please give a process name to search for. See -h for more information."
 
 processes=$(pgrep -a -i -- "$processname") || die "No process found matching \"$processname\"."
-firstprocess=$(echo "$processes" | head -1)
+
+# show them
+out=$(ps u -r -p $(echo "$processes" | tr '\n' ',' | sed 's/,$//')) || die "Failed to show processes (not running anymore?)"
+echo "$out"
+firstprocess=$(echo "$out" | head -2 | tail -1 | awk '{print $2}')
 pidToKill=$firstprocess
 
 if [[ $(echo "$processes" | wc -l) -eq 1 ]]; then
-  ps u -p $processes
   read -p "Only one process found. Do you really want to kill that process? (y/n) [y]: " ans
   [[ -n "$ans" && "$ans" != y ]] && pidToKill=
 else
-  ps u -p $(echo "$processes" | tr '\n' ',' | sed 's/,$//')
   read -p "Which process do you want to kill? (PID) [$firstprocess]: " ans
   [[ -z "$ans" ]] && ans=$firstprocess
   [[ "$ans" =~ ^[0-9]+$ ]] && pidToKill=$ans || die "That was not a number."
