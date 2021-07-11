@@ -96,6 +96,7 @@ alias ql="qlmanage -p"
 alias shutup="osascript -e 'Set volume output volume 0'"
 alias apropos="2>/dev/null apropos"
 alias diff="git diff --no-index"
+alias idiff="/Applications/IntelliJ\ IDEA.app/Contents/MacOS/idea diff"
 alias cp=fcp
 alias trim="sed 's/^[[:space:]]*//g' | xargs -L 1"
 
