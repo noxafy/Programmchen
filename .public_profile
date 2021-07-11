@@ -862,6 +862,7 @@ __test_b() {
   b 'ln(e^pi)' || return 1 # variables e and pi defined
   b 'nCr(24,4)' || return 1 # nCr defined
   b 'is_prime(512*2^512 - 1)' || return 1 # sage is working
+  b 'is_prime(1000000000000066600000000000001)' || return 1 # because primes are cool
   b 'diff(sin(x) * x^2 + cos(x) * e^(x^2))' || return 1 # sage is working 2
   echo "---------------"
   echo "All tests succeeded!"
