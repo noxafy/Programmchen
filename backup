@@ -204,6 +204,10 @@ git add .
 git commit -m "Backup"
 popd >&/dev/null
 
+# backup contacts
+export_contacts "$HOME/Cloud/.Contacts-Backup"
+
+# backup dir
 if [[ -z "$target" ]]; then
   if [[ -d "$default_target" ]]; then
     target="$default_target"

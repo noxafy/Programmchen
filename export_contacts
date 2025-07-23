@@ -1,0 +1,29 @@
+#!/bin/zsh      # bash works too
+if [[ -z $1 || ! -d "$(dirname $1)" ]]; then
+  echo "Not a valid directory: $1"
+  exit 1
+fi
+now=$(date +"%Y-%m-%d_%H-%M-%S")
+OUT="$1/$now.vcf"
+
+/usr/bin/osascript - "$OUT" <<'APPLESCRIPT'
+on run argv
+    set outPath to item 1 of argv
+
+    -- Fetch all vcards
+    tell application "Contacts"
+        set vcardsList to vcard of people
+    end tell
+
+    -- Write to file as UTF-8
+    set textBuffer to vcardsList as text
+    set outFile to POSIX file outPath
+    do shell script "truncate -s 0 " & quoted form of outPath
+    open for access outFile with write permission
+    write textBuffer to outFile as «class utf8»
+    close access outFile
+end run
+APPLESCRIPT
+
+(($?)) && echo "Exporting contacts failed" || echo "Contacts exported to: $OUT"
+sed -E -i '' '/^(UID|X-ABUID)/d; /^$/N;/^\n$/D' "$OUT"
