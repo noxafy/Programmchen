@@ -31,12 +31,13 @@ function cltex() {
   fi
 
   local -i removed=0
-  local -a tokill=(-blx.bib .acn .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .glsdefs .idx .ilg .ind .ist .listing .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp)
+  local -a tokill=(-blx.bib .acn .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .glsdefs .idx .ilg .ind .ist .listing .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp .xmpdata)
   [[ $SHORT == "false" ]] && tokill+=(.nav .toc)
   for postfix in ${tokill[@]}; do
     local file="${goal%.*}$postfix"
     [[ -e "$file" ]] && rm -v "$file" && ((removed++))
   done
+  [[ -e "pdfa.xmpi" ]] && rm -v "pdfa.xmpi" && ((removed++))
   echo "$removed files removed"
 }
 
