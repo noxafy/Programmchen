@@ -119,7 +119,7 @@ while [[ -n $* ]]; do
         esac
         ((i++))
       done
-      if [[ $desttime -eq 0 ]]; then
+      if [[ -n $numberbuffer && $desttime -eq 0 ]]; then
         # no unit specified, so interpret as minutes
         asMinutes $numberbuffer
       fi
@@ -176,7 +176,7 @@ count() {
     while [ $secs -gt $1 ]; do
       printf "\r\e[KTime left: $2 %ss" $secs
       ((secs--))
-      sleep 0.994
+      sleep 0.993
     done
   else
     ((secs++))
