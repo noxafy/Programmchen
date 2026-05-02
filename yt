@@ -163,108 +163,164 @@ function parseResults0() {
       if (content.richGridRenderer) {
         for (let item of content.richGridRenderer.contents) {
           if (!item.richItemRenderer) continue;
-          let v = item.richItemRenderer.content.videoRenderer
+          let v = item.richItemRenderer.content.lockupViewModel
+          let description, link
 
-          // get data
-          let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
-          // Remove trailing durations like '6 minutes, 35 seconds' or '1 hour, 2 minutes, 5 seconds'
-          while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
-            title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
-          }
-          title = title.trim();
-          if (!title) {
-            // slightly panic
-            console.error('Error! This video has no title node:')
-            console.error(JSON.stringify(item))
-            continue
-          }
+          if (v) {
+            // get data
+            let title = v.metadata.lockupMetadataViewModel.title.content
+            if (!title) {
+              // slightly panic
+              console.error('Error: This video has no title attribute')
+              console.error(JSON.stringify(item))
+              continue
+            }
 
-          // filter query
-          if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
+            // filter query
+            if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
 
-          let description
-          // Regular video
-          if (v.viewCountText?.simpleText && v.viewCountText) {
-            let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
-            let views = v.viewCountText.simpleText
-            let time = v.publishedTimeText.simpleText
+            // Regular video
+            if (v.metadata?.lockupMetadataViewModel?.metadata?.contentMetadataViewModel) {
+              // console.error(JSON.stringify(v.metadata.lockupMetadataViewModel.metadata, null, 2))
 
-            description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
-          }
-          // Livestream
-          else if (v.viewCountText?.runs) {
-            let views = v.viewCountText.runs[0].text
-            description = '\033[1m\033[31mLive:\033[0m ' + title + ' \033[37m\033[2m' + views + '\033[0m'
-          }
-          else if (!v.viewCountText && v.publishedTimeText) {
-            let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
-            let time = v.publishedTimeText.simpleText
+              let duration = v.contentImage.thumbnailViewModel.overlays[0].thumbnailBottomOverlayViewModel.badges[0].thumbnailBadgeViewModel.rendererContext.accessibilityContext.label
+              let metadataRows = v.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows
+              let views, time
 
-            description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + '\033[0m'
+              if (metadataRows[1]?.badges) {
+                time = metadataRows[0].metadataParts[0].text.content
+                views = metadataRows[1].badges[0].badgeViewModel.badgeText  // 'Members only'
+              } else if (metadataRows.length == 1) {
+                let last = metadataRows[metadataRows.length-1]
+                views = last.metadataParts[0].text.content
+                time = last.metadataParts[1].text.content
+              }
+
+              description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+            // TODO // Livestream
+            // } else if (v.viewCountText?.runs) {
+            //  let views = v.viewCountText.runs[0].text
+            //  description = '\033[1m\033[31mLive:\033[0m ' + title + ' \033[37m\033[2m' + views + '\033[0m'
+            // } else if (!v.viewCountText && v.publishedTimeText) {
+            //  let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+            //  let time = v.publishedTimeText.simpleText
+            //  description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + '\033[0m'
+            } else {
+              console.error('Error: Unknown video type!')
+              console.error(JSON.stringify(item, null, 2))
+            }
+
+            // create link
+            link = '$youtube' + v.rendererContext.commandContext.onTap.innertubeCommand.commandMetadata.webCommandMetadata.url
+            link = link.split('&')[0]  // remove parameters
           } else {
-            console.error('Unknown video type!')
-            console.error(item)
-          }
+            v = item.richItemRenderer.content.videoRenderer
+            if (!v) {
+              console.error('Error: Unable to parse this item:')
+              console.error(JSON.stringify(item, null, 2))
+            }
+            // console.error('Warning: Falling back to old variable name videoRenderer')
 
-          // create link
-          let link = '$youtube' + v.navigationEndpoint.commandMetadata.webCommandMetadata.url
-          link = link.split('&')[0]  // remove parameters
+            // get data
+            let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
+            // Remove trailing durations like '6 minutes, 35 seconds' or '1 hour, 2 minutes, 5 seconds'
+            while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
+              title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
+            }
+            title = title.trim();
+            if (!title) {
+              // slightly panic
+              console.error('Error! This video has no title node:')
+              console.error(JSON.stringify(item, null, 2))
+              continue
+            }
+
+            // filter query
+            if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
+
+            // Regular video
+            if (v.viewCountText?.simpleText && v.viewCountText) {
+              let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+              let views = v.viewCountText.simpleText
+              let time = v.publishedTimeText.simpleText
+
+              description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+            }
+            // Livestream
+            else if (v.viewCountText?.runs) {
+              let views = v.viewCountText.runs[0].text
+              description = '\033[1m\033[31mLive:\033[0m ' + title + ' \033[37m\033[2m' + views + '\033[0m'
+            }
+            else if (!v.viewCountText && v.publishedTimeText) {
+              let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+              let time = v.publishedTimeText.simpleText
+
+              description = title + ' \033[2m' + duration + '\033[0m \033[37m' + time + '\033[0m'
+            } else {
+              console.error('Unknown video type! (old)')
+              console.error(JSON.stringify(item, null, 2))
+            }
+
+            // create link
+            link = '$youtube' + v.navigationEndpoint.commandMetadata.webCommandMetadata.url
+            link = link.split('&')[0]  // remove parameters
+          }
 
           // print out, remove newlines
           console.log(description.replace(/\r?\n|\r/gm, ''))
           console.log(link)
         }
       }
-      else if (content.sectionListRenderer) {
-        let playlistVideoRenderer = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].playlistVideoListRenderer
-        for (let item of playlistVideoRenderer.contents) {
-          if (!item.playlistVideoRenderer) continue;
-          let v = item.playlistVideoRenderer
+      // else if (content.sectionListRenderer) {
+      //   let playlistVideoRenderer = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].playlistVideoListRenderer
+      //   for (let item of playlistVideoRenderer.contents) {
+      //     if (!item.playlistVideoRenderer) continue;
+      //     let v = item.playlistVideoRenderer
 
-          // get data
-          let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
-          let by_str = ' by'
-          idx = title.lastIndexOf(by_str)
-          if (idx < 0) { // try german version
-            by_str = ' von'
-            idx = title.lastIndexOf(by_str)
-          }
-          title = title.substring(0, idx)
-          while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
-            title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
-          }
-          title = title.trim();
-          if (!title) {
-            // slightly panic
-            console.error('Error! This video has no title node:')
-            console.error(item)
-            continue
-          }
+      //     // get data
+      //     let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
+      //     let by_str = ' by'
+      //     idx = title.lastIndexOf(by_str)
+      //     if (idx < 0) { // try german version
+      //       by_str = ' von'
+      //       idx = title.lastIndexOf(by_str)
+      //     }
+      //     title = title.substring(0, idx)
+      //     while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
+      //       title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
+      //     }
+      //     title = title.trim();
+      //     if (!title) {
+      //       // slightly panic
+      //       console.error('Error! This video has no title node:')
+      //       console.error(item)
+      //       continue
+      //     }
 
-          // filter query
-          if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
+      //     // filter query
+      //     if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
 
-          let description
-          // Regular video
-          let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
-          let user = v.shortBylineText.runs[0].text
-          if (v.videoInfo) {
-            let views = v.videoInfo.runs[0].text
-            let time = v.videoInfo.runs[2].text
-            description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
-          }
-          else {
-            description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m'
-          }
+      //     let description
+      //     // Regular video
+      //     let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+      //     let user = v.shortBylineText.runs[0].text
+      //     if (v.videoInfo) {
+      //       let views = v.videoInfo.runs[0].text
+      //       let time = v.videoInfo.runs[2].text
+      //       description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+      //     }
+      //     else {
+      //       description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m'
+      //     }
 
-          // create link
-          let link = '$youtube' + '/watch?v=' + v.videoId
+      //     // create link
+      //     let link = '$youtube' + '/watch?v=' + v.videoId
 
-          // print out, remove newlines
-          console.log(description.replace(/\r?\n|\r/gm, ''))
-          console.log(link)
-        }
-      }
+      //     // print out, remove newlines
+      //     console.log(description.replace(/\r?\n|\r/gm, ''))
+      //     console.log(link)
+      //   }
+      // }
       else {
         console.error('Unknown content object!')
         console.error(content)
@@ -386,7 +442,7 @@ function filterLinks() {
   if [[ -z $PRINTALL ]]; then
     # filter DESCRIPTIONS and LINKS to contain only new elements
     for idx in "${!LINKS[@]}"; do
-      if [[ "$content" == *"${LINKS[$idx]}"* ]]; then
+      if [[ "$content" == *"${LINKS[$idx]}"* && "${DESCRIPTIONS[$idx]}" != $'\033[1m\033[31mLive:'* ]]; then
         unset 'LINKS[$idx]'
         unset 'DESCRIPTIONS[$idx]'
       fi
@@ -446,6 +502,15 @@ function updateLocalStorage() {
   printf "%s" "$OUTPUTS" > "$RESULTS_FILE"
 }
 
+
+if [[ -n $DEBUG ]]; then
+  echo "site: $site"
+  echo "OPEN: $OPEN"
+  echo "USE_CACHED: $USE_CACHED"
+  echo "PRINTALL: $PRINTALL"
+  echo "JSON_FILE: $JSON_FILE"
+  echo "RESULTS_STORAGE: $RESULTS_STORAGE"
+fi
 if [[ "$site" = ${youtube}* ]]; then
   if [[ -n $OPEN ]]; then
     if [[ -z $DEBUG ]]; then
