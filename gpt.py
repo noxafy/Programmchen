@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 import os
-from openai import OpenAI
-client = OpenAI(
-   api_key=os.environ.get("OPENAI_API_KEY")
-)
+from openrouter import OpenRouter
 
-model = "gpt-4o"
-prompt = (model.split("-")[0] + "-" + model.split("-")[1]).upper() + ":"
+client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY", ""))
+
+model = "mistralai/ministral-8b-2512"
+#model = "openai/gpt-4.1-nano"
 
 messages = []
 interactive = False
-temperature = 0.5
+temperature = 1  #0.5
 max_tokens = 2048
 
 # Read arguments
 import sys
-input_message = ""
+prompt = ""
+input_message = []
 
 while len(sys.argv) > 1:
     # Parse -i and --interactive, no argument
@@ -40,26 +40,34 @@ while len(sys.argv) > 1:
         prompt = sys.argv[2]
         del sys.argv[1:3]
     else:
-        input_message += sys.argv[1]
+        input_message.append(sys.argv[1])
         del sys.argv[1]
 
+if prompt:
+    message.append({"role": "system", "content": prompt})
+
 if input_message:
+    input_message = " ".join(input_message)
     messages.append({"role": "user", "content": input_message})
 
 def gpt(messages):
     response = ""
-    stream = client.chat.completions.create(
+    stream = client.chat.send(
         model = model,
         messages = messages,
         temperature = temperature,
-        max_tokens = max_tokens,
+        max_completion_tokens = max_tokens,
+        provider = {
+            "zdr": True,
+            "sort": "latency",
+        },
         stream=True
     )
     for chunk in stream:
         chunk = chunk.choices[0].delta.content or ""
         if chunk:
             response += chunk
-            print(chunk, end="")
+            print(chunk, end="", flush=True)
 
     return response
 
