@@ -1488,14 +1488,16 @@ function hexflow() (
   t=${1:-100}
   t=$((1.0/t))
 
-  for i in $(seq 1 $LINES); do
-    openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g'
-  done
-  while true; do
+  out=$(for i in $(seq 1 $LINES); do
     openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g' | command grep --color=always -e "42\|$"
+  done)
+  while true; do
+    printf "\r\033[K$out\n"
+    out=$(openssl rand -hex $((COLUMNS / 3)) | sed 's/../& /g' | command grep --color=always -e "42\|$")
     sleep $t
   done
 )
+alias hf=hexflow
 
 function battery() {
   system_profiler SPPowerDataType | grep "Charge [^I]" | awk '{print $NF" %"}' #| awk '{print $NF}' | tr '\n' ' ' | awk '{ print $1 / $2 * 100 "%"}'
