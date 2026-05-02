@@ -45,7 +45,7 @@ for f in "${source}/"*.md; do
   rm -rf "$name"
   mkdir "$name"
   # generate html
-  md2html "$source/$f" > "$name/$name.html" || die
+  pandoc --toc -f markdown-tex_math_dollars-raw_tex -o "$name/$name.html" "$source/$f" --wrap=none || die
   # auto-id headers
   perl -i -pe 's{<h3>([^<]+)</h3>}{
     my $title = $1;
@@ -57,6 +57,9 @@ for f in "${source}/"*.md; do
   }ge' "$name/$name.html"
   # generate index.php
   echo "<?php
+header('Cache-Control: no-cache');
+// header('Cache-Control: max-age=86400, must-revalidate');
+
 if (file_exists('${name}-gen.html')) {
     include('${name}-gen.html');
 } else {
@@ -80,7 +83,7 @@ if [[ -z "$files" ]]; then
   echo "No changes found."
   exit 0
 fi
-rsync --mkpath --progress --files-from=<(printf "%s\n" "${files[@]}") ./ "$CLOUD_WEB_PREFIX" || die
+rsync --del --mkpath --progress --files-from=<(printf "%s\n" "${files[@]}") ./ "$CLOUD_WEB_PREFIX" || die
 
 rm -f $source/*.bak
 
