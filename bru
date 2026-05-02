@@ -1,6 +1,8 @@
 #!/bin/bash
 
 dest="$HOME/brewupdate.log"
+all_formulae="$HOME/brewupdate_formulae.txt"
+all_casks="$HOME/brewupdate_casks.txt"
 usage="\e[1mbru\e[0m [-h]"
 help="An updater script for homebrew.
 $usage
@@ -28,11 +30,43 @@ case $1 in
 esac
 
 end() {
-  printf "END on $(date)\n%s\n" >> $dest "******************************************"
+  printf "END on $(date)\n%s\n" >> $dest "******************************************"  # funny this works
 }
 
 start() {
   printf "START on $(date)\n" >> $dest
+}
+
+new_formulae() {
+  # '.items[].formula'
+  curl -s https://formulae.brew.sh/api/analytics/install/365d.json \
+    | jq -r '.items[] | select(.count | gsub(",";"") | tonumber >= 10) | .formula' \
+    | grep -v / \
+    | sort > "$all_formulae.new"
+  if [ -f "$all_formulae" ]; then
+    comm -13 "$all_formulae" "$all_formulae.new" | while read -r name; do
+      if curl -fsI "https://formulae.brew.sh/api/formula/${name}.json" >/dev/null; then
+        echo "$name"
+      fi
+    done
+  else
+    echo "No previous formulae list found; initializing list."
+  fi
+  mv "$all_formulae.new" "$all_formulae"
+}
+
+new_casks() {
+  # '.formulae | keys[]'
+  curl -s https://formulae.brew.sh/api/analytics/cask-install/homebrew-cask/365d.json \
+  | jq -r '.formulae | to_entries[] | select(.value[0].count | gsub(",";"") | tonumber >= 10) | .key' \
+  | grep -v '^font\-' \
+    | sort > "$all_casks.new"
+  if [ -f "$all_casks" ]; then
+    comm -13 "$all_casks" "$all_casks.new"
+  else
+    echo "No previous casks list found; initializing list."
+  fi
+  mv "$all_casks.new" "$all_casks"
 }
 
 runCmd() {
@@ -47,6 +81,8 @@ start
 
 nver_before=$(nativefier --version)
 
+runCmd new_formulae
+runCmd new_casks
 runCmd brew update
 runCmd brew upgrade --greedy
 runCmd brew cleanup
