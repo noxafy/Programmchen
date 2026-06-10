@@ -874,11 +874,12 @@ function cltex() (
   fi
 
   declare -i removed=0
-  declare -a tokill=(-blx.bib .acn .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .glsdefs .idx .ilg .ind .ist .listing .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp) # toc nav are needed
+  declare -a tokill=(-blx.bib .acn .aux .bbl .bcf .blg .dvi .fdb_latexmk .fls .glsdefs .idx .ilg .ind .ist .listing .lof .log .lot .out .out.ps .run.xml .snm .spl .xcp .xmpdata) # toc nav are needed
   for postfix in ${tokill[@]}; do
     file="${goal:0:$((${#goal}-4))}$postfix"
     [[ -e "$file" ]] && rm -v "$file" && ((removed++))
   done
+  [[ -e "pdfa.xmpi" ]] && rm -v "pdfa.xmpi" && ((removed++))
   echo "$removed files removed"
 )
 
