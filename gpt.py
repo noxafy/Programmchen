@@ -4,8 +4,10 @@ from openrouter import OpenRouter
 
 client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY", ""))
 
-model = "mistralai/ministral-8b-2512"
+#model = "mistralai/ministral-8b-2512"
 #model = "openai/gpt-4.1-nano"
+model = "inception/mercury-2"
+model = "openai/gpt-oss-120b"
 
 messages = []
 interactive = False
