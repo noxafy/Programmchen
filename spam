@@ -194,5 +194,6 @@ while true; do
     fi
   done
   # print wasted time again
-  printf "\r\e[K${#msg} Zeichen - $((${#msg} / readspeed + 2))s\e[0m\n"
+  # printf "\r\e[K${#msg} chars - $((${#msg} / readspeed + 2))s\e[0m\n"
+  printf "\r\e[K\e[0m"
 done

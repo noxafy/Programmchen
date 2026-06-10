@@ -4,6 +4,7 @@
 worktime=25
 breaktime=5
 soundfile=
+tracker_file="$C/Notes/self/hyperfocus tracker.md"
 usage="Usage: \e[1m$(basename $0)\e[0m -h | [-s \e[4mfile\e[0m] [\e[4mwork\e[0m [\e[4mbreak\e[0m]]"
 help="Starts a pomodoro timer with given work and break times. Default is 25 and 5 minutes.
     \e[1m-h\e[0m  	Show this help.
@@ -19,6 +20,17 @@ die() {
 
 now() {
   printf "\e[37m$(date +%T)\e[0m $1"
+}
+
+prompt_digit() {
+    local prompt="$1"
+    while true; do
+        printf "%s" "$prompt"
+        read digit
+        [[ "$digit" =~ ^[0-9]$ ]] && break
+        printf "\033[1A\033[2KPlease enter a single digit (0-9). "
+    done
+    printf "\033[1A\033[2K"
 }
 
 while [[ -n $1 ]]; do
@@ -53,34 +65,76 @@ elif [ $# -eq 2 ]; then
     worktime=$1
     breaktime=$2
 fi
-(( $worktime >= 1 )) || die "Worktime but be at least 1 minute, but was: $worktime"
-(( $breaktime >= 1 )) || die "Break but be at least 1 minute, but was: $breaktime"
+(( $worktime >= 1 )) || die "Worktime must be at least 1 minute, but was: $worktime"
+(( $breaktime >= 1 )) || die "Break must be at least 1 minute, but was: $breaktime"
 
+clear
 printf "Starting pomodoro timer with work time \e[1m%d\e[0m minutes and break time \e[1m%d\e[0m minutes.\n" $worktime $breaktime
 
-i=0
+# Track when the last break ended (init to script start)
+last_break_end=$(date +%s)
+
+today=$(date +"%Y-%m-%d")
+i=$(grep -c "| $today " "$tracker_file")
 task=
 while true; do
-    i=$((i+1))
+    ((i++))
     now "\e[1mPomodoro $i\e[0m\n"
+    # Calculate time since last break ended and adjust worktime
+    now_time=$(date +%s)
+    elapsed_since_break=$((now_time - last_break_end))
+    adj_worktime=$((worktime - elapsed_since_break / 60))
+
     if [[ -n "$task" ]]; then
-        printf "Have you finished \e[1m%s\e[0m? [y/n]: " "$task"
+        printf "Have you finished \e[1m%s\e[0m? (y/n) [n]: " "$task"
         read finished
-        if [[ "$finished" == "y" ]]; then
-            task=
-        fi
+        [[ "$finished" == "y" ]] && task=
     fi
     if [[ -z "$task" ]]; then
         printf "What are you going to do now?: "
         read task
     fi
-    [[ -n "$soundfile" ]] && play -q "$soundfile" &
-    note $((worktime))m "Work time is up!"
-    [[ -n "$soundfile" ]] && play -q "$soundfile" &
-    now "Time for a break :)\n"
-    note $((breaktime))m "Break time is up!"
-    [[ -n "$soundfile" ]] && play -q "$soundfile" &
-    now "Press enter to start another round"
-    while read -r -t 0; do read -r trash; echo "Found trash: $trash"; done  # Flush the input buffer
-    read trash
+    if ((adj_worktime > 1)); then
+      [[ -n "$soundfile" ]] && play -q "$soundfile" &
+      note $((adj_worktime))m "Work time is up!"
+      [[ -n "$soundfile" ]] && play -q "$soundfile" &
+    fi
+
+    # Collect metrics (before the break)
+    printf "Before taking a break, please rate (0-9):\n"
+    prompt_digit "Urge to continue (0-9): "
+    urge=$digit
+    prompt_digit "Fear/guilt if you stop (0-9): "
+    emotional=$digit
+    prompt_digit "Sense of agency to stop (0-9): "
+    agency=$digit
+    printf "\033[1A\033[2K"
+
+    # Break
+    take_break=$((RANDOM % 2 == 0))  # Random coin toss to decide between break or continue working
+    break_taken=0
+    if ((!take_break)); then
+        read -p "Do you want to take a break? (y/n) [n]: " want_break
+        [[ "$want_break" == "y" ]] && take_break=1
+    fi
+    # ↑↓ don't merge
+    if ((take_break)); then
+        now "Taking a break :)\n"
+        note $((breaktime))m "Break time is up!" &
+        trap 'kill $!; echo; trap - SIGINT' SIGINT
+        wait $!
+        trap - SIGINT
+        [[ -n "$soundfile" ]] && play -q "$soundfile" &
+        read -p "Have you actually taken the break? (y/n) [n]: " answer
+        break_taken=$([[ "$answer" == "y" ]] && echo 1 || echo 0)
+        ((break_taken)) && last_break_end=$(date +%s)
+    fi
+
+    # log metrics
+    timestamp=$(date +"%Y-%m-%d %H:%M")
+    echo "| $timestamp ($i) | $urge | $emotional | $agency | $take_break | $break_taken | $task |" >> "$tracker_file"
+
+    # now "Press enter to start another round"
+    # while read -r -t 0; do read -r trash; echo "Found trash: $trash"; done  # Flush the input buffer
+    # read trash
 done
