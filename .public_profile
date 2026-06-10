@@ -238,7 +238,7 @@ alias white="screen_of_color 47 | less"
 alias mvninit="mvn archetype:generate"
 # grep
 alias rg="rg --hidden --glob '!.git/*' -i"
-alias g=grep
+alias g="grep -i"
 alias pg="pgrep -ila"
 function pgf() { # process grep full
   pgrep -ilaf "$@" | grep -v " grep " | grep -i -- "${@: -1}"
