@@ -92,7 +92,7 @@ fdSh() {
 #############################
 ### git
 #############################
-alias gst="git status | sed -n 1,2p | grep -v 'On branch' | grep -v 'Untracked' && git status --short"
+alias gst="git status | sed -n 1,2p | grep -v 'On branch' | grep -v 'Untracked'; git status --short"
 alias gsti="gst --ignored"
 alias ga="git add"
 alias gup=git_update
