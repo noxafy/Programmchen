@@ -345,8 +345,8 @@ function wlan() {
 }
 alias won="wlan on"
 alias woff="wlan off"
-alias blon="blueutil -p 1"
-alias bloff="blueutil -p 0"
+alias blon="shortcuts run \"bluetooth on\""  # "blueutil -p 1"
+alias bloff="shortcuts run \"bluetooth off\""  # "blueutil -p 0"
 alias off="woff && bloff && pmset sleepnow >/dev/null"
 alias on="won && blon"
 
