@@ -11,18 +11,11 @@ target="$BLOG"
 source="$C/Notes/published"
 
 # clean up generated files
-rm -rf "$BLOG"
-mkdir "$BLOG"
+#rm -rf "$target"
+#mkdir "$target"
+pushd "$target" > /dev/null
 
-# create top-level index
-pushd "$target" >/dev/null
-if [[ ! -e "index.php" ]]; then
-  echo "<?php
-header('Location: /');
-?>" > "index.php"
-fi
-
-# copy telegram bot files
+### copy telegram bot files
 rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram"
 
 rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram_mh"
@@ -35,6 +28,15 @@ rsync -r --del --cvs-exclude "$PROJ/personal_assistant/" "../tools/gpt/telegram_
 sed -i.bak 's/\/bots\/general.php/\/bots\/voice_bot.php/g' "../tools/gpt/telegram_voice_bot/index.php"
 rm -f "../tools/gpt/telegram_voice_bot/index.php.bak"
 
+### blog
+
+# create top-level index
+if [[ ! -e "index.php" ]]; then
+  echo "<?php
+header('Location: /');
+?>" > "index.php"
+fi
+
 # Generate files from articles
 for f in "${source}/"*.md; do
   f=$(basename "$f")
@@ -42,21 +44,26 @@ for f in "${source}/"*.md; do
   f_no_ending=${f%.*}
   name=$(echo "$f_no_ending" | xargs | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
   # recreate folder
-  rm -rf "$name"
-  mkdir "$name"
+  #rm -rf "$name"
+  #mkdir "$name"
   # generate html
-  pandoc --toc -f markdown-tex_math_dollars-raw_tex -o "$name/$name.html" "$source/$f" --wrap=none || die
+  html_out=$(pandoc --toc -f markdown-tex_math_dollars-raw_tex -t html "$source/$f" --wrap=none) || die
   # auto-id headers
-  perl -i -pe 's{<h3>([^<]+)</h3>}{
+  html_out=$(printf "%s" "$html_out" | perl -pe 's{<h3>([^<]+)</h3>}{
     my $title = $1;
     my $id = lc($title);
     $id =~ s/[^a-z0-9 ]//g;
     $id =~ s/^ +| +$//g;
     $id =~ s/ /-/g;
     "<h3 id=\"$id\">$title</h3>";
-  }ge' "$name/$name.html"
+  }ge')
+  html_file="$name/$name.html"
+  if [[ ! -e "$html_file" || "$(cat $html_file)" != "$html_out" ]]; then
+    echo "Updating $html_file"
+    printf "%s" "$html_out" > "$html_file"
+  fi
   # generate index.php
-  echo "<?php
+  php_out=$(echo "<?php
 header('Cache-Control: no-cache');
 // header('Cache-Control: max-age=86400, must-revalidate');
 
@@ -69,7 +76,12 @@ if (file_exists('${name}-gen.html')) {
     file_put_contents('${name}-gen.html', ob_get_contents());
     ob_end_flush();
 }
-?>" > "$name/index.php"
+?>")
+  php_file="$name/index.php"
+  if [[ ! -e "$php_file" || "$(cat $php_file)" != "$php_out" ]]; then
+    echo "Updating $php_file"
+    printf "%s" "$php_out" > "$php_file"
+  fi
 done
 
 # Sync with server
