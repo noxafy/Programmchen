@@ -271,56 +271,61 @@ function parseResults0() {
           console.log(link)
         }
       }
-      // else if (content.sectionListRenderer) {
-      //   let playlistVideoRenderer = content.sectionListRenderer.contents[0].itemSectionRenderer.contents[0].playlistVideoListRenderer
-      //   for (let item of playlistVideoRenderer.contents) {
-      //     if (!item.playlistVideoRenderer) continue;
-      //     let v = item.playlistVideoRenderer
+      else if (content.sectionListRenderer) {
+        let playlistVideoRenderer = content.sectionListRenderer.contents[0]
+        if (playlistVideoRenderer.channelOwnerEmptyStateRenderer) {
+            console.error('This channel does not have videos yet!')
+            process.exit(0)
+        }
+        playlistVideoRenderer = itemSectionRenderer.contents[0].playlistVideoListRenderer
+        for (let item of playlistVideoRenderer.contents) {
+          if (!item.playlistVideoRenderer) continue;
+          let v = item.playlistVideoRenderer
 
-      //     // get data
-      //     let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
-      //     let by_str = ' by'
-      //     idx = title.lastIndexOf(by_str)
-      //     if (idx < 0) { // try german version
-      //       by_str = ' von'
-      //       idx = title.lastIndexOf(by_str)
-      //     }
-      //     title = title.substring(0, idx)
-      //     while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
-      //       title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
-      //     }
-      //     title = title.trim();
-      //     if (!title) {
-      //       // slightly panic
-      //       console.error('Error! This video has no title node:')
-      //       console.error(item)
-      //       continue
-      //     }
+          // get data
+          let title = v.title.accessibility.accessibilityData.label // inconsistent: v.title.simpleText
+          let by_str = ' by'
+          idx = title.lastIndexOf(by_str)
+          if (idx < 0) { // try german version
+            by_str = ' von'
+            idx = title.lastIndexOf(by_str)
+          }
+          title = title.substring(0, idx)
+          while (title.match(/,? ?\d+ (hours?|minutes?|seconds?)$/)) {
+            title = title.replace(/,? ?\d+ (hours?|minutes?|seconds?)$/, '');
+          }
+          title = title.trim();
+          if (!title) {
+            // slightly panic
+            console.error('Error! This video has no title node:')
+            console.error(item)
+            continue
+          }
 
-      //     // filter query
-      //     if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
+          // filter query
+          if ('$2' && title.toLowerCase().indexOf('$2'.toLowerCase()) === -1) continue;
 
-      //     let description
-      //     // Regular video
-      //     let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
-      //     let user = v.shortBylineText.runs[0].text
-      //     if (v.videoInfo) {
-      //       let views = v.videoInfo.runs[0].text
-      //       let time = v.videoInfo.runs[2].text
-      //       description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
-      //     }
-      //     else {
-      //       description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m'
-      //     }
+          let description
+          // Regular video
+          let duration = v.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.accessibility.accessibilityData.label
+          let user = v.shortBylineText.runs[0].text
+          if (v.videoInfo) {
+            let views = v.videoInfo.runs[0].text
+            let time = v.videoInfo.runs[2].text
+            description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m \033[37m' + time + ' \033[2m' + views + '\033[0m'
+          }
+          else {
+            description = title + '\033[0m \033[37m' + user + '\033[0m \033[2m' + duration + '\033[0m'
+          }
 
-      //     // create link
-      //     let link = '$youtube' + '/watch?v=' + v.videoId
+          // create link
+          let link = '$youtube' + '/watch?v=' + v.videoId
 
-      //     // print out, remove newlines
-      //     console.log(description.replace(/\r?\n|\r/gm, ''))
-      //     console.log(link)
-      //   }
-      // }
+          // print out, remove newlines
+          console.log(description.replace(/\r?\n|\r/gm, ''))
+          console.log(link)
+        }
+      }
       else {
         console.error('Unknown content object!')
         console.error(content)
