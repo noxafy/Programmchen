@@ -16,6 +16,7 @@ import numpy as np
 try:
     from sage.all import * # see if sage is loaded
     from utils import *
+    from QuantumComputer import *
     from tqdm import tqdm as tq
 except:
     from math import *
@@ -40,7 +41,7 @@ except:
         pass
     try:
         from utils import *
-        #from utils.quantum import *
+        from QuantumComputer import *
         from tqdm.autonotebook import tqdm as tq
     except:
         pass
