@@ -5,6 +5,35 @@ send()    { printf '%s\n' "$1"; }
 respond() { send "{\"jsonrpc\":\"2.0\",\"id\":$1,\"result\":$2}"; }
 err()     { send "{\"jsonrpc\":\"2.0\",\"id\":$1,\"error\":{\"code\":$2,\"message\":$(jq -Rn --arg m "$3" '$m')}}"; }
 
+# Query arXiv's search API with a given search_query expression and print
+# one formatted line per result. Prints nothing if there are no results.
+arxiv_search_query() {
+    local search_query="$1" max_results="$2" response
+    response=$(curl -sL --max-time 30 -G \
+        --data-urlencode "search_query=$search_query" \
+        --data-urlencode "start=0" \
+        --data-urlencode "max_results=$max_results" \
+        --data-urlencode "sortBy=relevance" \
+        --data-urlencode "sortOrder=descending" \
+        "https://export.arxiv.org/api/query") || return 1
+
+    printf '%s' "$response" | python3 -c "
+import sys, re
+import xml.etree.ElementTree as ET
+
+ns = {'atom': 'http://www.w3.org/2005/Atom'}
+root = ET.fromstring(sys.stdin.read())
+for i, e in enumerate(root.findall('atom:entry', ns), 1):
+    id_url = e.findtext('atom:id', default='', namespaces=ns)
+    arxiv_id = id_url.rsplit('/', 1)[-1]
+    title = re.sub(r'\s+', ' ', e.findtext('atom:title', default='', namespaces=ns)).strip()
+    published = e.findtext('atom:published', default='', namespaces=ns)[:10]
+    authors = [a.findtext('atom:name', default='', namespaces=ns) for a in e.findall('atom:author', ns)]
+    author_str = ', '.join(authors[:3]) + (' et al.' if len(authors) > 3 else '')
+    print(f'{i}. {arxiv_id} - \"{title}\" ({author_str}; {published})')
+"
+}
+
 while IFS= read -r line; do
     method=$(printf '%s' "$line" | jq -r '.method // empty')
     id=$(printf '%s' "$line" | jq -r '.id // "null"')
@@ -16,22 +45,175 @@ while IFS= read -r line; do
         notifications/initialized)
             ;;
         tools/list)
-            respond "$id" '{"tools":[{"name":"fetch_url","description":"Fetch a URL directly from this machine using curl and return its text content","inputSchema":{"type":"object","properties":{"url":{"type":"string","description":"URL to fetch"},"raw":{"type":"boolean","description":"Return raw HTML instead of stripped text (default: false)"}},"required":["url"]}}]}'
+            respond "$id" '{"tools":[{"name":"fetch_url","description":"Fetch a URL directly from this machine using curl and return its text content","inputSchema":{"type":"object","properties":{"url":{"type":"string","description":"URL to fetch"},"raw":{"type":"boolean","description":"Return raw HTML instead of stripped text (default: false)"}},"required":["url"]}},{"name":"fetch_arxiv_tex","description":"Download an arXiv paper'"'"'s TeX source, extract the main file, clean it up (UTF-8, strip preamble/bibliography), and write it to a file","inputSchema":{"type":"object","properties":{"arxiv_id":{"type":"string","description":"arXiv ID, e.g. 2301.00001 or 2301.00001v2"},"output_path":{"type":"string","description":"Path to write the cleaned .tex file (default: a temp file)"}},"required":["arxiv_id"]}},{"name":"search_arxiv","description":"Search arXiv by free-text query and return matching papers with their arXiv IDs, titles, authors, and dates","inputSchema":{"type":"object","properties":{"query":{"type":"string","description":"Free-text search query"},"max_results":{"type":"integer","description":"Number of results to return (default: 5, max: 20)"},"match_title_only":{"type":"boolean","description":"Restrict matching to paper titles only, instead of title+abstract+full text (default: false). Use this when you know (part of) the paper'"'"'s title."}},"required":["query"]}}]}'
             ;;
         tools/call)
             tool=$(printf '%s' "$line" | jq -r '.params.name')
-            url=$(printf '%s' "$line" | jq -r '.params.arguments.url')
-            raw=$(printf '%s' "$line" | jq -r '.params.arguments.raw // false')
 
-            if [ "$tool" = "fetch_url" ]; then
+            if [[ "$tool" == "fetch_arxiv_tex" ]]; then
+                arxiv_id=$(printf '%s' "$line" | jq -r '.params.arguments.arxiv_id // empty')
+                output_path=$(printf '%s' "$line" | jq -r '.params.arguments.output_path // empty')
+
+                # Normalize: strip optional URL prefix, .pdf suffix, version suffix
+                paper_id=$(printf '%s' "$arxiv_id" | sed -E 's#^(https?://)?arxiv\.org/(abs|pdf)/##; s/\.pdf$//')
+                paper_id=$(printf '%s' "$paper_id" | sed -E 's/v[0-9]+$//')
+
+                # Validate format: modern (YYYY.NNNN[N]) or legacy (category/YYMMNNN)
+                if [[ ! "$paper_id" =~ ^[0-9]{4}\.[0-9]{4,5}$ ]] && [[ ! "$paper_id" =~ ^[a-zA-Z-]+(\.[A-Za-z-]+)?/[0-9]{7}$ ]]; then
+                    err "$id" -32602 "Invalid arXiv ID: $arxiv_id"
+                    continue
+                fi
+
+                tmpdir=$(mktemp -d)
+                archive="$tmpdir/source.tar.gz"
+
+                if ! curl -sL --max-time 60 -A "Mozilla/5.0" -o "$archive" "https://arxiv.org/e-print/$paper_id"; then
+                    rm -rf "$tmpdir"
+                    err "$id" -32000 "Failed to download arXiv source for $paper_id"
+                    continue
+                fi
+
+                if tar -xzf "$archive" -C "$tmpdir" 2>/dev/null; then
+                    :
+                elif gunzip -c "$archive" > "$tmpdir/source.tex" 2>/dev/null; then
+                    :
+                else
+                    rm -rf "$tmpdir"
+                    err "$id" -32000 "Failed to extract arXiv source archive for $paper_id"
+                    continue
+                fi
+                rm -f "$archive"
+
+                tex_files=$(find "$tmpdir" -maxdepth 1 -name '*.tex' 2>/dev/null)
+                if [[ -z "$tex_files" ]]; then
+                    no_ext=$(find "$tmpdir" -maxdepth 1 -type f ! -name '*.*' 2>/dev/null)
+                    no_ext_count=$(printf '%s\n' "$no_ext" | grep -c .)
+                    if [[ "$no_ext_count" -eq 1 ]]; then
+                        mv "$no_ext" "$no_ext.tex"
+                        tex_files="$no_ext.tex"
+                    else
+                        tex_files=$(find "$tmpdir" -mindepth 2 -maxdepth 2 -name '*.tex' 2>/dev/null)
+                    fi
+                fi
+
+                if [[ -z "$tex_files" ]]; then
+                    rm -rf "$tmpdir"
+                    err "$id" -32000 "No TeX files found in arXiv source for $paper_id"
+                    continue
+                fi
+
+                main_file=$(printf '%s\n' "$tex_files" | awk 'tolower($0) !~ /template/ {print; exit}')
+                if [[ -z "$main_file" ]]; then
+                    main_file=$(printf '%s\n' "$tex_files" | head -n1)
+                fi
+
+                if [[ -z "$output_path" ]]; then
+                    tmp_base="${TMPDIR:-/tmp}"
+                    output_path="${tmp_base%/}/arxiv_${paper_id//\//_}_$$.tex"
+                fi
+
+                if ! python3 - "$main_file" "$output_path" <<'PYEOF'
+import sys, re
+src, dst = sys.argv[1], sys.argv[2]
+with open(src, 'rb') as f:
+    raw = f.read()
+try:
+    text = raw.decode('utf-8')
+except UnicodeDecodeError:
+    text = raw.decode('cp1252', errors='replace')
+
+text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', text)
+text = text.replace('\r\n', '\n').replace('\r', '\n')
+
+m = re.search(r'\\begin\s*{\s*document\s*}(.+)\\end\s*{\s*document\s*}', text, re.S)
+if m:
+    text = m.group(1)
+
+text = re.sub(r'\\begin\s*{\s*thebibliography\s*}.*?\\end\s*{\s*thebibliography\s*}', '', text, flags=re.S)
+
+with open(dst, 'w', encoding='utf-8') as f:
+    f.write(text)
+PYEOF
+                then
+                    rm -rf "$tmpdir"
+                    err "$id" -32000 "Failed to process TeX content for $paper_id (check output_path is writable)"
+                    continue
+                fi
+
+                rm -rf "$tmpdir"
+
+                title=$(curl -sL --max-time 30 "https://export.arxiv.org/api/query?id_list=$paper_id" | python3 -c "
+import sys, re
+xml = sys.stdin.read()
+m = re.search(r'<entry>.*?<title>(.*?)</title>', xml, re.S)
+print(re.sub(r'\s+', ' ', m.group(1)).strip() if m else '')
+")
+
+                words=$(wc -w < "$output_path" | tr -d ' ')
+
+                result=$(jq -cn --arg path "$output_path" --arg title "$title" --arg pid "$paper_id" --arg words "$words" \
+                    '{"content":[{"type":"text","text":("Saved arXiv:" + $pid + (if $title != "" then " \"" + $title + "\"" else "" end) + " TeX source to " + $path + " (" + $words + " words).")}]}')
+                respond "$id" "$result"
+            elif [[ "$tool" == "search_arxiv" ]]; then
+                query=$(printf '%s' "$line" | jq -r '.params.arguments.query // empty')
+                max_results=$(printf '%s' "$line" | jq -r '.params.arguments.max_results // empty')
+                match_title_only=$(printf '%s' "$line" | jq -r '.params.arguments.match_title_only // false')
+
+                if [[ -z "$query" ]]; then
+                    err "$id" -32602 "Missing required argument: query"
+                    continue
+                fi
+
+                if [[ ! "$max_results" =~ ^[0-9]+$ ]]; then
+                    max_results=5
+                fi
+                if [[ "$max_results" -lt 1 ]]; then
+                    max_results=1
+                elif [[ "$max_results" -gt 20 ]]; then
+                    max_results=20
+                fi
+
+                if [[ "$match_title_only" == "true" ]]; then
+                    field="ti"
+                else
+                    field="all"
+                fi
+
+                # Try an exact-phrase match first (good for known titles), then
+                # fall back to a loose keyword match (better for topic queries).
+                if ! content=$(arxiv_search_query "$field:\"$query\"" "$max_results"); then
+                    err "$id" -32000 "Failed to query arXiv search API"
+                    continue
+                fi
+                if [[ -z "$content" ]]; then
+                    if ! content=$(arxiv_search_query "$field:$query" "$max_results"); then
+                        err "$id" -32000 "Failed to query arXiv search API"
+                        continue
+                    fi
+                fi
+                if [[ -z "$content" ]]; then
+                    content="No results found for: $query"
+                fi
+
+                result=$(jq -cn --arg text "$content" '{"content":[{"type":"text","text":$text}]}')
+                respond "$id" "$result"
+            elif [[ "$tool" == "fetch_url" ]]; then
+                url=$(printf '%s' "$line" | jq -r '.params.arguments.url // empty')
+                raw=$(printf '%s' "$line" | jq -r '.params.arguments.raw // false')
+
+                if [[ -z "$url" ]]; then
+                    err "$id" -32602 "Missing required argument: url"
+                    continue
+                fi
+
                 content=$(curl -sL --max-time 30 -A "Mozilla/5.0" -- "$url" 2>&1)
                 rc=$?
-                if [ $rc -ne 0 ]; then
+                if [[ $rc -ne 0 ]]; then
                     err "$id" -32000 "curl failed (exit $rc): $content"
                     continue
                 fi
 
-                if [ "$raw" != "true" ]; then
+                if [[ "$raw" != "true" ]]; then
                     content=$(printf '%s' "$content" | python3 -c "
 import sys, re
 html = sys.stdin.read()
@@ -50,7 +232,7 @@ print('\n'.join(lines[:150]))
             fi
             ;;
         *)
-            [ "$id" != "null" ] && err "$id" -32601 "Method not found: $method"
+            [[ "$id" != "null" ]] && err "$id" -32601 "Method not found: $method"
             ;;
     esac
 done
