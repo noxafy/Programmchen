@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Personal grab-bag MCP server (stdio transport, JSON-RPC 2.0)
+
+send()    { printf '%s\n' "$1"; }
+respond() { send "{\"jsonrpc\":\"2.0\",\"id\":$1,\"result\":$2}"; }
+err()     { send "{\"jsonrpc\":\"2.0\",\"id\":$1,\"error\":{\"code\":$2,\"message\":$(jq -Rn --arg m "$3" '$m')}}"; }
+
+while IFS= read -r line; do
+    method=$(printf '%s' "$line" | jq -r '.method // empty')
+    id=$(printf '%s' "$line" | jq -r '.id // "null"')
+
+    case "$method" in
+        initialize)
+            respond "$id" '{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"personal","version":"0.1.0"}}'
+            ;;
+        notifications/initialized)
+            ;;
+        tools/list)
+            respond "$id" '{"tools":[{"name":"fetch_url","description":"Fetch a URL directly from this machine using curl and return its text content","inputSchema":{"type":"object","properties":{"url":{"type":"string","description":"URL to fetch"},"raw":{"type":"boolean","description":"Return raw HTML instead of stripped text (default: false)"}},"required":["url"]}}]}'
+            ;;
+        tools/call)
+            tool=$(printf '%s' "$line" | jq -r '.params.name')
+            url=$(printf '%s' "$line" | jq -r '.params.arguments.url')
+            raw=$(printf '%s' "$line" | jq -r '.params.arguments.raw // false')
+
+            if [ "$tool" = "fetch_url" ]; then
+                content=$(curl -sL --max-time 30 -A "Mozilla/5.0" -- "$url" 2>&1)
+                rc=$?
+                if [ $rc -ne 0 ]; then
+                    err "$id" -32000 "curl failed (exit $rc): $content"
+                    continue
+                fi
+
+                if [ "$raw" != "true" ]; then
+                    content=$(printf '%s' "$content" | python3 -c "
+import sys, re
+html = sys.stdin.read()
+html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
+html = re.sub(r'<(script|style|head)[^>]*>.*?</\1>', '', html, flags=re.DOTALL|re.IGNORECASE)
+html = re.sub(r'<[^>]+>', '', html)
+lines = [l.strip() for l in html.splitlines() if l.strip()]
+print('\n'.join(lines[:150]))
+")
+                fi
+
+                result=$(jq -cn --arg text "$content" '{"content":[{"type":"text","text":$text}]}')
+                respond "$id" "$result"
+            else
+                err "$id" -32601 "Unknown tool: $tool"
+            fi
+            ;;
+        *)
+            [ "$id" != "null" ] && err "$id" -32601 "Method not found: $method"
+            ;;
+    esac
+done
